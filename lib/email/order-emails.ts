@@ -77,11 +77,11 @@ export async function sendOrderPlacedEmails(orderId: string, customerEmail: stri
       const orderLink = `${siteUrl()}/orders/${order.id}`;
       await deliver(order.id, "customer", "order_placed", {
         to: customerEmail,
-        subject: `Your order from ${restaurant?.name ?? "PaliaEats"} is placed (#${order.order_number})`,
+        subject: `Your order from ${restaurant?.name ?? "the restaurant"} is placed (#${order.order_number})`,
         text:
           `Hi ${order.customer_name},\n\nYour order #${order.order_number} from ${restaurant?.name ?? "the restaurant"} has been placed.\n\n` +
           items.map((i) => `${i.quantity} x ${i.item_name}  ${formatPrice(i.line_total)}`).join("\n") +
-          `\n\nTotal: ${formatPrice(order.total)} - pay in cash on delivery.\n\nTrack it here: ${orderLink}\n`,
+          `\n\nTotal: ${formatPrice(order.total)} - pay in cash on delivery.\n\nTrack it here: ${orderLink}\n\nRegards,\n${restaurant?.name ?? "the restaurant"}\n`,
         html:
           `<div style="font-family:Arial,sans-serif;max-width:480px">` +
           `<h2 style="margin:0 0 8px">Order placed!</h2>` +
@@ -89,6 +89,7 @@ export async function sendOrderPlacedEmails(orderId: string, customerEmail: stri
           `<table style="width:100%;border-collapse:collapse;border-top:1px solid #ddd;border-bottom:1px solid #ddd">${itemRowsHtml(items)}</table>` +
           `<p style="font-size:18px"><strong>Total ${formatPrice(order.total)}</strong><br><span style="font-size:14px;color:#666">Pay in cash on delivery</span></p>` +
           button(orderLink, "Track your order") +
+          `<p style="color:#444">Regards,<br>${escapeHtml(restaurant?.name ?? "the restaurant")}</p>` +
           `</div>`,
       });
     }

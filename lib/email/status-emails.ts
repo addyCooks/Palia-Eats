@@ -41,8 +41,8 @@ const CUSTOMER_COPY: Record<string, { subject: string; heading: string; line: st
   },
   delivered: {
     subject: "was delivered",
-    heading: "Delivered. Enjoy your meal!",
-    line: "Your order has been delivered. Thank you for ordering with PaliaEats.",
+    heading: "Your order was delivered",
+    line: "Your order has been delivered. Enjoy your meal!",
   },
   cancelled: {
     subject: "was cancelled",
@@ -76,7 +76,7 @@ export async function sendOrderStatusEmails(orderId: string, status: string) {
           `Hi ${order.customer_name},\n\n${copy.heading}.\n${copy.line}\n` +
           (reason ? `\nReason: ${reason}\n` : "") +
           (status === "cancelled" ? "" : `\nTotal: ${formatPrice(order.total)} (cash on delivery)\n`) +
-          `\nOrder #${order.order_number} from ${restaurantName}.\nView it here: ${orderLink}\n`,
+          `\nOrder #${order.order_number} from ${restaurantName}.\nView it here: ${orderLink}\n\nRegards,\n${restaurantName}\n`,
         html:
           `<div style="font-family:Arial,sans-serif;max-width:480px">` +
           `<h2 style="margin:0 0 8px">${escapeHtml(copy.heading)}</h2>` +
@@ -88,6 +88,7 @@ export async function sendOrderStatusEmails(orderId: string, status: string) {
           (status === "cancelled" ? "" : ` · ${formatPrice(order.total)} cash on delivery`) +
           `</p>` +
           button(orderLink, "View your order") +
+          `<p style="color:#444">Regards,<br>${escapeHtml(restaurantName)}</p>` +
           `</div>`,
       });
     }
