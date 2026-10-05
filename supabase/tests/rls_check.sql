@@ -46,6 +46,10 @@ begin
   exception when insufficient_privilege then null; end;
   begin perform 1 from public.restaurant_private; raise exception 'FAIL: visitor can read private data';
   exception when insufficient_privilege then null; end;
+  begin perform 1 from public.notification_log; raise exception 'FAIL: visitor can read the notification log';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.whatsapp_sessions; raise exception 'FAIL: visitor can read WhatsApp sessions';
+  exception when insufficient_privilege then null; end;
   begin insert into public.restaurants (slug, name) values ('hack', 'hack'); raise exception 'FAIL: visitor can create restaurant';
   exception when insufficient_privilege then null; end;
   begin update public.menu_items set price = 0; raise exception 'FAIL: visitor can change prices';
@@ -68,6 +72,20 @@ begin
   update public.profiles set full_name = 'New Name' where id = cust_id;
   get diagnostics n = row_count;
   if n <> 1 then raise exception 'FAIL: customer cannot edit own name'; end if;
+  -- WhatsApp: a customer may switch their own updates on/off, but not set a WhatsApp identity,
+  -- and can never read the server-only WhatsApp tables or the notification log.
+  update public.profiles set whatsapp_opt_in = true where id = cust_id;
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: customer cannot switch own WhatsApp updates on'; end if;
+  begin update public.profiles set whatsapp_phone = '919999900009' where id = cust_id;
+    raise exception 'FAIL: customer can set own whatsapp_phone';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.whatsapp_sessions; raise exception 'FAIL: customer can read WhatsApp sessions';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.whatsapp_processed; raise exception 'FAIL: customer can read WhatsApp message ids';
+  exception when insufficient_privilege then null; end;
+  select count(*) into n from public.notification_log;
+  if n <> 0 then raise exception 'FAIL: customer can read the notification log'; end if;
   begin insert into public.orders (customer_id, restaurant_id, subtotal, delivery_fee, total, customer_name, customer_phone, delivery_address)
     values (cust_id, rest_id, 1, 0, 1, 'x', 'x', '{}'); raise exception 'FAIL: customer can insert orders directly';
   exception when insufficient_privilege then null; end;
@@ -106,6 +124,11 @@ begin
   end;
   begin update public.orders set total = 1 where id = order_id;
     raise exception 'FAIL: order total could be changed';
+  exception when raise_exception then
+    if sqlerrm like 'FAIL:%' then raise; end if;
+  end;
+  begin update public.orders set channel = 'whatsapp' where id = order_id;
+    raise exception 'FAIL: order channel could be changed';
   exception when raise_exception then
     if sqlerrm like 'FAIL:%' then raise; end if;
   end;
