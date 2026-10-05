@@ -5,6 +5,7 @@ export type Profile = {
   role: UserRole;
   full_name: string | null;
   phone: string | null;
+  whatsapp_opt_in: boolean;
 };
 
 export type Address = {

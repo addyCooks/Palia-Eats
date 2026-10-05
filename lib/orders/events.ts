@@ -1,6 +1,7 @@
 import "server-only";
 import { sendOrderPlacedEmails } from "@/lib/email/order-emails";
 import { sendOrderStatusEmails } from "@/lib/email/status-emails";
+import { sendWhatsAppOrderUpdate } from "@/lib/whatsapp/notify";
 
 // The ONE place that reacts to things happening to an order. Every code path that
 // places or changes an order (website, restaurant panel, admin, later WhatsApp) calls
@@ -14,11 +15,18 @@ export type OrderEvent =
 export async function handleOrderEvent(event: OrderEvent): Promise<void> {
   try {
     switch (event.type) {
+      // Email and WhatsApp go out side by side; neither can hold up or break the other.
       case "placed":
-        await sendOrderPlacedEmails(event.orderId, event.customerEmail);
+        await Promise.allSettled([
+          sendOrderPlacedEmails(event.orderId, event.customerEmail),
+          sendWhatsAppOrderUpdate(event.orderId, { type: "placed" }),
+        ]);
         break;
       case "status_changed":
-        await sendOrderStatusEmails(event.orderId, event.status);
+        await Promise.allSettled([
+          sendOrderStatusEmails(event.orderId, event.status),
+          sendWhatsAppOrderUpdate(event.orderId, { type: "status", status: event.status }),
+        ]);
         break;
     }
   } catch (error) {

@@ -1,7 +1,6 @@
 import "server-only";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/email/mailer";
-import { logNotification } from "@/lib/notifications/log";
+import { alreadySent, logNotification } from "@/lib/notifications/log";
 import { formatPrice } from "@/lib/utils/format";
 import type { OrderItem } from "@/types/app";
 
@@ -47,16 +46,7 @@ export async function deliver(
   event: string,
   email: Parameters<typeof sendEmail>[0],
 ): Promise<void> {
-  const { data: alreadySent } = await createAdminClient()
-    .from("notification_log")
-    .select("id")
-    .eq("order_id", orderId)
-    .eq("channel", "email")
-    .eq("recipient_type", recipientType)
-    .eq("event", event)
-    .eq("status", "sent")
-    .limit(1);
-  if (alreadySent?.length) return;
+  if (await alreadySent(orderId, "email", recipientType, event)) return;
 
   let result: Awaited<ReturnType<typeof sendEmail>> = { ok: false, error: "not attempted" };
   let attempts = 0;

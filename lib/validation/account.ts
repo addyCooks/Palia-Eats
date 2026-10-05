@@ -3,6 +3,7 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 export type ProfileInput = {
   full_name: string;
   phone: string | null;
+  whatsapp_opt_in: boolean;
 };
 
 export type AddressInput = {
@@ -41,7 +42,12 @@ export function parseProfileForm(formData: FormData): Result<ProfileInput> {
     if (!phone) return { ok: false, error: PHONE_ERROR };
   }
 
-  return { ok: true, data: { full_name: fullName, phone } };
+  const optIn = formData.get("whatsapp_opt_in") === "on";
+  if (optIn && !phone) {
+    return { ok: false, error: "Add your mobile number to get WhatsApp updates." };
+  }
+
+  return { ok: true, data: { full_name: fullName, phone, whatsapp_opt_in: optIn } };
 }
 
 export function parseAddressForm(formData: FormData): Result<AddressInput> {

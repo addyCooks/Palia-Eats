@@ -34,3 +34,22 @@ export async function logNotification(entry: NotificationEntry): Promise<void> {
     console.error("[notifications] Could not write log:", error instanceof Error ? error.message : error);
   }
 }
+
+// Has this exact message already been delivered? (Stops duplicates when something retries.)
+export async function alreadySent(
+  orderId: string,
+  channel: "email" | "whatsapp",
+  recipientType: "restaurant" | "customer",
+  event: string,
+): Promise<boolean> {
+  const { data } = await createAdminClient()
+    .from("notification_log")
+    .select("id")
+    .eq("order_id", orderId)
+    .eq("channel", channel)
+    .eq("recipient_type", recipientType)
+    .eq("event", event)
+    .eq("status", "sent")
+    .limit(1);
+  return Boolean(data?.length);
+}

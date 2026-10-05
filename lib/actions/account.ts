@@ -26,7 +26,11 @@ export async function updateProfile(
   const supabase = await createClient();
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name: parsed.data.full_name, phone: parsed.data.phone })
+    .update({
+      full_name: parsed.data.full_name,
+      phone: parsed.data.phone,
+      whatsapp_opt_in: parsed.data.whatsapp_opt_in,
+    })
     .eq("id", profile.id);
   if (error) return { error: "Could not save your details. Please try again." };
 

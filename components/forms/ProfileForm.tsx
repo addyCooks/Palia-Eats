@@ -30,6 +30,20 @@ export function ProfileForm({ profile, email }: { profile: Profile; email: strin
         placeholder="98765 43210"
         defaultValue={profile.phone ?? ""}
       />
+      <label className="flex items-start gap-3 text-sm">
+        <input
+          type="checkbox"
+          name="whatsapp_opt_in"
+          defaultChecked={profile.whatsapp_opt_in}
+          className="mt-0.5 size-5 accent-brand"
+        />
+        <span>
+          Send my order updates on WhatsApp
+          <span className="block text-stone-500">
+            To the mobile number above. Reply STOP to a message any time to switch it off.
+          </span>
+        </span>
+      </label>
       {state?.error && (
         <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
           {state.error}
