@@ -9,6 +9,7 @@ export type NotificationEntry = {
   recipient: string | null;
   status: "sent" | "failed" | "skipped";
   error?: string;
+  attempts?: number;
 };
 
 // Records one send attempt in notification_log so the admin can see what was sent and
@@ -23,6 +24,7 @@ export async function logNotification(entry: NotificationEntry): Promise<void> {
       recipient: entry.recipient,
       status: entry.status,
       error: entry.error?.slice(0, 500) ?? null,
+      attempts: entry.attempts ?? 1,
     });
     // 23505 = this message was already sent successfully once; that's the safety net working.
     if (error && error.code !== "23505") {

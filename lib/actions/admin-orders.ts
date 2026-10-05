@@ -46,7 +46,7 @@ export async function adminUpdateOrderStatus(input: {
   if (!data?.length) return { error: "Order not found." };
 
   after(() =>
-    handleOrderEvent({ type: "status_changed", orderId: input.orderId, status: input.status, reason }),
+    handleOrderEvent({ type: "status_changed", orderId: input.orderId, status: input.status }),
   );
   revalidatePath("/admin/orders");
   revalidatePath("/admin");

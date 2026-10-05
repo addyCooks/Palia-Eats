@@ -1,57 +1,10 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPanelToken } from "@/lib/panel/token";
-import { sendEmail } from "@/lib/email/mailer";
 import { logNotification } from "@/lib/notifications/log";
+import { button, deliver, escapeHtml, itemRowsHtml, siteUrl } from "@/lib/email/shared";
 import { formatDateTime, formatPrice } from "@/lib/utils/format";
 import type { OrderItem } from "@/types/app";
-
-// Customer-supplied text (name, notes, address) goes into HTML emails, so escape it.
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function siteUrl(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
-}
-
-function itemRowsHtml(items: OrderItem[]): string {
-  return items
-    .map(
-      (item) =>
-        `<tr><td style="padding:4px 0">${item.quantity} × ${escapeHtml(item.item_name)}</td>` +
-        `<td style="padding:4px 0;text-align:right">${formatPrice(item.line_total)}</td></tr>`,
-    )
-    .join("");
-}
-
-function button(href: string, label: string): string {
-  return `<p><a href="${href}" style="display:inline-block;background:#ea580c;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">${label}</a></p>`;
-}
-
-// Sends one email and records the outcome in notification_log.
-async function deliver(
-  orderId: string,
-  recipientType: "restaurant" | "customer",
-  event: string,
-  email: Parameters<typeof sendEmail>[0],
-) {
-  const result = await sendEmail(email);
-  await logNotification({
-    orderId,
-    channel: "email",
-    recipientType,
-    event,
-    recipient: email.to,
-    status: result.ok ? "sent" : "failed",
-    error: result.ok ? undefined : result.error,
-  });
-}
 
 // Called right after an order is placed. Sends the restaurant its new-order email
 // (with a link into its panel) and the customer a confirmation. Never throws.

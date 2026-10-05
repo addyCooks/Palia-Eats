@@ -1,5 +1,6 @@
 import "server-only";
 import { sendOrderPlacedEmails } from "@/lib/email/order-emails";
+import { sendOrderStatusEmails } from "@/lib/email/status-emails";
 
 // The ONE place that reacts to things happening to an order. Every code path that
 // places or changes an order (website, restaurant panel, admin, later WhatsApp) calls
@@ -8,7 +9,7 @@ import { sendOrderPlacedEmails } from "@/lib/email/order-emails";
 // Callers run it inside after() so a slow email never delays the response.
 export type OrderEvent =
   | { type: "placed"; orderId: string; customerEmail: string | null }
-  | { type: "status_changed"; orderId: string; status: string; reason: string | null };
+  | { type: "status_changed"; orderId: string; status: string };
 
 export async function handleOrderEvent(event: OrderEvent): Promise<void> {
   try {
@@ -17,7 +18,7 @@ export async function handleOrderEvent(event: OrderEvent): Promise<void> {
         await sendOrderPlacedEmails(event.orderId, event.customerEmail);
         break;
       case "status_changed":
-        // Customer status notifications are added in the next section.
+        await sendOrderStatusEmails(event.orderId, event.status);
         break;
     }
   } catch (error) {

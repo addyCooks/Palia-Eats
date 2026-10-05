@@ -69,7 +69,7 @@ export async function updateOrderStatus(input: {
   }
   if (!data?.length) return { error: "Order not found." };
 
-  after(() => handleOrderEvent({ type: "status_changed", orderId: input.orderId, status, reason }));
+  after(() => handleOrderEvent({ type: "status_changed", orderId: input.orderId, status }));
   revalidatePath("/panel");
   return {};
 }
