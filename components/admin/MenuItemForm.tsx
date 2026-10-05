@@ -13,17 +13,31 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 
+type MenuAction = (prev: MenuFormState, formData: FormData) => Promise<MenuFormState>;
+
 type MenuItemFormProps = {
   restaurantId: string;
+  // Which server actions save the item. Defaults to the admin's; the restaurant panel
+  // passes its own, which are limited to that restaurant.
+  actions?: { create: MenuAction; update: MenuAction };
+  // Photo upload needs an admin login, so the panel hides it (the photo stays as it is).
+  allowImage?: boolean;
   categories: MenuCategory[];
   item?: MenuItem; // present when editing
   defaultCategoryId?: string;
 };
 
-export function MenuItemForm({ restaurantId, categories, item, defaultCategoryId }: MenuItemFormProps) {
+export function MenuItemForm({
+  restaurantId,
+  categories,
+  item,
+  defaultCategoryId,
+  actions = { create: createMenuItem, update: updateMenuItem },
+  allowImage = true,
+}: MenuItemFormProps) {
   const isEdit = Boolean(item);
   const [state, formAction, pending] = useActionState<MenuFormState, FormData>(
-    isEdit ? updateMenuItem : createMenuItem,
+    isEdit ? actions.update : actions.create,
     undefined,
   );
 
@@ -71,13 +85,17 @@ export function MenuItemForm({ restaurantId, categories, item, defaultCategoryId
           </select>
         </div>
 
-        <ImageUpload
-          name="image_url"
-          label="Photo"
-          restaurantId={restaurantId}
-          folder="menu"
-          defaultUrl={item?.image_url}
-        />
+        {allowImage ? (
+          <ImageUpload
+            name="image_url"
+            label="Photo"
+            restaurantId={restaurantId}
+            folder="menu"
+            defaultUrl={item?.image_url}
+          />
+        ) : (
+          <p className="text-sm text-stone-500">To add or change the photo, contact PaliaEats.</p>
+        )}
 
         <label className="flex items-center gap-3 text-sm">
           <input type="checkbox" name="is_veg" defaultChecked={item?.is_veg ?? true} className="size-5 accent-green-600" />

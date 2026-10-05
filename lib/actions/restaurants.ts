@@ -24,6 +24,7 @@ function publicColumns(input: RestaurantInput, existingTheme: object = {}) {
     address_text: input.address_text,
     opening_time: input.opening_time,
     closing_time: input.closing_time,
+    closed_days: input.closed_days,
     min_order_amount: input.min_order_amount,
     delivery_fee: input.delivery_fee,
     theme: { ...existingTheme, brand: input.brand, brandDark: input.brandDark },

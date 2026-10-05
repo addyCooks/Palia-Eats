@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { ImageUpload } from "@/components/admin/ImageUpload";
+import { ClosedDaysField } from "@/components/restaurant/ClosedDaysField";
 
 // Postgres returns times as "10:00:00"; <input type="time"> wants "10:00".
 const toTimeInput = (time: string | null | undefined) => time?.slice(0, 5) ?? "";
@@ -89,6 +90,7 @@ export function RestaurantForm({ restaurant }: { restaurant?: AdminRestaurant })
 
       <Card className="flex flex-col gap-4">
         <h2 className="font-semibold">Hours and charges</h2>
+        <ClosedDaysField defaultClosed={restaurant?.closed_days ?? []} />
         <div className="grid grid-cols-2 gap-4">
           <Input label="Opens at" name="opening_time" type="time" defaultValue={toTimeInput(restaurant?.opening_time)} />
           <Input label="Closes at" name="closing_time" type="time" defaultValue={toTimeInput(restaurant?.closing_time)} />

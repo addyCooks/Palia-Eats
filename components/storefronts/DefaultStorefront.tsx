@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { StorefrontProps } from "@/components/storefronts/types";
 import { formatPrice } from "@/lib/utils/format";
-import { formatTime, getRestaurantStatus } from "@/lib/utils/hours";
+import { describeClosedDays, formatTime, getRestaurantStatus } from "@/lib/utils/hours";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { CartBar } from "@/components/cart/CartBar";
 import { CartLink } from "@/components/cart/CartLink";
@@ -98,6 +98,9 @@ export function DefaultStorefront({ restaurant, categories, items }: StorefrontP
               <span>
                 {formatTime(restaurant.opening_time)} – {formatTime(restaurant.closing_time)}
               </span>
+            )}
+            {describeClosedDays(restaurant.closed_days) && (
+              <span>{describeClosedDays(restaurant.closed_days)}</span>
             )}
             <span>
               {restaurant.delivery_fee > 0

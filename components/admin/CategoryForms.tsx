@@ -11,9 +11,26 @@ import type { MenuCategory } from "@/types/app";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 
-export function AddCategoryForm({ restaurantId }: { restaurantId: string }) {
+type MenuAction = (prev: MenuFormState, formData: FormData) => Promise<MenuFormState>;
+
+// Which server actions the category forms call. Defaults to the admin's; the restaurant
+// panel passes its own, which are limited to that restaurant.
+export type CategoryActions = { create: MenuAction; update: MenuAction; remove: MenuAction };
+const ADMIN_CATEGORY_ACTIONS: CategoryActions = {
+  create: createCategory,
+  update: updateCategory,
+  remove: deleteCategory,
+};
+
+export function AddCategoryForm({
+  restaurantId,
+  actions = ADMIN_CATEGORY_ACTIONS,
+}: {
+  restaurantId: string;
+  actions?: CategoryActions;
+}) {
   const [state, formAction, pending] = useActionState<MenuFormState, FormData>(
-    createCategory,
+    actions.create,
     undefined,
   );
   const formRef = useRef<HTMLFormElement>(null);
@@ -48,16 +65,18 @@ export function AddCategoryForm({ restaurantId }: { restaurantId: string }) {
 export function CategoryRow({
   restaurantId,
   category,
+  actions = ADMIN_CATEGORY_ACTIONS,
 }: {
   restaurantId: string;
   category: MenuCategory;
+  actions?: CategoryActions;
 }) {
   const [saveState, saveAction, saving] = useActionState<MenuFormState, FormData>(
-    updateCategory,
+    actions.update,
     undefined,
   );
   const [deleteState, deleteAction, deleting] = useActionState<MenuFormState, FormData>(
-    deleteCategory,
+    actions.remove,
     undefined,
   );
 

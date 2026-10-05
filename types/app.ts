@@ -37,6 +37,7 @@ export type Restaurant = {
   cover_url: string | null;
   opening_time: string | null;
   closing_time: string | null;
+  closed_days: number[]; // weekdays closed, 0 = Sunday ... 6 = Saturday
   min_order_amount: number;
   delivery_fee: number;
   theme: RestaurantTheme;

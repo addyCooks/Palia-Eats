@@ -7,6 +7,7 @@ import { getPanelRestaurant } from "@/lib/panel/session";
 import { isUuid } from "@/lib/validation/menu";
 import { handleOrderEvent } from "@/lib/orders/events";
 import { MAX_REASON_LENGTH } from "@/lib/orders/cancel-reasons";
+import { parseClosedDays } from "@/lib/validation/restaurant";
 
 export type PanelActionResult = { error?: string };
 
@@ -94,4 +95,42 @@ export async function setPanelItemAvailability(input: {
   revalidatePath("/panel/menu");
   revalidatePath(`/restaurants/${restaurant.slug}`);
   return {};
+}
+
+export type PanelHoursState = { error?: string; saved?: boolean } | undefined;
+
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// The restaurant sets its own opening hours and days off. (Delivery fee and minimum
+// order stay with PaliaEats.) Leave both times empty for "open all day".
+export async function updatePanelHours(
+  _prev: PanelHoursState,
+  formData: FormData,
+): Promise<PanelHoursState> {
+  const restaurant = await getPanelRestaurant();
+  if (!restaurant) return { error: SESSION_EXPIRED };
+
+  const opening = String(formData.get("opening_time") ?? "").trim();
+  const closing = String(formData.get("closing_time") ?? "").trim();
+  if ((opening && !TIME_PATTERN.test(opening)) || (closing && !TIME_PATTERN.test(closing))) {
+    return { error: "Please enter valid times." };
+  }
+  if (Boolean(opening) !== Boolean(closing)) {
+    return { error: "Set both the opening and closing time, or leave both empty." };
+  }
+
+  const { error } = await createAdminClient()
+    .from("restaurants")
+    .update({
+      opening_time: opening || null,
+      closing_time: closing || null,
+      closed_days: parseClosedDays(formData),
+    })
+    .eq("id", restaurant.id);
+  if (error) return { error: "Could not save. Please try again." };
+
+  revalidatePath("/panel", "layout");
+  revalidatePath(`/restaurants/${restaurant.slug}`);
+  revalidatePath("/");
+  return { saved: true };
 }

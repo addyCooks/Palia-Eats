@@ -7,14 +7,16 @@ export function DeleteItemButton({
   restaurantId,
   itemId,
   itemName,
+  action = deleteMenuItem,
 }: {
   restaurantId: string;
   itemId: string;
   itemName: string;
+  action?: (formData: FormData) => Promise<void>;
 }) {
   return (
     <form
-      action={deleteMenuItem}
+      action={action}
       onSubmit={(event) => {
         if (!window.confirm(`Delete "${itemName}"? Past orders are not affected.`)) {
           event.preventDefault();

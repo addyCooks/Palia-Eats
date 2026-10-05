@@ -22,7 +22,7 @@ export async function syncCartWithServer(cart: Cart): Promise<CartSyncResult> {
   const [restaurantResult, itemsResult] = await Promise.all([
     supabase
       .from("restaurants")
-      .select("delivery_fee, min_order_amount, is_accepting_orders, opening_time, closing_time")
+      .select("delivery_fee, min_order_amount, is_accepting_orders, opening_time, closing_time, closed_days")
       .eq("id", restaurant.id)
       .eq("is_active", true)
       .maybeSingle(),

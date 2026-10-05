@@ -12,6 +12,7 @@ export type RestaurantInput = {
   address_text: string | null;
   opening_time: string | null;
   closing_time: string | null;
+  closed_days: number[];
   min_order_amount: number;
   delivery_fee: number;
   brand: string;
@@ -44,6 +45,15 @@ function money(formData: FormData, key: string): number | null {
   const value = Number(raw);
   if (!Number.isFinite(value) || value < 0) return null;
   return Math.round(value * 100) / 100; // keep 2 decimal places
+}
+
+// The "closed on" checkboxes: weekday numbers 0 (Sunday) to 6 (Saturday).
+export function parseClosedDays(formData: FormData): number[] {
+  const days = formData
+    .getAll("closed_days")
+    .map((value) => Number(value))
+    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6);
+  return [...new Set(days)].sort();
 }
 
 // Reads the admin's restaurant form and checks every field.
@@ -103,6 +113,7 @@ export function parseRestaurantForm(formData: FormData): ParseResult {
       address_text: text(formData, "address_text"),
       opening_time: text(formData, "opening_time"),
       closing_time: text(formData, "closing_time"),
+      closed_days: parseClosedDays(formData),
       min_order_amount: minOrder,
       delivery_fee: deliveryFee,
       brand,

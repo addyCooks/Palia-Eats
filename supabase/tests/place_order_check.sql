@@ -194,6 +194,29 @@ begin
   reset role;
   update public.restaurants set opening_time = null, closing_time = null where id = rest_id;
 
+  -- ============ 9b. Day off (closed today, even with no opening hours) ============
+  update public.restaurants
+    set closed_days = array[extract(dow from (now() at time zone 'Asia/Kolkata'))::int]::smallint[]
+    where id = rest_id;
+  set local role authenticated;
+  begin
+    perform public.place_order(rest_id, good_items, addr_id, null, expected);
+    raise exception 'FAIL: expected restaurant_closed (day off)';
+  exception when others then
+    if sqlerrm <> 'restaurant_closed' then raise exception 'FAIL: expected restaurant_closed (day off), got: %', sqlerrm; end if;
+  end;
+  reset role;
+  -- A different weekday off must NOT block today's orders; the 15 s double-click rule
+  -- returns the existing order, which proves the order went through the hours check.
+  update public.restaurants
+    set closed_days = array[(extract(dow from (now() at time zone 'Asia/Kolkata'))::int + 1) % 7]::smallint[]
+    where id = rest_id;
+  set local role authenticated;
+  order2 := public.place_order(rest_id, good_items, addr_id, null, expected);
+  reset role;
+  if order2 <> order1 then raise exception 'FAIL: another day off blocked today''s order'; end if;
+  update public.restaurants set closed_days = '{}' where id = rest_id;
+
   -- ============ 10. No phone number anywhere ============
   update public.profiles set phone = null where id = cust_id;
   set local role authenticated;

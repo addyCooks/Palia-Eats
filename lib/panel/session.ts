@@ -14,6 +14,7 @@ export type PanelRestaurant = {
   is_accepting_orders: boolean;
   opening_time: string | null;
   closing_time: string | null;
+  closed_days: number[];
   // Secret name of this restaurant's live-ping channel (see 0007_realtime.sql)
   realtime_topic: string;
 };
@@ -32,7 +33,7 @@ export async function resolvePanelToken(token: string): Promise<PanelRestaurant 
   const { data } = await admin
     .from("restaurants")
     .select(
-      "id, slug, name, is_active, is_accepting_orders, opening_time, closing_time, restaurant_private(panel_key_created_at, realtime_topic)",
+      "id, slug, name, is_active, is_accepting_orders, opening_time, closing_time, closed_days, restaurant_private(panel_key_created_at, realtime_topic)",
     )
     .eq("id", claims.restaurantId)
     .maybeSingle();
@@ -55,6 +56,7 @@ export async function resolvePanelToken(token: string): Promise<PanelRestaurant 
     is_accepting_orders: data.is_accepting_orders,
     opening_time: data.opening_time,
     closing_time: data.closing_time,
+    closed_days: data.closed_days ?? [],
     realtime_topic: privateRow.realtime_topic,
   };
 }
