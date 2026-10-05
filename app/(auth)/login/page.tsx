@@ -10,7 +10,8 @@ export const metadata: Metadata = { title: "Log in" };
 
 const ERROR_MESSAGES: Record<string, string> = {
   google: "Google sign-in isn't available right now. Please use email instead.",
-  callback: "That sign-in link didn't work. Please try again.",
+  callback:
+    "We couldn't log you in from that link. If you were confirming your email, that part probably worked: just log in below with your email and password.",
 };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
