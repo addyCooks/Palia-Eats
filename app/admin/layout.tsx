@@ -22,6 +22,12 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <Link href="/admin/restaurants" className="rounded-lg px-3 py-2 hover:bg-muted">
               Restaurants
             </Link>
+            <Link href="/admin/customers" className="rounded-lg px-3 py-2 hover:bg-muted">
+              Customers
+            </Link>
+            <Link href="/admin/notifications" className="rounded-lg px-3 py-2 hover:bg-muted">
+              Emails
+            </Link>
             <span className="hidden text-stone-500 sm:inline">
               {profile.full_name ?? "Admin"}
             </span>
