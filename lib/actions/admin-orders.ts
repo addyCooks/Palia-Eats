@@ -1,9 +1,12 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/validation/menu";
+import { handleOrderEvent } from "@/lib/orders/events";
+import { MAX_REASON_LENGTH } from "@/lib/orders/cancel-reasons";
 
 // Lets the admin move any order along, or cancel it. Uses the normal logged-in client,
 // so the database's own rules apply: only admins may update orders, and the order
@@ -21,12 +24,16 @@ export async function adminUpdateOrderStatus(input: {
   }
 
   const reason =
-    input.status === "cancelled" ? String(input.reason ?? "").trim().slice(0, 200) || null : null;
+    input.status === "cancelled" ? String(input.reason ?? "").trim().slice(0, MAX_REASON_LENGTH) || null : null;
 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("orders")
-    .update({ status: input.status, rejection_reason: reason })
+    .update({
+      status: input.status,
+      rejection_reason: reason,
+      cancelled_by: input.status === "cancelled" ? "admin" : null,
+    })
     .eq("id", input.orderId)
     .select("id");
 
@@ -38,6 +45,9 @@ export async function adminUpdateOrderStatus(input: {
   }
   if (!data?.length) return { error: "Order not found." };
 
+  after(() =>
+    handleOrderEvent({ type: "status_changed", orderId: input.orderId, status: input.status, reason }),
+  );
   revalidatePath("/admin/orders");
   revalidatePath("/admin");
   return {};

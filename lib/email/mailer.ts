@@ -14,7 +14,9 @@ function isConfigured(): boolean {
 
 // Sends one email through your SMTP account (Gmail app password, Brevo, ...).
 // It NEVER throws: a failed email must not break placing an order. Problems are logged.
-export async function sendEmail(email: Email): Promise<boolean> {
+export type SendResult = { ok: true } | { ok: false; error: string };
+
+export async function sendEmail(email: Email): Promise<SendResult> {
   if (!isConfigured()) {
     // Development: no SMTP account yet, so show the email in the server console.
     if (process.env.NODE_ENV !== "production") {
@@ -24,7 +26,7 @@ export async function sendEmail(email: Email): Promise<boolean> {
     } else {
       console.error("[email] SMTP is not configured; email to", email.to, "was NOT sent.");
     }
-    return false;
+    return { ok: false, error: "SMTP is not configured" };
   }
 
   try {
@@ -48,9 +50,10 @@ export async function sendEmail(email: Email): Promise<boolean> {
       html: email.html,
       text: email.text,
     });
-    return true;
+    return { ok: true };
   } catch (error) {
-    console.error("[email] Sending failed:", error instanceof Error ? error.message : error);
-    return false;
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[email] Sending failed:", message);
+    return { ok: false, error: message };
   }
 }

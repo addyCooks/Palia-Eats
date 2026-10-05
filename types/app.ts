@@ -110,6 +110,8 @@ export type Order = {
   };
   customer_notes: string | null;
   rejection_reason: string | null;
+  channel: "web" | "whatsapp";
+  cancelled_by: "restaurant" | "admin" | "customer" | null;
   placed_at: string;
   status_updated_at: string;
 };

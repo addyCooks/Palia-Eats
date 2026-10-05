@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPanelToken } from "@/lib/panel/token";
 import { sendEmail } from "@/lib/email/mailer";
+import { logNotification } from "@/lib/notifications/log";
 import { formatDateTime, formatPrice } from "@/lib/utils/format";
 import type { OrderItem } from "@/types/app";
 
@@ -33,6 +34,25 @@ function button(href: string, label: string): string {
   return `<p><a href="${href}" style="display:inline-block;background:#ea580c;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:600">${label}</a></p>`;
 }
 
+// Sends one email and records the outcome in notification_log.
+async function deliver(
+  orderId: string,
+  recipientType: "restaurant" | "customer",
+  event: string,
+  email: Parameters<typeof sendEmail>[0],
+) {
+  const result = await sendEmail(email);
+  await logNotification({
+    orderId,
+    channel: "email",
+    recipientType,
+    event,
+    recipient: email.to,
+    status: result.ok ? "sent" : "failed",
+    error: result.ok ? undefined : result.error,
+  });
+}
+
 // Called right after an order is placed. Sends the restaurant its new-order email
 // (with a link into its panel) and the customer a confirmation. Never throws.
 export async function sendOrderPlacedEmails(orderId: string, customerEmail: string | null) {
@@ -62,7 +82,7 @@ export async function sendOrderPlacedEmails(orderId: string, customerEmail: stri
       const panelLink = `${siteUrl()}/panel/enter/${createPanelToken(restaurant.id, new Date(), 30)}`;
       const notes = order.customer_notes ? `\nNote: ${order.customer_notes}` : "";
 
-      await sendEmail({
+      await deliver(order.id, "restaurant", "order_placed", {
         to: privateRow.notification_email,
         subject: `New order #${order.order_number} · ${formatPrice(order.total)}`,
         text:
@@ -88,12 +108,21 @@ export async function sendOrderPlacedEmails(orderId: string, customerEmail: stri
       });
     } else {
       console.error(`[email] No notification email set for the restaurant of order ${orderId}.`);
+      await logNotification({
+        orderId: order.id,
+        channel: "email",
+        recipientType: "restaurant",
+        event: "order_placed",
+        recipient: null,
+        status: "skipped",
+        error: "Restaurant has no notification email",
+      });
     }
 
     // ---- Confirmation to the customer ----
     if (customerEmail) {
       const orderLink = `${siteUrl()}/orders/${order.id}`;
-      await sendEmail({
+      await deliver(order.id, "customer", "order_placed", {
         to: customerEmail,
         subject: `Your order from ${restaurant?.name ?? "PaliaEats"} is placed (#${order.order_number})`,
         text:

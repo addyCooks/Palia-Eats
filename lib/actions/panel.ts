@@ -1,9 +1,12 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPanelRestaurant } from "@/lib/panel/session";
 import { isUuid } from "@/lib/validation/menu";
+import { handleOrderEvent } from "@/lib/orders/events";
+import { MAX_REASON_LENGTH } from "@/lib/orders/cancel-reasons";
 
 export type PanelActionResult = { error?: string };
 
@@ -47,12 +50,12 @@ export async function updateOrderStatus(input: {
   }
 
   const status = input.status as SettableStatus;
-  const reason = status === "cancelled" ? String(input.reason ?? "").trim().slice(0, 200) || null : null;
+  const reason = status === "cancelled" ? String(input.reason ?? "").trim().slice(0, MAX_REASON_LENGTH) || null : null;
 
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("orders")
-    .update({ status, rejection_reason: reason })
+    .update({ status, rejection_reason: reason, cancelled_by: status === "cancelled" ? "restaurant" : null })
     .eq("id", input.orderId)
     .eq("restaurant_id", restaurant.id)
     .select("id");
@@ -66,6 +69,7 @@ export async function updateOrderStatus(input: {
   }
   if (!data?.length) return { error: "Order not found." };
 
+  after(() => handleOrderEvent({ type: "status_changed", orderId: input.orderId, status, reason }));
   revalidatePath("/panel");
   return {};
 }

@@ -3,7 +3,7 @@
 import { after } from "next/server";
 import { getCurrentUser, getProfile } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { sendOrderPlacedEmails } from "@/lib/email/order-emails";
+import { handleOrderEvent } from "@/lib/orders/events";
 import { isUuid } from "@/lib/validation/menu";
 import { REFRESH_CART_CODES, orderErrorMessage } from "@/lib/orders/errors";
 
@@ -67,7 +67,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   // email trouble can never slow down or break placing an order.
   const user = await getCurrentUser();
   const orderId = data as string;
-  after(() => sendOrderPlacedEmails(orderId, user?.email ?? null));
+  after(() => handleOrderEvent({ type: "placed", orderId, customerEmail: user?.email ?? null }));
 
   return { orderId };
 }

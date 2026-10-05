@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { OrderStatus } from "@/types/app";
 import { Button } from "@/components/ui/Button";
+import { CANCEL_REASONS, MAX_REASON_LENGTH, OTHER_REASON } from "@/lib/orders/cancel-reasons";
 
 export type UpdateOrderStatus = (input: {
   orderId: string;
@@ -31,6 +32,9 @@ export function OrderActions({ orderId, status, updateStatus }: OrderActionsProp
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [choice, setChoice] = useState<string>(CANCEL_REASONS[0]);
+  const [otherText, setOtherText] = useState("");
 
   const next = NEXT_STEP[status];
   if (!next) return null; // delivered or cancelled: nothing more to do
@@ -46,13 +50,60 @@ export function OrderActions({ orderId, status, updateStatus }: OrderActionsProp
     });
   }
 
-  function cancel() {
-    const reason = window.prompt(
-      "Why are you cancelling this order? The customer will see this.",
-      "",
+  const reasonToSend = choice === OTHER_REASON ? otherText.trim() : choice;
+
+  function confirmCancel() {
+    if (!reasonToSend) {
+      setError("Please type a reason.");
+      return;
+    }
+    setCancelling(false);
+    change("cancelled", reasonToSend);
+  }
+
+  if (cancelling) {
+    return (
+      <div className="flex flex-col gap-2 rounded-xl border border-red-200 bg-red-50 p-3">
+        <label className="text-sm font-medium text-red-800" htmlFor={`cancel-${orderId}`}>
+          Why are you cancelling? The customer will see this.
+        </label>
+        <select
+          id={`cancel-${orderId}`}
+          value={choice}
+          onChange={(e) => setChoice(e.target.value)}
+          className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+        >
+          {CANCEL_REASONS.map((reason) => (
+            <option key={reason} value={reason}>
+              {reason}
+            </option>
+          ))}
+          <option value={OTHER_REASON}>{OTHER_REASON}…</option>
+        </select>
+        {choice === OTHER_REASON && (
+          <input
+            value={otherText}
+            onChange={(e) => setOtherText(e.target.value)}
+            maxLength={MAX_REASON_LENGTH}
+            placeholder="Type the reason"
+            className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+          />
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Button variant="danger" onClick={confirmCancel} disabled={isPending}>
+            Confirm cancellation
+          </Button>
+          <Button variant="ghost" onClick={() => { setCancelling(false); setError(null); }}>
+            Keep order
+          </Button>
+        </div>
+        {error && (
+          <p role="alert" className="text-sm text-red-600">
+            {error}
+          </p>
+        )}
+      </div>
     );
-    if (reason === null) return; // pressed Cancel in the box
-    change("cancelled", reason);
   }
 
   return (
@@ -61,7 +112,7 @@ export function OrderActions({ orderId, status, updateStatus }: OrderActionsProp
         <Button onClick={() => change(next.status)} disabled={isPending}>
           {isPending ? "Updating…" : next.label}
         </Button>
-        <Button variant="ghost" onClick={cancel} disabled={isPending}>
+        <Button variant="ghost" onClick={() => setCancelling(true)} disabled={isPending}>
           Cancel order
         </Button>
       </div>
