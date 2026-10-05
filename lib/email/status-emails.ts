@@ -68,7 +68,8 @@ export async function sendOrderStatusEmails(orderId: string, status: string) {
     // ---- Customer ----
     const { data: userData } = await createAdminClient().auth.admin.getUserById(order.customer_id);
     const customerEmail = userData?.user?.email ?? null;
-    if (customerEmail) {
+    // WhatsApp customers have no real email (they are told on WhatsApp instead).
+    if (customerEmail && order.channel !== "whatsapp") {
       await deliver(order.id, "customer", `status_${status}`, {
         to: customerEmail,
         subject: `Your order #${order.order_number} from ${restaurantName} ${copy.subject}`,

@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { handleBotMessage } from "@/lib/whatsapp/bot";
 import { sendWhatsApp } from "@/lib/whatsapp/client";
 import type { Inbound } from "@/lib/whatsapp/inbound";
 import { toNationalNumber } from "@/lib/whatsapp/phone";
@@ -45,7 +46,7 @@ export async function processInbound(messages: Inbound[]): Promise<void> {
         await handleOptOut(message);
         continue;
       }
-      // (The ordering bot is plugged in here in the next step.)
+      await handleBotMessage(message);
     } catch (error) {
       console.error("[whatsapp] Could not process a message:", error instanceof Error ? error.message : error);
     }

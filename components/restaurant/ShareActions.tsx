@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 
-type ShareActionsProps = { url: string; name: string; slug: string };
+type ShareActionsProps = { url: string; name: string; slug: string; whatsappUrl?: string | null };
 
 function save(blob: Blob, filename: string) {
   const href = URL.createObjectURL(blob);
@@ -20,7 +20,7 @@ async function makeSvg(url: string): Promise<string> {
   return QRCode.toString(url, { type: "svg", errorCorrectionLevel: "M", margin: 2, width: 1024 });
 }
 
-export function ShareActions({ url, name, slug }: ShareActionsProps) {
+export function ShareActions({ url, name, slug, whatsappUrl }: ShareActionsProps) {
   const [note, setNote] = useState<string | null>(null);
 
   function flash(message: string) {
@@ -32,6 +32,16 @@ export function ShareActions({ url, name, slug }: ShareActionsProps) {
     try {
       await navigator.clipboard.writeText(url);
       flash("Link copied");
+    } catch {
+      flash("Couldn't copy. Select the link and copy it.");
+    }
+  }
+
+  async function copyWhatsApp() {
+    if (!whatsappUrl) return;
+    try {
+      await navigator.clipboard.writeText(whatsappUrl);
+      flash("WhatsApp link copied");
     } catch {
       flash("Couldn't copy. Select the link and copy it.");
     }
@@ -94,6 +104,23 @@ export function ShareActions({ url, name, slug }: ShareActionsProps) {
           Download QR (SVG, for print)
         </Button>
       </div>
+      {whatsappUrl && (
+        <div className="flex flex-col gap-2 border-t border-border pt-3">
+          <p className="text-sm font-medium">Order on WhatsApp</p>
+          <input
+            readOnly
+            value={whatsappUrl}
+            aria-label="WhatsApp ordering link"
+            onFocus={(e) => e.currentTarget.select()}
+            className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm"
+          />
+          <div>
+            <Button size="sm" variant="secondary" onClick={copyWhatsApp}>
+              Copy WhatsApp link
+            </Button>
+          </div>
+        </div>
+      )}
       <p role="status" className="min-h-5 text-sm text-green-700">
         {note}
       </p>

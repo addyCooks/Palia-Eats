@@ -46,7 +46,7 @@ export default async function AdminCustomersPage({ searchParams }: PageProps<"/a
                     {customer.role === "admin" && <Badge tone="neutral">Admin</Badge>}
                   </p>
                   <p className="truncate text-sm text-stone-600">
-                    {customer.email ?? "No email"}
+                    {customer.email ?? (customer.whatsapp_phone ? "WhatsApp customer" : "No email")}
                     {customer.phone ? ` · ${customer.phone}` : ""}
                   </p>
                 </div>

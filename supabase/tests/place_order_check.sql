@@ -252,6 +252,42 @@ begin
   end;
   reset role;
 
+  -- ============ 11b. A logged-in user cannot call place_order_core ============
+  -- (it takes the customer id as an argument, so they could order as someone else)
+  set local role authenticated;
+  begin
+    perform public.place_order_core(other_id, 'web', rest_id, good_items, other_addr_id, null, expected);
+    raise exception 'FAIL: a logged-in user could call place_order_core';
+  exception when insufficient_privilege then null;
+  end;
+  reset role;
+  set local role anon;
+  begin
+    perform public.place_order_core(other_id, 'web', rest_id, good_items, other_addr_id, null, expected);
+    raise exception 'FAIL: a visitor could call place_order_core';
+  exception when insufficient_privilege then null;
+  end;
+  reset role;
+
+  -- ============ 11c. The server can place a WhatsApp order (same rules, channel whatsapp) ============
+  select count(*) into n from public.orders where id = order1 and channel = 'web';
+  if n <> 1 then raise exception 'FAIL: website orders must be recorded with channel web'; end if;
+  set local role service_role;
+  order2 := public.place_order_core(other_id, 'whatsapp', rest_id, good_items, other_addr_id, null, expected);
+  reset role;
+  select count(*) into n from public.orders where id = order2 and customer_id = other_id and channel = 'whatsapp';
+  if n <> 1 then raise exception 'FAIL: WhatsApp order not created with channel whatsapp'; end if;
+  update public.menu_items set is_available = false where id = item2;
+  set local role service_role;
+  begin
+    perform public.place_order_core(other_id, 'whatsapp', rest_id, good_items, other_addr_id, null, expected);
+    raise exception 'FAIL: WhatsApp order ignored the sold-out rule';
+  exception when others then
+    if sqlerrm <> 'item_unavailable' then raise exception 'FAIL: expected item_unavailable (whatsapp), got: %', sqlerrm; end if;
+  end;
+  reset role;
+  update public.menu_items set is_available = true where id = item2;
+
   -- ============ 12. Order limit (5 per 10 minutes) ============
   -- 1 order exists already; add 4 more directly, then a different order must be refused.
   insert into public.orders (customer_id, restaurant_id, subtotal, delivery_fee, total, customer_name, customer_phone, delivery_address)

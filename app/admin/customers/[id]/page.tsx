@@ -33,7 +33,7 @@ export default async function AdminCustomerPage({ params }: PageProps<"/admin/cu
           <h2 className="font-semibold">Details</h2>
           <dl className="grid grid-cols-[6rem_1fr] gap-y-1 text-sm">
             <dt className="text-stone-500">Email</dt>
-            <dd className="break-all">{email ?? "-"}</dd>
+            <dd className="break-all">{email ?? (profile.whatsapp_phone ? "WhatsApp customer (no email)" : "-")}</dd>
             <dt className="text-stone-500">Phone</dt>
             <dd>{profile.phone ?? "-"}</dd>
             <dt className="text-stone-500">Role</dt>

@@ -78,6 +78,7 @@ export type AdminCustomer = {
   full_name: string | null;
   phone: string | null;
   email: string | null;
+  whatsapp_phone: string | null;
   created_at: string | null;
   orderCount: number;
   spent: number; // excludes cancelled orders
@@ -90,13 +91,18 @@ async function emailsById(): Promise<Map<string, string>> {
   await requireAdmin();
   const { data, error } = await createAdminClient().auth.admin.listUsers({ page: 1, perPage: 1000 });
   if (error) throw new Error(`Could not load customer emails: ${error.message}`);
-  return new Map(data.users.filter((user) => user.email).map((user) => [user.id, user.email as string]));
+  // WhatsApp customers have a made-up, undeliverable address: don't show it as an email.
+  return new Map(
+    data.users
+      .filter((user) => user.email && !user.email.endsWith("@whatsapp.invalid"))
+      .map((user) => [user.id, user.email as string]),
+  );
 }
 
 export async function getAdminCustomers(search: string): Promise<AdminCustomer[]> {
   const supabase = await createClient();
   const [profiles, orders, emails] = await Promise.all([
-    supabase.from("profiles").select("id, role, full_name, phone, created_at").limit(1000),
+    supabase.from("profiles").select("id, role, full_name, phone, whatsapp_phone, created_at").limit(1000),
     supabase.from("orders").select("customer_id, total, status, placed_at").limit(10000),
     emailsById(),
   ]);
@@ -122,6 +128,7 @@ export async function getAdminCustomers(search: string): Promise<AdminCustomer[]
         full_name: profile.full_name,
         phone: profile.phone,
         email: emails.get(profile.id) ?? null,
+        whatsapp_phone: profile.whatsapp_phone ?? null,
         created_at: profile.created_at ?? null,
         orderCount: entry?.count ?? 0,
         spent: Math.round((entry?.spent ?? 0) * 100) / 100,
@@ -131,7 +138,7 @@ export async function getAdminCustomers(search: string): Promise<AdminCustomer[]
     .filter(
       (customer) =>
         !needle ||
-        [customer.full_name, customer.phone, customer.email]
+        [customer.full_name, customer.phone, customer.email, customer.whatsapp_phone]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(needle)),
     )
@@ -141,7 +148,7 @@ export async function getAdminCustomers(search: string): Promise<AdminCustomer[]
 export async function getAdminCustomer(id: string) {
   const supabase = await createClient();
   const [profile, addresses, orders, emails] = await Promise.all([
-    supabase.from("profiles").select("id, role, full_name, phone, created_at").eq("id", id).maybeSingle(),
+    supabase.from("profiles").select("id, role, full_name, phone, whatsapp_phone, created_at").eq("id", id).maybeSingle(),
     supabase.from("customer_addresses").select("*").eq("user_id", id).order("is_default", { ascending: false }),
     supabase
       .from("orders")

@@ -1,5 +1,5 @@
 import QRCode from "qrcode";
-import { restaurantUrl } from "@/lib/utils/site";
+import { restaurantUrl, restaurantWhatsAppUrl } from "@/lib/utils/site";
 import { ShareActions } from "@/components/restaurant/ShareActions";
 
 // Shows a restaurant's ordering link and QR code, with copy / download buttons.
@@ -32,7 +32,7 @@ export async function ShareCard({ name, slug }: { name: string; slug: string }) 
           className="size-40 shrink-0 overflow-hidden rounded-xl border border-border bg-white [&>svg]:size-full"
           dangerouslySetInnerHTML={{ __html: svg }}
         />
-        <ShareActions url={url} name={name} slug={slug} />
+        <ShareActions url={url} name={name} slug={slug} whatsappUrl={restaurantWhatsAppUrl(slug)} />
       </div>
     </section>
   );
