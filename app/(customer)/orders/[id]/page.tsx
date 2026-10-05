@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/session";
 import { getMyOrder } from "@/lib/queries/orders";
 import { isUuid } from "@/lib/validation/menu";
 import { formatDateTime, formatPrice } from "@/lib/utils/format";
+import { isOrderOverdue } from "@/lib/orders/overdue";
 import { LiveUpdates } from "@/components/LiveUpdates";
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
 import { OrderTimeline } from "@/components/order/OrderTimeline";
@@ -26,6 +27,7 @@ export default async function OrderPage({
   const { placed } = await searchParams;
   const restaurant = order.restaurants;
   const address = order.delivery_address;
+  const overdue = isOrderOverdue(order.status, order.placed_at);
   const isActive = ["pending", "accepted", "preparing", "out_for_delivery"].includes(order.status);
 
   return (
@@ -34,7 +36,7 @@ export default async function OrderPage({
       {placed === "1" && (
         <p role="status" className="rounded-xl bg-green-50 p-4 text-green-900">
           <span className="font-semibold">Order placed!</span> {restaurant?.name ?? "The restaurant"} has
-          been notified and will start preparing it.
+          received it and will start preparing it.
         </p>
       )}
 
@@ -50,6 +52,23 @@ export default async function OrderPage({
           <OrderStatusBadge status={order.status} />
         </div>
       </div>
+
+      {overdue && (
+        <p role="status" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
+          This is taking longer than usual.{" "}
+          {restaurant?.phone ? (
+            <>
+              You can call {restaurant.name} on{" "}
+              <a href={`tel:${restaurant.phone}`} className="font-semibold underline">
+                {restaurant.phone}
+              </a>
+              .
+            </>
+          ) : (
+            "Please try again in a few minutes."
+          )}
+        </p>
+      )}
 
       {(order.status === "cancelled" || order.status === "rejected") ? (
         <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">

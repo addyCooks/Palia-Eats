@@ -217,6 +217,20 @@ begin
   if order2 <> order1 then raise exception 'FAIL: another day off blocked today''s order'; end if;
   update public.restaurants set closed_days = '{}' where id = rest_id;
 
+  -- ============ 9c. Menu changes AFTER ordering never rewrite the order ============
+  update public.menu_items set price = price + 50 where id = item1;
+  select unit_price into t from public.order_items where order_id = order1 and item_name = 'Margherita';
+  if t <> 199.00 then raise exception 'FAIL: a later price change altered a past order (%)', t; end if;
+  delete from public.menu_items where id = item2;
+  select count(*) into n from public.order_items
+    where order_id = order1 and item_name = 'Farmhouse' and menu_item_id is null and unit_price = 279.00;
+  if n <> 1 then raise exception 'FAIL: deleting a dish damaged a past order'; end if;
+  -- put the dish back for the remaining checks
+  insert into public.menu_items (id, restaurant_id, category_id, name, price, is_available)
+    select item2, restaurant_id, category_id, 'Farmhouse', 279.00, true
+    from public.menu_items where id = item1;
+  update public.menu_items set price = 199.00 where id = item1;
+
   -- ============ 10. No phone number anywhere ============
   update public.profiles set phone = null where id = cust_id;
   set local role authenticated;

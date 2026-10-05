@@ -38,6 +38,9 @@ export default async function AdminRestaurantsPage() {
                     <span className="text-stone-600">
                       Delivery {formatPrice(restaurant.delivery_fee)}
                     </span>
+                    {!restaurant.restaurant_private?.notification_email && (
+                      <Badge tone="danger">No order email set</Badge>
+                    )}
                     <Badge tone={restaurant.is_active ? "success" : "danger"}>
                       {restaurant.is_active ? "Visible" : "Hidden"}
                     </Badge>

@@ -26,6 +26,12 @@ export default async function EditRestaurantPage({
       </Link>
       <h1 className="mb-6 mt-2 text-2xl font-bold">{restaurant.name}</h1>
       <div className="flex flex-col gap-6">
+        {!restaurant.restaurant_private?.notification_email && (
+          <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-800">
+            <strong>No order email is set.</strong> This restaurant will NOT be told about new orders. Add a
+            notification email in the form below.
+          </p>
+        )}
         <Link
           href={`/admin/restaurants/${restaurant.id}/menu`}
           className="rounded-2xl border border-border bg-surface p-4 font-semibold shadow-sm hover:bg-muted"
