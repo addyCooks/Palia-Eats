@@ -23,6 +23,9 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
             <Link href="/panel/menu" className="rounded-lg px-3 py-2 hover:bg-muted">
               Menu
             </Link>
+            <Link href="/panel/share" className="rounded-lg px-3 py-2 hover:bg-muted">
+              Share
+            </Link>
             <Link
               href={`/restaurants/${restaurant.slug}`}
               className="rounded-lg px-3 py-2 text-stone-500 hover:bg-muted"

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getAdminRestaurant } from "@/lib/queries/restaurants";
 import { RestaurantForm } from "@/components/admin/RestaurantForm";
 import { PanelKeyCard } from "@/components/admin/PanelKeyCard";
+import { ShareCard } from "@/components/restaurant/ShareCard";
 
 export const metadata: Metadata = { title: "Edit restaurant" };
 
@@ -35,6 +36,7 @@ export default async function EditRestaurantPage({
           restaurantId={restaurant.id}
           createdAt={restaurant.restaurant_private?.panel_key_created_at ?? null}
         />
+        <ShareCard name={restaurant.name} slug={restaurant.slug} />
         <RestaurantForm restaurant={restaurant} />
       </div>
     </>
