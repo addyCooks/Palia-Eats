@@ -48,7 +48,7 @@ export async function adminUpdateOrderStatus(input: {
   after(() =>
     handleOrderEvent({ type: "status_changed", orderId: input.orderId, status: input.status }),
   );
-  revalidatePath("/admin/orders");
+  revalidatePath("/admin/orders", "layout");
   revalidatePath("/admin");
   return {};
 }

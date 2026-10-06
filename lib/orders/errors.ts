@@ -30,6 +30,8 @@ export function orderErrorMessage(code: string, detail?: string | null): string 
       return "Prices changed while you were ordering. We've updated your cart, so please check the new total.";
     case "too_many_orders":
       return "You've placed several orders in the last few minutes. Please wait a little before ordering again.";
+    case "account_blocked":
+      return "This account can't place orders right now. Please contact PaliaEats if you think this is a mistake.";
     case "notes_too_long":
       return "Your note is too long. Please keep it under 300 characters.";
     default:

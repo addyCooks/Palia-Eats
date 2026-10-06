@@ -1,5 +1,6 @@
 "use client";
 
+import { keepValues } from "@/lib/forms";
 import { useActionState } from "react";
 import { signup } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
@@ -17,7 +18,7 @@ export function SignupForm({ next }: { next?: string }) {
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form onSubmit={keepValues(formAction)} className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next ?? ""} />
       <Input
         label="Full name"
@@ -45,7 +46,7 @@ export function SignupForm({ next }: { next?: string }) {
           {state.error}
         </p>
       )}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" size="lg" className="h-[54px]" disabled={pending}>
         {pending ? "Creating account..." : "Create account"}
       </Button>
     </form>

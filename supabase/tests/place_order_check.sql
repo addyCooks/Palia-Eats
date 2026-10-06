@@ -18,6 +18,7 @@ declare
   good_items jsonb;
   order1 uuid;
   order2 uuid;
+  order3 uuid;
   n int;
   t numeric;
   win_start time := ((now() at time zone 'Asia/Kolkata') + interval '2 hours')::time;
@@ -288,8 +289,103 @@ begin
   reset role;
   update public.menu_items set is_available = true where id = item2;
 
+  -- ============ 11d. Half plates ============
+  update public.menu_items set half_price = null where id = item1;
+  set local role authenticated;
+  begin
+    perform public.place_order(rest_id,
+      jsonb_build_array(jsonb_build_object('id', item1, 'quantity', 1, 'variant', 'half')), addr_id, null, 0);
+    raise exception 'FAIL: expected item_unavailable (dish has no half plate)';
+  exception when others then
+    if sqlerrm <> 'item_unavailable' then raise exception 'FAIL: expected item_unavailable (no half), got: %', sqlerrm; end if;
+  end;
+  reset role;
+  update public.menu_items set half_price = 120.00 where id = item1;
+  set local role authenticated;
+  begin
+    perform public.place_order(rest_id,
+      jsonb_build_array(jsonb_build_object('id', item1, 'quantity', 1, 'variant', 'quarter')), addr_id, null, 0);
+    raise exception 'FAIL: expected invalid_items (unknown variant)';
+  exception when others then
+    if sqlerrm <> 'invalid_items' then raise exception 'FAIL: expected invalid_items (variant), got: %', sqlerrm; end if;
+  end;
+  begin
+    perform public.place_order(rest_id,
+      jsonb_build_array(jsonb_build_object('id', item1, 'quantity', 1, 'variant', 'half'),
+                        jsonb_build_object('id', item1, 'quantity', 1, 'variant', 'half')), addr_id, null, 0);
+    raise exception 'FAIL: expected invalid_items (duplicate half line)';
+  exception when others then
+    if sqlerrm <> 'invalid_items' then raise exception 'FAIL: expected invalid_items (dup half), got: %', sqlerrm; end if;
+  end;
+  -- Half and full of the same dish in one order is fine: 2 x 120 + 1 x 199 + 1 x 279 = 718
+  order3 := public.place_order(rest_id,
+    jsonb_build_array(jsonb_build_object('id', item1, 'quantity', 2, 'variant', 'half'),
+                      jsonb_build_object('id', item1, 'quantity', 1, 'variant', 'full'),
+                      jsonb_build_object('id', item2, 'quantity', 1)), addr_id, null, 718.00 + fee);
+  reset role;
+  select count(*) into n from public.orders where id = order3 and subtotal = 718.00;
+  if n <> 1 then raise exception 'FAIL: half-plate order total wrong'; end if;
+  select count(*) into n from public.order_items
+    where order_id = order3 and item_name = 'Margherita (Half)' and variant = 'half'
+      and unit_price = 120.00 and quantity = 2 and line_total = 240.00;
+  if n <> 1 then raise exception 'FAIL: half-plate line not saved correctly'; end if;
+  select count(*) into n from public.order_items
+    where order_id = order3 and variant = 'full' and item_name in ('Margherita', 'Farmhouse');
+  if n <> 2 then raise exception 'FAIL: full-plate lines not saved correctly'; end if;
+
+  -- ============ 11e. Blocked customer ============
+  update public.profiles set is_blocked = true where id = cust_id;
+  set local role authenticated;
+  begin
+    perform public.place_order(rest_id, good_items, addr_id, null, expected);
+    raise exception 'FAIL: expected account_blocked';
+  exception when others then
+    if sqlerrm <> 'account_blocked' then raise exception 'FAIL: expected account_blocked, got: %', sqlerrm; end if;
+  end;
+  reset role;
+  update public.profiles set is_blocked = false where id = cust_id;
+
+  -- ============ 11f. Status timeline and ratings ============
+  select count(*) into n from public.order_status_events where order_id = order3 and status = 'pending';
+  if n <> 1 then raise exception 'FAIL: placing an order did not log a pending event'; end if;
+  set local role authenticated;
+  begin
+    insert into public.order_ratings (order_id, customer_id, restaurant_id, stars) values (order3, cust_id, rest_id, 5);
+    raise exception 'FAIL: rated an order that was not delivered yet';
+  exception when insufficient_privilege then null;
+  end;
+  reset role;
+  update public.orders set status = 'preparing' where id = order3;
+  update public.orders set status = 'out_for_delivery' where id = order3;
+  update public.orders set status = 'delivered' where id = order3;
+  select count(*) into n from public.order_status_events where order_id = order3;
+  if n <> 4 then raise exception 'FAIL: expected 4 status events, got %', n; end if;
+  -- someone else's delivered order cannot be rated
+  update public.orders set status = 'preparing' where id = order2;
+  update public.orders set status = 'out_for_delivery' where id = order2;
+  update public.orders set status = 'delivered' where id = order2;
+  set local role authenticated;
+  begin
+    insert into public.order_ratings (order_id, customer_id, restaurant_id, stars) values (order2, cust_id, rest_id, 1);
+    raise exception 'FAIL: rated someone else''s order';
+  exception when insufficient_privilege then null;
+  end;
+  insert into public.order_ratings (order_id, customer_id, restaurant_id, stars, comment)
+    values (order3, cust_id, rest_id, 4, 'Good');
+  begin
+    insert into public.order_ratings (order_id, customer_id, restaurant_id, stars) values (order3, cust_id, rest_id, 1);
+    raise exception 'FAIL: rated the same order twice';
+  exception when unique_violation then null;
+  end;
+  reset role;
+  select count(*) into n from public.restaurants r
+    where r.id = rest_id
+      and r.rating_count = (select count(*) from public.order_ratings where restaurant_id = rest_id)
+      and r.rating_avg = (select round(avg(stars)::numeric, 1) from public.order_ratings where restaurant_id = rest_id);
+  if n <> 1 then raise exception 'FAIL: restaurant rating was not updated'; end if;
+
   -- ============ 12. Order limit (5 per 10 minutes) ============
-  -- 1 order exists already; add 4 more directly, then a different order must be refused.
+  -- 2 orders exist already; add 4 more directly, then a different order must be refused.
   insert into public.orders (customer_id, restaurant_id, subtotal, delivery_fee, total, customer_name, customer_phone, delivery_address)
   select cust_id, rest_id, 1, 0, 1, 'x', 'x', '{}' from generate_series(1, 4);
   set local role authenticated;

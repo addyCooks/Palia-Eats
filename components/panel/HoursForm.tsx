@@ -1,5 +1,6 @@
 "use client";
 
+import { keepValues } from "@/lib/forms";
 import { useActionState } from "react";
 import { updatePanelHours, type PanelHoursState } from "@/lib/actions/panel";
 import { Button } from "@/components/ui/Button";
@@ -23,7 +24,7 @@ export function HoursForm({ openingTime, closingTime, closedDays }: HoursFormPro
   );
 
   return (
-    <form action={formAction}>
+    <form onSubmit={keepValues(formAction)}>
       <Card className="flex flex-col gap-4">
         <div>
           <h2 className="text-lg font-semibold">Opening hours</h2>

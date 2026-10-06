@@ -4,15 +4,31 @@ type QuantityStepperProps = {
   quantity: number;
   onChange: (quantity: number) => void;
   itemName: string;
+  // "solid": filled saffron, as on the menu. "outline": the quieter bordered version
+  // used inside the cart (v2: border #ECE7DF, burnt-orange − and +).
+  variant?: "solid" | "outline";
+  className?: string;
 };
 
 // The  [ − 2 + ]  control used on the menu and in the cart.
-export function QuantityStepper({ quantity, onChange, itemName }: QuantityStepperProps) {
-  const buttonClass =
-    "flex size-9 items-center justify-center text-lg font-semibold text-brand hover:bg-brand/10 disabled:opacity-40";
+export function QuantityStepper({
+  quantity,
+  onChange,
+  itemName,
+  variant = "outline",
+  className = "",
+}: QuantityStepperProps) {
+  const solid = variant === "solid";
+  const buttonClass = solid
+    ? "flex h-full w-9 items-center justify-center text-xl font-semibold text-on-brand hover:bg-black/10"
+    : "flex h-full w-8 items-center justify-center text-lg font-semibold text-accent hover:bg-muted";
 
   return (
-    <div className="inline-flex items-center overflow-hidden rounded-xl border border-brand">
+    <div
+      className={`inline-flex h-8 items-center justify-between overflow-hidden rounded-lg ${
+        solid ? "bg-brand text-on-brand" : "border border-border bg-surface"
+      } ${className}`}
+    >
       <button
         type="button"
         className={buttonClass}
@@ -21,7 +37,7 @@ export function QuantityStepper({ quantity, onChange, itemName }: QuantitySteppe
       >
         −
       </button>
-      <span className="min-w-8 text-center text-sm font-semibold" aria-live="polite">
+      <span className="min-w-6 text-center text-sm font-semibold tabular-nums" aria-live="polite">
         {quantity}
       </span>
       <button

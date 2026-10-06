@@ -6,6 +6,7 @@ export type Profile = {
   full_name: string | null;
   phone: string | null;
   whatsapp_opt_in: boolean;
+  is_blocked: boolean;
 };
 
 export type Address = {
@@ -45,6 +46,10 @@ export type Restaurant = {
   template_key: string | null;
   is_accepting_orders: boolean;
   is_active: boolean;
+  area: string | null;
+  rating_avg: number | null;
+  rating_count: number;
+  created_at?: string;
 };
 
 // Admin-only fields (table `restaurant_private`).
@@ -52,6 +57,8 @@ export type RestaurantPrivate = {
   notification_email: string | null;
   notification_phone: string | null;
   panel_key_created_at: string | null;
+  owner_name: string | null;
+  commission_percent: number;
 };
 
 export type MenuCategory = {
@@ -72,7 +79,13 @@ export type MenuItem = {
   is_veg: boolean;
   is_available: boolean;
   sort_order: number;
+  is_bestseller: boolean;
+  contains_egg: boolean;
+  prep_minutes: number | null;
+  half_price: number | null; // null = no half plate
 };
+
+export type PlateSize = "full" | "half";
 
 export type OrderStatus =
   | "pending"
@@ -86,10 +99,12 @@ export type OrderStatus =
 export type OrderItem = {
   id: string;
   order_id: string;
+  menu_item_id: string | null; // null if the dish was deleted later
   item_name: string;
   unit_price: number;
   quantity: number;
   line_total: number;
+  variant: PlateSize;
 };
 
 export type Order = {
@@ -116,6 +131,7 @@ export type Order = {
   cancelled_by: "restaurant" | "admin" | "customer" | null;
   placed_at: string;
   status_updated_at: string;
+  rider_id: string | null;
 };
 
 export type OrderWithDetails = Order & {
@@ -125,4 +141,37 @@ export type OrderWithDetails = Order & {
 
 export type AdminRestaurant = Restaurant & {
   restaurant_private: RestaurantPrivate | null;
+};
+
+export type Rider = {
+  id: string;
+  name: string;
+  phone: string;
+  restaurant_id: string | null; // null = a PaliaEats rider who can deliver for anyone
+  is_active: boolean;
+  created_at: string;
+};
+
+export type OrderStatusEvent = {
+  status: OrderStatus;
+  at: string;
+};
+
+export type OrderRating = {
+  order_id: string;
+  stars: number;
+  comment: string | null;
+  created_at: string;
+};
+
+export type RestaurantPayout = {
+  id: string;
+  restaurant_id: string;
+  week_start: string;
+  week_end: string;
+  gross: number;
+  commission_percent: number;
+  commission: number;
+  net: number;
+  paid_at: string;
 };

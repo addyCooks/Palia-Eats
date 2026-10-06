@@ -1,66 +1,101 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { getAdminOrders, type AdminOrderFilter } from "@/lib/queries/admin";
-import { adminUpdateOrderStatus } from "@/lib/actions/admin-orders";
+import { ADMIN_PAGE_SIZE, getAdminOrders, type AdminOrderFilter } from "@/lib/queries/admin";
+import { wholeRupees } from "@/lib/orders/stats";
 import { LiveUpdates } from "@/components/LiveUpdates";
-import { StaffOrderCard } from "@/components/order/StaffOrderCard";
+import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
+import {
+  Cell,
+  DataRow,
+  DataTable,
+  FilterChips,
+  PageHeader,
+  Pagination,
+  SearchBox,
+  TableEmpty,
+  hrefWith,
+  pageNumber,
+  param,
+} from "@/components/ui/page";
 
 export const metadata: Metadata = { title: "Orders" };
 
-const TABS: { key: AdminOrderFilter; label: string }[] = [
-  { key: "active", label: "Active" },
-  { key: "done", label: "Delivered & cancelled" },
+const CHIPS: { key: AdminOrderFilter; label: string }[] = [
   { key: "all", label: "All" },
+  { key: "new", label: "New" },
+  { key: "cooking", label: "Cooking" },
+  { key: "way", label: "On the way" },
+  { key: "delivered", label: "Delivered" },
+  { key: "cancelled", label: "Cancelled" },
 ];
 
-export default async function AdminOrdersPage({ searchParams }: PageProps<"/admin/orders">) {
-  const { show } = await searchParams;
-  const filter: AdminOrderFilter = show === "all" || show === "done" ? show : "active";
+const COLUMNS = "100px minmax(0,1.3fr) minmax(0,1.3fr) minmax(0,1fr) 90px 110px";
 
-  const orders = await getAdminOrders(filter);
+export default async function AdminOrdersPage({ searchParams }: PageProps<"/admin/orders">) {
+  const params = await searchParams;
+  const search = param(params.q);
+  const raw = param(params.status);
+  const filter: AdminOrderFilter = CHIPS.some((chip) => chip.key === raw) ? (raw as AdminOrderFilter) : "all";
+  const page = pageNumber(params.page);
+
+  const { orders, total, today, restaurantsToday } = await getAdminOrders({ filter, search, page });
+  const keep = { q: search || undefined, status: filter === "all" ? undefined : filter };
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Orders</h1>
+      <PageHeader
+        title="All orders"
+        sub={`${today} today across ${restaurantsToday} ${restaurantsToday === 1 ? "restaurant" : "restaurants"}`}
+      >
         <LiveUpdates tables={[{ table: "orders" }]} showStatus />
-      </div>
+        <SearchBox
+          action="/admin/orders"
+          value={search}
+          placeholder="Order, customer or restaurant"
+          keep={{ status: keep.status }}
+        />
+      </PageHeader>
 
-      <nav aria-label="Order filter" className="mt-4 flex flex-wrap gap-2">
-        {TABS.map((tab) => (
-          <Link
-            key={tab.key}
-            href={tab.key === "active" ? "/admin/orders" : `/admin/orders?show=${tab.key}`}
-            aria-current={tab.key === filter ? "page" : undefined}
-            className={`rounded-full border px-4 py-1.5 text-sm font-medium ${
-              tab.key === filter
-                ? "border-brand bg-brand text-on-brand"
-                : "border-border bg-surface hover:bg-muted"
-            }`}
-          >
-            {tab.label}
-          </Link>
+      <FilterChips
+        label="Filter orders"
+        chips={CHIPS}
+        active={filter}
+        hrefFor={(key) => hrefWith("/admin/orders", keep, { status: key === "all" ? undefined : key, page: undefined })}
+      />
+
+      <DataTable
+        columns={COLUMNS}
+        headers={["ORDER", "RESTAURANT", "CUSTOMER", "RIDER", "TOTAL", "STATUS"]}
+        empty={
+          orders.length === 0 ? (
+            <TableEmpty>{search || filter !== "all" ? "No orders match that." : "No orders yet."}</TableEmpty>
+          ) : undefined
+        }
+        footer={
+          <Pagination
+            page={page}
+            pageSize={ADMIN_PAGE_SIZE}
+            total={total}
+            hrefFor={(n) => hrefWith("/admin/orders", keep, { page: n > 1 ? String(n) : undefined })}
+          />
+        }
+      >
+        {orders.map((order) => (
+          <DataRow key={order.id} columns={COLUMNS} href={`/admin/orders/${order.id}`}>
+            <Cell strong>#{order.order_number}</Cell>
+            <Cell strong>{order.restaurants?.name ?? "—"}</Cell>
+            <Cell>
+              {order.customer_name}
+              {order.channel === "whatsapp" ? " · WhatsApp" : ""}
+            </Cell>
+            <Cell>{order.riders?.name ?? "—"}</Cell>
+            <Cell strong>{wholeRupees(order.total)}</Cell>
+            <span>
+              <OrderStatusBadge status={order.status} />
+            </span>
+          </DataRow>
         ))}
-      </nav>
-
-      {orders.length === 0 ? (
-        <p className="mt-8 rounded-2xl border border-dashed border-border p-8 text-center text-stone-500">
-          No orders here yet.
-        </p>
-      ) : (
-        <ul className="mt-6 grid gap-4 lg:grid-cols-2">
-          {orders.map((order) => (
-            <li key={order.id}>
-              <StaffOrderCard
-                order={order}
-                restaurantName={order.restaurants?.name}
-                updateStatus={adminUpdateOrderStatus}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-      <p className="mt-6 text-xs text-stone-500">Showing up to the latest 50 orders. Updates instantly.</p>
+      </DataTable>
+      <p className="text-xs text-stone-500">Tap an order to move it along, cancel it or put a rider on it. Updates live.</p>
     </>
   );
 }

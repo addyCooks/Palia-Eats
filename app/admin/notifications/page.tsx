@@ -1,66 +1,51 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getNotificationLog } from "@/lib/queries/admin";
 import { formatDateTime } from "@/lib/utils/format";
 import { Badge } from "@/components/ui/Badge";
+import { FilterChips, PageHeader } from "@/components/ui/page";
 
-export const metadata: Metadata = { title: "Notifications" };
+export const metadata: Metadata = { title: "Message log" };
 
-const TONES = { sent: "success", failed: "danger", skipped: "warning" } as const;
+const TONES = { sent: "neutral", failed: "error", skipped: "new" } as const;
 
-export default async function AdminNotificationsPage({
-  searchParams,
-}: PageProps<"/admin/notifications">) {
+export default async function AdminNotificationsPage({ searchParams }: PageProps<"/admin/notifications">) {
   const { show } = await searchParams;
   const onlyProblems = show !== "all";
   const rows = await getNotificationLog(onlyProblems);
 
-  const tabs = [
-    { key: "problems", label: "Problems", href: "/admin/notifications" },
-    { key: "all", label: "Everything", href: "/admin/notifications?show=all" },
-  ];
-
   return (
     <>
-      <h1 className="text-2xl font-bold">Notifications</h1>
-      <p className="mt-1 text-sm text-stone-600">
-        Every email we try to send about an order. &ldquo;Failed&rdquo; means the email provider refused
-        it after 3 tries; &ldquo;skipped&rdquo; usually means a restaurant has no notification email set.
+      <PageHeader
+        crumb="Settings › Message log"
+        title="Message log"
+        sub="Every email and WhatsApp message we try to send about an order."
+      />
+      <p className="-mt-2 max-w-2xl text-sm text-stone-600">
+        &ldquo;Failed&rdquo; means the provider refused it after 3 tries; &ldquo;skipped&rdquo; usually means a
+        restaurant has no notification email set.
       </p>
 
-      <nav aria-label="Filter" className="mt-4 flex gap-2">
-        {tabs.map((tab) => {
-          const active = (tab.key === "problems") === onlyProblems;
-          return (
-            <Link
-              key={tab.key}
-              href={tab.href}
-              aria-current={active ? "page" : undefined}
-              className={`rounded-full border px-4 py-1.5 text-sm font-medium ${
-                active ? "border-brand bg-brand text-on-brand" : "border-border bg-surface hover:bg-muted"
-              }`}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
-      </nav>
+      <FilterChips
+        label="Filter"
+        chips={[
+          { key: "problems", label: "Problems" },
+          { key: "all", label: "Everything" },
+        ]}
+        active={onlyProblems ? "problems" : "all"}
+        hrefFor={(key) => (key === "all" ? "/admin/notifications?show=all" : "/admin/notifications")}
+      />
 
       {rows.length === 0 ? (
-        <p className="mt-8 rounded-2xl border border-dashed border-border p-8 text-center text-stone-500">
+        <p className="rounded-2xl border border-dashed border-border p-8 text-center text-stone-500">
           {onlyProblems ? "No problems. Everything was delivered." : "Nothing sent yet."}
         </p>
       ) : (
-        <ul className="mt-6 flex flex-col gap-2">
+        <ul className="overflow-hidden rounded-[18px] bg-surface shadow-card">
           {rows.map((row) => (
-            <li
-              key={row.id}
-              className="flex flex-col gap-1 rounded-2xl border border-border bg-surface p-4 shadow-sm"
-            >
+            <li key={row.id} className="flex flex-col gap-1 border-b border-muted px-5 py-3.5 last:border-b-0">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-medium">
-                  {row.orders ? `Order #${row.orders.order_number}` : "No order"} ·{" "}
-                  {row.event.replaceAll("_", " ")}
+                <p className="font-semibold">
+                  {row.orders ? `Order #${row.orders.order_number}` : "No order"} · {row.event.replaceAll("_", " ")}
                 </p>
                 <Badge tone={TONES[row.status]}>{row.status}</Badge>
               </div>
@@ -74,7 +59,7 @@ export default async function AdminNotificationsPage({
           ))}
         </ul>
       )}
-      <p className="mt-6 text-xs text-stone-500">Showing the latest 100.</p>
+      <p className="text-xs text-stone-500">Showing the latest 100.</p>
     </>
   );
 }

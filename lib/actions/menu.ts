@@ -176,23 +176,23 @@ export async function deleteMenuItem(formData: FormData) {
   redirect(menuPath(restaurantId));
 }
 
-// One-click "sold out" / "available" switch from the menu list.
-export async function setItemAvailability(formData: FormData) {
+// The in-stock switch in the admin's menu table.
+export async function adminSetItemAvailability(input: {
+  itemId: string;
+  available: boolean;
+}): Promise<{ error?: string }> {
   await requireAdmin();
-  const restaurantId = readRestaurantId(formData);
-  const itemId = String(formData.get("itemId") ?? "");
-  if (!restaurantId || !isUuid(itemId)) throw new Error("Missing item.");
-
-  const makeAvailable = formData.get("available") === "true";
+  if (!isUuid(String(input?.itemId))) return { error: "Missing item." };
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("menu_items")
-    .update({ is_available: makeAvailable })
-    .eq("id", itemId)
-    .eq("restaurant_id", restaurantId);
-  if (error) throw new Error("Could not update the item.");
+    .update({ is_available: Boolean(input.available) })
+    .eq("id", input.itemId)
+    .select("restaurant_id");
+  if (error || !data?.length) return { error: "Could not update the item." };
 
-  revalidatePath(menuPath(restaurantId));
-  await refreshStorefront(restaurantId);
+  revalidatePath(menuPath(data[0].restaurant_id));
+  await refreshStorefront(data[0].restaurant_id);
+  return {};
 }

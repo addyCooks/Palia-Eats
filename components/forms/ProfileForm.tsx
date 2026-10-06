@@ -1,5 +1,6 @@
 "use client";
 
+import { keepValues } from "@/lib/forms";
 import { useActionState } from "react";
 import { updateProfile, type AccountFormState } from "@/lib/actions/account";
 import type { Profile } from "@/types/app";
@@ -13,7 +14,7 @@ export function ProfileForm({ profile, email }: { profile: Profile; email: strin
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form onSubmit={keepValues(formAction)} className="flex flex-col gap-4">
       <Input label="Email" value={email} readOnly disabled />
       <Input
         label="Full name"

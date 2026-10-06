@@ -9,6 +9,7 @@ import {
   cartTotal,
   setQuantity,
   type CartRestaurant,
+  type PlateSize,
 } from "@/lib/cart/cart";
 import {
   getCartSnapshot,
@@ -17,7 +18,7 @@ import {
   subscribeToCart,
 } from "@/lib/cart/store";
 
-type ItemToAdd = { id: string; name: string; price: number; isVeg: boolean };
+type ItemToAdd = { id: string; name: string; price: number; isVeg: boolean; variant?: PlateSize };
 
 // The one hook every cart component uses.
 export function useCart() {
@@ -27,8 +28,9 @@ export function useCart() {
     saveCart(addToCart(getCartSnapshot(), restaurant, item));
   }, []);
 
-  const changeQuantity = useCallback((menuItemId: string, quantity: number) => {
-    saveCart(setQuantity(getCartSnapshot(), menuItemId, quantity));
+  // `key` is the line's lineKey() (dish + plate size).
+  const changeQuantity = useCallback((key: string, quantity: number) => {
+    saveCart(setQuantity(getCartSnapshot(), key, quantity));
   }, []);
 
   const clearCart = useCallback(() => saveCart(EMPTY_CART), []);

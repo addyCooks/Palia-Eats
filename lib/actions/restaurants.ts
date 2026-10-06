@@ -33,6 +33,17 @@ function publicColumns(input: RestaurantInput, existingTheme: object = {}) {
     cover_url: input.cover_url,
     is_active: input.is_active,
     is_accepting_orders: input.is_accepting_orders,
+    area: input.area,
+  };
+}
+
+// The admin-only `restaurant_private` columns.
+function privateColumns(input: RestaurantInput) {
+  return {
+    notification_email: input.notification_email,
+    notification_phone: input.notification_phone,
+    owner_name: input.owner_name,
+    commission_percent: input.commission_percent,
   };
 }
 
@@ -61,13 +72,7 @@ export async function createRestaurant(
   }
 
   // A private row is created automatically by a database trigger; fill it in.
-  await supabase
-    .from("restaurant_private")
-    .update({
-      notification_email: input.notification_email,
-      notification_phone: input.notification_phone,
-    })
-    .eq("restaurant_id", created.id);
+  await supabase.from("restaurant_private").update(privateColumns(input)).eq("restaurant_id", created.id);
 
   revalidatePath("/admin/restaurants");
   redirect(`/admin/restaurants/${created.id}`);
@@ -104,17 +109,31 @@ export async function updateRestaurant(
 
   const { error: privateError } = await supabase
     .from("restaurant_private")
-    .update({
-      notification_email: input.notification_email,
-      notification_phone: input.notification_phone,
-    })
+    .update(privateColumns(input))
     .eq("restaurant_id", id);
   if (privateError) return { error: "Could not save notification details." };
 
-  revalidatePath("/admin/restaurants");
-  revalidatePath(`/admin/restaurants/${id}`);
+  revalidatePath("/admin/restaurants", "layout");
   revalidatePath(`/restaurants/${current.slug}`);
+  revalidatePath("/");
   return { saved: true };
+}
+
+// "Pause orders" / "Resume orders" on the restaurant detail page.
+export async function adminSetAccepting(input: { restaurantId: string; accepting: boolean }): Promise<{ error?: string }> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("restaurants")
+    .update({ is_accepting_orders: Boolean(input.accepting) })
+    .eq("id", String(input?.restaurantId))
+    .select("slug");
+  if (error || !data?.length) return { error: "Could not change this. Please try again." };
+
+  revalidatePath("/admin/restaurants", "layout");
+  revalidatePath(`/restaurants/${data[0].slug}`);
+  revalidatePath("/");
+  return {};
 }
 
 // Creates a new panel link. Moving "valid since" to now cancels EVERY older link,

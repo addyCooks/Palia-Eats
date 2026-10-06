@@ -4,13 +4,22 @@ import type { Restaurant } from "@/types/app";
 // The cart is kept in the visitor's browser. Prices here are for DISPLAY only:
 // at checkout the server re-reads real prices from the database.
 
+export type PlateSize = "full" | "half";
+
 export type CartItem = {
   menuItemId: string;
-  name: string;
-  price: number;
+  name: string; // the dish name, without "(Half)"
+  price: number; // the price of THIS plate size
   isVeg: boolean;
   quantity: number;
+  variant: PlateSize;
 };
+
+// A dish can be in the cart twice: once as a full plate and once as a half plate.
+export const lineKey = (line: { menuItemId: string; variant: PlateSize }) => `${line.menuItemId}:${line.variant}`;
+
+export const lineName = (line: { name: string; variant: PlateSize }) =>
+  line.variant === "half" ? `${line.name} (Half)` : line.name;
 
 export type CartRestaurant = {
   id: string;
@@ -68,38 +77,34 @@ export function isOtherRestaurant(cart: Cart, restaurantId: string): boolean {
 
 // ---- Changes (each returns a NEW cart; nothing is edited in place) ----------
 
-// Adds one of an item. If the cart belongs to another restaurant it is replaced,
+// Adds one plate of an item. If the cart belongs to another restaurant it is replaced,
 // so ask the visitor first (see AddToCartButton).
 export function addToCart(
   cart: Cart,
   restaurant: CartRestaurant,
-  item: { id: string; name: string; price: number; isVeg: boolean },
+  item: { id: string; name: string; price: number; isVeg: boolean; variant?: PlateSize },
 ): Cart {
   const base: Cart = isOtherRestaurant(cart, restaurant.id) ? EMPTY_CART : cart;
-  const existing = base.items.find((line) => line.menuItemId === item.id);
+  const variant: PlateSize = item.variant ?? "full";
+  const key = lineKey({ menuItemId: item.id, variant });
+  const existing = base.items.find((line) => lineKey(line) === key);
 
   const items = existing
     ? base.items.map((line) =>
-        line.menuItemId === item.id
-          ? { ...line, quantity: Math.min(line.quantity + 1, MAX_QUANTITY_PER_ITEM) }
-          : line,
+        lineKey(line) === key ? { ...line, quantity: Math.min(line.quantity + 1, MAX_QUANTITY_PER_ITEM) } : line,
       )
     : [
         ...base.items,
-        { menuItemId: item.id, name: item.name, price: item.price, isVeg: item.isVeg, quantity: 1 },
+        { menuItemId: item.id, name: item.name, price: item.price, isVeg: item.isVeg, quantity: 1, variant },
       ];
 
   return { restaurant, items };
 }
 
-// Sets an item's quantity. Zero (or less) removes it; an empty cart forgets its restaurant.
-export function setQuantity(cart: Cart, menuItemId: string, quantity: number): Cart {
+// Sets a line's quantity (key from lineKey). Zero removes it; an empty cart forgets its restaurant.
+export function setQuantity(cart: Cart, key: string, quantity: number): Cart {
   const items = cart.items
-    .map((line) =>
-      line.menuItemId === menuItemId
-        ? { ...line, quantity: Math.min(quantity, MAX_QUANTITY_PER_ITEM) }
-        : line,
-    )
+    .map((line) => (lineKey(line) === key ? { ...line, quantity: Math.min(quantity, MAX_QUANTITY_PER_ITEM) } : line))
     .filter((line) => line.quantity > 0);
 
   return items.length === 0 ? EMPTY_CART : { restaurant: cart.restaurant, items };
@@ -126,16 +131,24 @@ export function parseCart(raw: string | null): Cart {
       return EMPTY_CART;
     }
 
-    const items = data.items.filter(
-      (item): item is CartItem =>
-        typeof item?.menuItemId === "string" &&
-        typeof item.name === "string" &&
-        typeof item.price === "number" &&
-        typeof item.isVeg === "boolean" &&
-        Number.isInteger(item.quantity) &&
-        item.quantity > 0 &&
-        item.quantity <= MAX_QUANTITY_PER_ITEM,
-    );
+    const items = (data.items as unknown[])
+      // Carts saved before half plates existed have no variant: those are full plates.
+      .map((item) =>
+        item && typeof item === "object" && !("variant" in item) ? { ...(item as object), variant: "full" } : item,
+      )
+      .filter((item): item is CartItem => {
+        const line = item as Partial<CartItem> | null;
+        return (
+          typeof line?.menuItemId === "string" &&
+          typeof line.name === "string" &&
+          typeof line.price === "number" &&
+          typeof line.isVeg === "boolean" &&
+          (line.variant === "full" || line.variant === "half") &&
+          Number.isInteger(line.quantity) &&
+          (line.quantity ?? 0) > 0 &&
+          (line.quantity ?? 0) <= MAX_QUANTITY_PER_ITEM
+        );
+      });
 
     return items.length === 0 ? EMPTY_CART : { restaurant, items };
   } catch {

@@ -1,5 +1,6 @@
 "use client";
 
+import { keepValues } from "@/lib/forms";
 import { useActionState } from "react";
 import {
   createRestaurant,
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { ClosedDaysField } from "@/components/restaurant/ClosedDaysField";
+import { FormToggle } from "@/components/ui/Toggle";
 
 // Postgres returns times as "10:00:00"; <input type="time"> wants "10:00".
 const toTimeInput = (time: string | null | undefined) => time?.slice(0, 5) ?? "";
@@ -27,7 +29,7 @@ export function RestaurantForm({ restaurant }: { restaurant?: AdminRestaurant })
   const priv = restaurant?.restaurant_private;
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <form onSubmit={keepValues(formAction)} className="flex flex-col gap-6">
       {restaurant && <input type="hidden" name="restaurantId" value={restaurant.id} />}
 
       <Card className="flex flex-col gap-4">
@@ -60,6 +62,21 @@ export function RestaurantForm({ restaurant }: { restaurant?: AdminRestaurant })
         />
         <Input label="Phone" name="phone" type="tel" defaultValue={restaurant?.phone ?? ""} />
         <Input label="Address" name="address_text" defaultValue={restaurant?.address_text ?? ""} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Input
+            label="Area (shown to customers)"
+            name="area"
+            placeholder="Main Chowk"
+            maxLength={60}
+            defaultValue={restaurant?.area ?? ""}
+          />
+          <Input
+            label="Owner name (private)"
+            name="owner_name"
+            maxLength={80}
+            defaultValue={priv?.owner_name ?? ""}
+          />
+        </div>
       </Card>
 
       <Card className="flex flex-col gap-4">
@@ -153,27 +170,30 @@ export function RestaurantForm({ restaurant }: { restaurant?: AdminRestaurant })
           type="tel"
           defaultValue={priv?.notification_phone ?? ""}
         />
+        <Input
+          label="PaliaEats commission (%)"
+          name="commission_percent"
+          type="number"
+          min="0"
+          max="50"
+          step="0.01"
+          defaultValue={priv?.commission_percent ?? 8}
+        />
       </Card>
 
       <Card className="flex flex-col gap-3">
         <h2 className="font-semibold">Status</h2>
-        <label className="flex items-center gap-3 text-sm">
-          <input
-            type="checkbox"
-            name="is_active"
-            defaultChecked={restaurant?.is_active ?? true}
-            className="size-5 accent-brand"
-          />
-          Visible on the website
+        <label className="flex items-center justify-between gap-3 text-sm font-medium">
+          Visible on the website (off = waiting for approval)
+          <FormToggle name="is_active" defaultChecked={restaurant?.is_active ?? true} label="Visible on the website" />
         </label>
-        <label className="flex items-center gap-3 text-sm">
-          <input
-            type="checkbox"
+        <label className="flex items-center justify-between gap-3 text-sm font-medium">
+          Currently accepting orders
+          <FormToggle
             name="is_accepting_orders"
             defaultChecked={restaurant?.is_accepting_orders ?? true}
-            className="size-5 accent-brand"
+            label="Currently accepting orders"
           />
-          Currently accepting orders
         </label>
       </Card>
 
@@ -183,7 +203,7 @@ export function RestaurantForm({ restaurant }: { restaurant?: AdminRestaurant })
         </p>
       )}
       {state?.saved && (
-        <p role="status" className="rounded-xl bg-green-50 p-3 text-sm text-green-800">
+        <p role="status" className="rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
           Changes saved.
         </p>
       )}

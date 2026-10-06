@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { EMPTY_CART, type Cart, type CartItem } from "@/lib/cart/cart";
+import { EMPTY_CART, lineName, type Cart, type CartItem } from "@/lib/cart/cart";
 import { formatPrice } from "@/lib/utils/format";
 import { getRestaurantStatus, type RestaurantStatus } from "@/lib/utils/hours";
 
@@ -28,7 +28,7 @@ export async function syncCartWithServer(cart: Cart): Promise<CartSyncResult> {
       .maybeSingle(),
     supabase
       .from("menu_items")
-      .select("id, name, price, is_available")
+      .select("id, name, price, half_price, is_available")
       .eq("restaurant_id", restaurant.id)
       .in("id", cart.items.map((item) => item.menuItemId)),
   ]);
@@ -54,15 +54,20 @@ export async function syncCartWithServer(cart: Cart): Promise<CartSyncResult> {
   for (const line of cart.items) {
     const current = liveItems.get(line.menuItemId);
     if (!current || !current.is_available) {
-      notices.push(`${line.name} is no longer available and was removed.`);
+      notices.push(`${lineName(line)} is no longer available and was removed.`);
       continue;
     }
-    if (current.price !== line.price) {
+    const livePrice = line.variant === "half" ? current.half_price : current.price;
+    if (livePrice === null) {
+      notices.push(`${current.name} no longer comes as a half plate, so it was removed.`);
+      continue;
+    }
+    if (livePrice !== line.price) {
       notices.push(
-        `The price of ${line.name} changed from ${formatPrice(line.price)} to ${formatPrice(current.price)}.`,
+        `The price of ${lineName(line)} changed from ${formatPrice(line.price)} to ${formatPrice(livePrice)}.`,
       );
     }
-    items.push({ ...line, name: current.name, price: current.price });
+    items.push({ ...line, name: current.name, price: livePrice });
   }
 
   if (live.delivery_fee !== restaurant.deliveryFee) {

@@ -15,7 +15,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
     typeof address === "string" && addresses.some((a) => a.id === address) ? address : undefined;
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 lg:px-12">
       <CheckoutView
         addresses={addresses}
         profilePhone={profile.phone}

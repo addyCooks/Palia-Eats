@@ -16,6 +16,8 @@ declare
   exp_items int;
   exp_private int;
   total_orders int;
+  rider1 uuid;
+  rider2 uuid;
 begin
   select id into rest_id from public.restaurants where slug = 'brown-pizza';
   -- What each person SHOULD see, worked out from the real data, so the test keeps
@@ -49,6 +51,14 @@ begin
   begin perform 1 from public.notification_log; raise exception 'FAIL: visitor can read the notification log';
   exception when insufficient_privilege then null; end;
   begin perform 1 from public.whatsapp_sessions; raise exception 'FAIL: visitor can read WhatsApp sessions';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.riders; raise exception 'FAIL: visitor can read riders';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.restaurant_payouts; raise exception 'FAIL: visitor can read payouts';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.order_status_events; raise exception 'FAIL: visitor can read order timelines';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.order_ratings; raise exception 'FAIL: visitor can read ratings';
   exception when insufficient_privilege then null; end;
   begin insert into public.restaurants (slug, name) values ('hack', 'hack'); raise exception 'FAIL: visitor can create restaurant';
   exception when insufficient_privilege then null; end;
@@ -86,6 +96,20 @@ begin
   exception when insufficient_privilege then null; end;
   select count(*) into n from public.notification_log;
   if n <> 0 then raise exception 'FAIL: customer can read the notification log'; end if;
+  -- v2: a customer cannot unblock themselves, sees no riders until one is on their order,
+  -- sees their own order's timeline, and never sees payouts.
+  begin update public.profiles set is_blocked = false where id = cust_id;
+    raise exception 'FAIL: customer can change own blocked flag';
+  exception when insufficient_privilege then null; end;
+  select count(*) into n from public.riders;
+  if n <> 0 then raise exception 'FAIL: customer sees riders not on their order'; end if;
+  select count(*) into n from public.order_status_events;
+  if n <> 1 then raise exception 'FAIL: customer should see 1 timeline event of own order, saw %', n; end if;
+  select count(*) into n from public.restaurant_payouts;
+  if n <> 0 then raise exception 'FAIL: customer can read payouts'; end if;
+  begin insert into public.riders (name, phone) values ('Me', '9876500009');
+    raise exception 'FAIL: customer can add riders';
+  exception when insufficient_privilege then null; end;
   begin insert into public.orders (customer_id, restaurant_id, subtotal, delivery_fee, total, customer_name, customer_phone, delivery_address)
     values (cust_id, rest_id, 1, 0, 1, 'x', 'x', '{}'); raise exception 'FAIL: customer can insert orders directly';
   exception when insufficient_privilege then null; end;
@@ -108,6 +132,8 @@ begin
   if n <> 0 then raise exception 'FAIL: other customer can see someone elses order'; end if;
   select count(*) into n from public.customer_addresses;
   if n <> 0 then raise exception 'FAIL: other customer can see someone elses address'; end if;
+  select count(*) into n from public.order_status_events;
+  if n <> 0 then raise exception 'FAIL: other customer can see someone elses order timeline'; end if;
   reset role;
 
   -- ============ Admin ============
@@ -143,6 +169,31 @@ begin
   update public.menu_items set is_available = false where restaurant_id = rest_id;
   get diagnostics n = row_count;
   if n = 0 then raise exception 'FAIL: admin cannot edit menu'; end if;
+  -- Riders: a PaliaEats rider can be put on any order; another restaurant's rider or an
+  -- inactive rider cannot.
+  insert into public.riders (name, phone) values ('Test Rider', '9876500001') returning id into rider1;
+  insert into public.riders (name, phone, restaurant_id)
+    select 'Other Rider', '9876500002', id from public.restaurants where slug = 'blue-cafe'
+    returning id into rider2;
+  begin update public.orders set rider_id = rider2 where id = order_id;
+    raise exception 'FAIL: rider from another restaurant was assigned';
+  exception when raise_exception then
+    if sqlerrm like 'FAIL:%' then raise; end if;
+  end;
+  update public.orders set rider_id = rider1 where id = order_id;
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: admin cannot assign a rider'; end if;
+  insert into public.restaurant_payouts (restaurant_id, week_start, week_end, gross, commission_percent, commission, net)
+    values (rest_id, date '2000-01-03', date '2000-01-09', 100, 8, 8, 92);
+  reset role;
+
+  -- ============ Customer again: now sees only the rider on their order ============
+  perform set_config('request.jwt.claims', json_build_object('sub', cust_id, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  select count(*) into n from public.riders;
+  if n <> 1 then raise exception 'FAIL: customer should see the 1 rider on their order, saw %', n; end if;
+  select count(*) into n from public.restaurant_payouts;
+  if n <> 0 then raise exception 'FAIL: customer can read payouts'; end if;
   reset role;
 
   -- ============ Server-side admin client (service role) ============

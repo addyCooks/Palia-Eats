@@ -1,100 +1,138 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  countRecentNotificationProblems,
-  getAdminBreakdown,
-  getAdminOverview,
-} from "@/lib/queries/admin";
-import { formatPrice } from "@/lib/utils/format";
+import { countRecentNotificationProblems, getAdminDashboard, type DashboardRange } from "@/lib/queries/admin";
+import { compactRupees, formatMinutes, percentChange, signed } from "@/lib/orders/stats";
+import { formatClock, formatLongToday } from "@/lib/utils/time";
 import { LiveUpdates } from "@/components/LiveUpdates";
-import { Card } from "@/components/ui/Card";
+import { Bars, Kpi, PageHeader, Panel, param } from "@/components/ui/page";
 
 export const metadata: Metadata = { title: "Admin" };
 
-export default async function AdminHomePage() {
-  const [stats, breakdown, problems] = await Promise.all([
-    getAdminOverview(),
-    getAdminBreakdown(),
-    countRecentNotificationProblems(),
-  ]);
+const RANGES: { key: DashboardRange; label: string; compare: string }[] = [
+  { key: "today", label: "Today", compare: "vs last week" },
+  { key: "week", label: "Week", compare: "vs previous week" },
+  { key: "month", label: "Month", compare: "vs previous 30 days" },
+];
 
-  const tiles = [
-    { label: "Active orders now", value: String(stats.activeOrders), href: "/admin/orders" },
-    { label: "Orders today", value: String(stats.ordersToday), href: "/admin/orders?show=all" },
-    { label: "Sales today", value: formatPrice(stats.salesToday), note: "excluding cancelled" },
-    { label: "Orders, all time", value: String(stats.totalOrders), href: "/admin/orders?show=all" },
-    { label: "Restaurants", value: String(stats.restaurants), href: "/admin/restaurants" },
-    { label: "Customers", value: String(stats.customers), href: "/admin/customers" },
-    {
-      label: "Email problems (24h)",
-      value: String(problems),
-      href: "/admin/notifications",
-      note: problems > 0 ? "needs a look" : "all good",
-    },
-  ];
+export default async function AdminHomePage({ searchParams }: PageProps<"/admin">) {
+  const raw = param((await searchParams).range);
+  const range = RANGES.find((r) => r.key === raw) ?? RANGES[0];
+
+  const [stats, problems] = await Promise.all([getAdminDashboard(range.key), countRecentNotificationProblems()]);
+  const peak = Math.max(1, ...stats.hourBars.map((bar) => bar.orders));
+  const deliveryDelta =
+    stats.delivery.now !== null && stats.delivery.before !== null
+      ? `${signed(stats.delivery.now - stats.delivery.before)} min`
+      : undefined;
 
   return (
     <>
       {/* The numbers change the moment an order is placed or updated */}
       <LiveUpdates tables={[{ table: "orders" }]} />
-      <h1 className="text-2xl font-bold">Overview</h1>
 
-      <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {tiles.map((tile) => {
-          const content = (
-            <Card className="flex h-full flex-col gap-1 transition-colors hover:bg-muted">
-              <span className="text-sm text-stone-600">{tile.label}</span>
-              <span className="text-2xl font-bold">{tile.value}</span>
-              {tile.note && <span className="text-xs text-stone-500">{tile.note}</span>}
-            </Card>
-          );
-          return (
-            <li key={tile.label}>
-              {tile.href ? <Link href={tile.href}>{content}</Link> : content}
-            </li>
-          );
-        })}
-      </ul>
+      <PageHeader
+        title={range.key === "today" ? "Today in Palia" : range.key === "week" ? "This week in Palia" : "This month in Palia"}
+        sub={`${formatLongToday()} · updated ${formatClock(new Date().toISOString())}`}
+      >
+        <nav aria-label="Time range" className="flex rounded-[10px] bg-surface p-[3px] shadow-card">
+          {RANGES.map((r) => (
+            <Link
+              key={r.key}
+              href={r.key === "today" ? "/admin" : `/admin?range=${r.key}`}
+              aria-current={r.key === range.key ? "page" : undefined}
+              className={`flex h-[34px] items-center rounded-lg px-3.5 text-[13px] font-semibold ${
+                r.key === range.key ? "bg-deep text-brand" : "text-stone-600 hover:text-foreground"
+              }`}
+            >
+              {r.label}
+            </Link>
+          ))}
+        </nav>
+      </PageHeader>
 
-      <h2 className="mb-3 mt-10 text-lg font-semibold">Last 30 days</h2>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="flex flex-col gap-3">
-          <h3 className="font-semibold">By restaurant</h3>
-          {breakdown.restaurants.length === 0 ? (
-            <p className="text-sm text-stone-500">No orders yet.</p>
-          ) : (
-            <ul className="flex flex-col gap-2 text-sm">
-              {breakdown.restaurants.map((row) => (
-                <li key={row.name} className="flex items-center justify-between gap-3">
-                  <span className="truncate font-medium">{row.name}</span>
-                  <span className="shrink-0 text-stone-600">
-                    {row.orders} {row.orders === 1 ? "order" : "orders"} · {formatPrice(row.sales)}
-                    {row.cancelled > 0 ? ` · ${row.cancelled} cancelled` : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
+      {(stats.activeOrders > 0 || problems > 0) && (
+        <div className="flex flex-wrap gap-2.5">
+          {stats.activeOrders > 0 && (
+            <Link
+              href="/admin/orders"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-amber-50 px-4 text-sm font-semibold text-amber-900 hover:bg-amber-100"
+            >
+              <span className="size-2 animate-pulse rounded-full bg-brand" aria-hidden />
+              {stats.activeOrders} {stats.activeOrders === 1 ? "order" : "orders"} in progress →
+            </Link>
           )}
-        </Card>
-        <Card className="flex flex-col gap-3">
-          <h3 className="font-semibold">By channel</h3>
-          {breakdown.channels.length === 0 ? (
-            <p className="text-sm text-stone-500">No orders yet.</p>
-          ) : (
-            <ul className="flex flex-col gap-2 text-sm">
-              {breakdown.channels.map((row) => (
-                <li key={row.channel} className="flex items-center justify-between gap-3">
-                  <span className="font-medium">{row.channel === "whatsapp" ? "WhatsApp" : "Website"}</span>
-                  <span className="text-stone-600">
-                    {row.orders} {row.orders === 1 ? "order" : "orders"} · {formatPrice(row.sales)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+          {problems > 0 && (
+            <Link
+              href="/admin/notifications?show=problems"
+              className="inline-flex h-10 items-center rounded-xl bg-red-100 px-4 text-sm font-semibold text-red-700 hover:bg-red-200"
+            >
+              {problems} email / WhatsApp {problems === 1 ? "problem" : "problems"} in the last 24 h →
+            </Link>
           )}
-        </Card>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <Kpi
+          dark
+          size="md"
+          label="Orders"
+          value={String(stats.orders.now)}
+          delta={percentChange(stats.orders.now, stats.orders.before, range.compare) || "No earlier orders to compare"}
+        />
+        <Kpi
+          size="md"
+          label="Revenue"
+          value={compactRupees(stats.revenue.now)}
+          delta={percentChange(stats.revenue.now, stats.revenue.before, range.compare) || undefined}
+        />
+        <Kpi
+          size="md"
+          label="Active restaurants"
+          value={`${stats.restaurants.open} / ${stats.restaurants.total}`}
+          delta={
+            stats.restaurants.total - stats.restaurants.open > 0
+              ? `${stats.restaurants.total - stats.restaurants.open} closed right now`
+              : "All open"
+          }
+        />
+        <Kpi size="md" label="Avg delivery" value={formatMinutes(stats.delivery.now)} delta={deliveryDelta} />
       </div>
-      <p className="mt-3 text-xs text-stone-500">Sales exclude cancelled orders.</p>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <Panel title="Orders by hour">
+          <Bars
+            bars={stats.hourBars.map((bar) => ({
+              label: bar.label,
+              value: bar.orders,
+              display: bar.orders > 0 ? String(bar.orders) : undefined,
+              tone: bar.orders >= peak * 0.9 && bar.orders > 0 ? "hot" : bar.orders >= peak * 0.5 && bar.orders > 0 ? "high" : "low",
+            }))}
+          />
+        </Panel>
+        <Panel title="Top restaurants">
+          {stats.topRestaurants.length === 0 ? (
+            <p className="text-sm text-stone-500">No orders in this period yet.</p>
+          ) : (
+            <ol className="flex flex-col gap-3">
+              {stats.topRestaurants.map((restaurant, i) => (
+                <li key={restaurant.name} className="flex items-center gap-3 text-sm">
+                  <span className="grid size-[26px] shrink-0 place-items-center rounded-[7px] bg-amber-50 text-xs font-bold text-amber-800">
+                    {i + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-medium">{restaurant.name}</span>
+                  <span className="shrink-0 text-stone-600">
+                    {restaurant.orders} {restaurant.orders === 1 ? "order" : "orders"}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </Panel>
+      </div>
+      <p className="text-xs text-stone-500">
+        Orders and revenue leave out cancelled orders. Avg delivery is from placing the order to delivery.
+      </p>
     </>
   );
 }

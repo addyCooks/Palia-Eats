@@ -23,7 +23,9 @@ export type BotItem = {
   name: string;
   description: string | null;
   price: number;
+  half_price: number | null; // null = no half plate
   is_veg: boolean;
+  contains_egg: boolean;
   is_available: boolean;
   category_id: string | null;
 };
@@ -104,7 +106,7 @@ export async function listCategories(restaurantId: string): Promise<BotCategory[
 export async function listItems(restaurantId: string, categoryId: string): Promise<BotItem[]> {
   const { data } = await createAdminClient()
     .from("menu_items")
-    .select("id, name, description, price, is_veg, is_available, category_id")
+    .select("id, name, description, price, half_price, is_veg, contains_egg, is_available, category_id")
     .eq("restaurant_id", restaurantId)
     .eq("category_id", categoryId)
     .eq("is_available", true)
@@ -118,7 +120,7 @@ export async function getItems(restaurantId: string, ids: string[]): Promise<Bot
   if (ids.length === 0) return [];
   const { data } = await createAdminClient()
     .from("menu_items")
-    .select("id, name, description, price, is_veg, is_available, category_id")
+    .select("id, name, description, price, half_price, is_veg, contains_egg, is_available, category_id")
     .eq("restaurant_id", restaurantId)
     .in("id", ids);
   return (data ?? []).map((item) => ({ ...item, price: Number(item.price) }));

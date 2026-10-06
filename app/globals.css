@@ -1,138 +1,165 @@
 @import "tailwindcss";
 
-/* ---------------------------------------------------------------------------
-   PaliaEats design tokens (from the design system: warm cream, saffron, deep chili).
-   Individual restaurant storefronts override --brand / --brand-dark / --on-brand with
-   their own theme colors.
-   --------------------------------------------------------------------------- */
-:root {
-  --background: #fffaf3; /* warm cream page */
-  --foreground: #1f1b16; /* ink */
-  --surface: #ffffff; /* cards */
-  --muted: #f7f1e8; /* quiet fills, panel background */
-  --border: #efe6da;
-  --brand: #e8590c; /* spiced saffron-orange */
-  --brand-dark: #c2410c; /* hover / pressed */
-  --on-brand: #ffffff; /* text on top of --brand */
-  --deep: #7a1f1f; /* deep chili / maroon */
-  --gold: #f4b942; /* turmeric */
-  --chrome: #1f1b16; /* dark bars: restaurant panel header and tab bar */
-  --shadow-card: 0 4px 20px rgba(122, 31, 31, 0.08);
-  --shadow-float: 0 12px 40px rgba(122, 31, 31, 0.16);
-
-  /* Muted text and neutral lines. The whole app uses these Tailwind "stone" shades, so
-     re-pointing them here (and in dark mode below) re-themes everything at once. */
-  --color-stone-300: #d9cfc1;
-  --color-stone-500: #6b6258;
-  --color-stone-600: #5c544b;
-  --color-stone-700: #4a4239;
-
-  /* Status tints (cancelled, delivered, cooking ...) */
-  --color-red-50: #fdecec;
-  --color-red-100: #fdecec;
-  --color-red-200: #f5c2c2;
-  --color-red-300: #eda5a5;
-  --color-red-600: #d63031;
-  --color-red-700: #b91c1c;
-  --color-red-800: #991b1b;
-  --color-red-900: #7f1d1d;
-  --color-green-50: #e3f5ea;
-  --color-green-100: #e3f5ea;
-  --color-green-300: #a7ddba;
-  --color-green-600: #1f9d55;
-  --color-green-700: #187a43;
-  --color-green-800: #14532d;
-  --color-green-900: #14532d;
-  --color-amber-50: #fff6dd;
-  --color-amber-100: #fdefc3;
-  --color-amber-400: #e0a100;
-  --color-amber-800: #7a5500;
-  --color-amber-900: #5f4200;
+/* `dark:` follows the theme toggle (data-theme on <html>), or the phone's setting when the
+   person hasn't picked one. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
 }
 
-/* Dark mode: warm charcoal, never pure black; saffron lifts to #F07A3A for contrast. */
+/* ---------------------------------------------------------------------------
+   PaliaEats design system v2: paper and white surfaces, warm charcoal ink, saffron for
+   actions (always with dark text on it, never white). DM Serif Display for headings,
+   Outfit for everything else. Restaurant storefronts may override --brand / --brand-dark /
+   --on-brand / --accent-text with their own theme colors.
+   --------------------------------------------------------------------------- */
+:root {
+  --background: #f7f6f3; /* paper: app background */
+  --outer: #fff6e6; /* cream: marketing outer frame */
+  --foreground: #16120d; /* ink */
+  --surface: #ffffff; /* cards, inputs */
+  --muted: #f1ede6; /* quiet fills, hover, table dividers */
+  --border: #ece7df;
+  --brand: #f5a524; /* saffron: primary buttons, highlights */
+  --brand-dark: #e39412; /* hover / pressed saffron */
+  --on-brand: #1a1206; /* text and icons on saffron */
+  --accent-text: #c2410c; /* burnt orange: links, kicker labels */
+  --deep: #16120d; /* raised: dark buttons, selected chips */
+  --gold: #f5a524;
+  --chrome: #16120d; /* sidebar, panel bars, tab bar */
+  --shadow-card: 0 10px 30px rgba(120, 70, 0, 0.08);
+  --shadow-float: 0 18px 40px rgba(120, 70, 0, 0.14);
+  --shadow-plate: 0 14px 28px rgba(0, 0, 0, 0.22);
+  --shadow-saffron: 0 18px 40px rgba(245, 165, 36, 0.45);
+
+  /* Text roles. The whole app uses these Tailwind "stone" shades for secondary text, so
+     re-pointing them here (and in dark mode below) re-themes everything at once. */
+  --color-stone-300: #d8d2c8;
+  --color-stone-500: #8a8378; /* muted: meta, captions */
+  --color-stone-600: #5c564e; /* body copy */
+  --color-stone-700: #3a342c;
+
+  /* Status tints */
+  --color-red-50: #fbe1d6;
+  --color-red-100: #fbe1d6;
+  --color-red-200: #f3c3b0;
+  --color-red-300: #eaa58c;
+  --color-red-600: #b42318;
+  --color-red-700: #b42318;
+  --color-red-800: #9a1d14;
+  --color-red-900: #7a1710;
+  --color-green-50: #e7f4ec;
+  --color-green-100: #dcefe3;
+  --color-green-300: #a3d3b4;
+  --color-green-600: #15803d;
+  --color-green-700: #166534;
+  --color-green-800: #14532d;
+  --color-green-900: #14532d;
+  --color-amber-50: #fff3da;
+  --color-amber-100: #fde7bc;
+  --color-amber-400: #f5a524;
+  --color-amber-800: #9a3412;
+  --color-amber-900: #7c2d12;
+}
+
+/* Dark mode: charcoal, never pure black; saffron stays the same, accents lift to amber. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: #1a1512;
-    --foreground: #f5ede3;
-    --surface: #26201b;
-    --muted: #2f2721;
-    --border: #3a312a;
-    --brand: #f07a3a;
-    --brand-dark: #f5915a;
-    --on-brand: #1a1512;
-    --deep: #4a1717;
-    --chrome: #120e0b;
-    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.35);
-    --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.5);
-    --color-stone-300: #3a312a;
-    --color-stone-500: #b5a898;
-    --color-stone-600: #c9bdae;
-    --color-stone-700: #ddd2c4;
-    --color-red-50: #3a1c1c;
-    --color-red-100: #4a2020;
-    --color-red-200: #6b2a2a;
-    --color-red-300: #7f3333;
-    --color-red-600: #ff8a80;
-    --color-red-700: #ff9c93;
-    --color-red-800: #ffa59b;
-    --color-red-900: #ffb4ab;
-    --color-green-50: #16301f;
-    --color-green-100: #1b3a27;
+    --background: #14110d;
+    --outer: #0e0c09;
+    --foreground: #f6f1e8;
+    --surface: #1f1a14;
+    --muted: #2a241c;
+    --border: #332c22;
+    --brand: #f5a524;
+    --brand-dark: #ffb547;
+    --on-brand: #1a1206;
+    --accent-text: #ffb547;
+    --deep: #2a241c;
+    --chrome: #0e0c09;
+    --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.35);
+    --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.5);
+    --shadow-plate: 0 14px 28px rgba(0, 0, 0, 0.5);
+    --shadow-saffron: 0 18px 40px rgba(245, 165, 36, 0.25);
+    --color-stone-300: #332c22;
+    --color-stone-500: #9c9386;
+    --color-stone-600: #b5ac9f;
+    --color-stone-700: #d8d2c8;
+    --color-red-50: #3a1a14;
+    --color-red-100: #3a1a14;
+    --color-red-200: #5a2a20;
+    --color-red-300: #7a382a;
+    --color-red-600: #ff8a7a;
+    --color-red-700: #ff8a7a;
+    --color-red-800: #ffa093;
+    --color-red-900: #ffb4a8;
+    --color-green-50: #12291b;
+    --color-green-100: #163322;
     --color-green-300: #2e6b45;
     --color-green-600: #3bbf74;
     --color-green-700: #5fd592;
-    --color-green-800: #7be0a0;
-    --color-green-900: #9aeab8;
-    --color-amber-50: #3a2e10;
-    --color-amber-100: #4a3a12;
-    --color-amber-400: #b8870f;
-    --color-amber-800: #f4c95d;
-    --color-amber-900: #f8d77f;
+    --color-green-800: #86efac;
+    --color-green-900: #a7f3c0;
+    --color-amber-50: #3a2c14;
+    --color-amber-100: #3a2c14;
+    --color-amber-400: #f5a524;
+    --color-amber-800: #ffb547;
+    --color-amber-900: #ffc670;
   }
 }
 
 :root[data-theme="dark"] {
-  --background: #1a1512;
-  --foreground: #f5ede3;
-  --surface: #26201b;
-  --muted: #2f2721;
-  --border: #3a312a;
-  --brand: #f07a3a;
-  --brand-dark: #f5915a;
-  --on-brand: #1a1512;
-  --deep: #4a1717;
-  --chrome: #120e0b;
-  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.35);
-  --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.5);
-  --color-stone-300: #3a312a;
-  --color-stone-500: #b5a898;
-  --color-stone-600: #c9bdae;
-  --color-stone-700: #ddd2c4;
-  --color-red-50: #3a1c1c;
-  --color-red-100: #4a2020;
-  --color-red-200: #6b2a2a;
-  --color-red-300: #7f3333;
-  --color-red-600: #ff8a80;
-  --color-red-700: #ff9c93;
-  --color-red-800: #ffa59b;
-  --color-red-900: #ffb4ab;
-  --color-green-50: #16301f;
-  --color-green-100: #1b3a27;
+  --background: #14110d;
+  --outer: #0e0c09;
+  --foreground: #f6f1e8;
+  --surface: #1f1a14;
+  --muted: #2a241c;
+  --border: #332c22;
+  --brand: #f5a524;
+  --brand-dark: #ffb547;
+  --on-brand: #1a1206;
+  --accent-text: #ffb547;
+  --deep: #2a241c;
+  --chrome: #0e0c09;
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow-float: 0 18px 40px rgba(0, 0, 0, 0.5);
+  --shadow-plate: 0 14px 28px rgba(0, 0, 0, 0.5);
+  --shadow-saffron: 0 18px 40px rgba(245, 165, 36, 0.25);
+  --color-stone-300: #332c22;
+  --color-stone-500: #9c9386;
+  --color-stone-600: #b5ac9f;
+  --color-stone-700: #d8d2c8;
+  --color-red-50: #3a1a14;
+  --color-red-100: #3a1a14;
+  --color-red-200: #5a2a20;
+  --color-red-300: #7a382a;
+  --color-red-600: #ff8a7a;
+  --color-red-700: #ff8a7a;
+  --color-red-800: #ffa093;
+  --color-red-900: #ffb4a8;
+  --color-green-50: #12291b;
+  --color-green-100: #163322;
   --color-green-300: #2e6b45;
   --color-green-600: #3bbf74;
   --color-green-700: #5fd592;
-  --color-green-800: #7be0a0;
-  --color-green-900: #9aeab8;
-  --color-amber-50: #3a2e10;
-  --color-amber-100: #4a3a12;
-  --color-amber-400: #b8870f;
-  --color-amber-800: #f4c95d;
-  --color-amber-900: #f8d77f;
+  --color-green-800: #86efac;
+  --color-green-900: #a7f3c0;
+  --color-amber-50: #3a2c14;
+  --color-amber-100: #3a2c14;
+  --color-amber-400: #f5a524;
+  --color-amber-800: #ffb547;
+  --color-amber-900: #ffc670;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-outer: var(--outer);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-muted: var(--muted);
@@ -140,25 +167,41 @@
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
   --color-on-brand: var(--on-brand);
+  --color-accent: var(--accent-text);
   --color-deep: var(--deep);
   --color-gold: var(--gold);
   --color-chrome: var(--chrome);
   --shadow-card: var(--shadow-card);
   --shadow-float: var(--shadow-float);
-  --font-sans: var(--font-jakarta), system-ui, sans-serif;
-  --font-display: var(--font-playfair), Georgia, serif;
+  --shadow-plate: var(--shadow-plate);
+  --shadow-saffron: var(--shadow-saffron);
+  --font-sans: var(--font-outfit), system-ui, sans-serif;
+  --font-display: var(--font-dm-serif), Georgia, serif;
+}
+
+/* DM Serif Display has a single weight. Never let the browser fake a bold version. */
+.font-display {
+  font-weight: 400;
+  font-synthesis: none;
+}
+
+/* Kicker labels: "PALIA · PARTNER", section labels. */
+.kicker {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent-text);
 }
 
 /* A restaurant picks its own brand color, which may be dark (navy, maroon). In dark mode,
    brand-colored TEXT on a storefront is lightened so it stays readable. */
-:root[data-theme="dark"] .storefront .text-brand,
-:root[data-theme="dark"] .storefront .text-brand-dark {
-  color: color-mix(in srgb, var(--brand) 55%, white);
+:root[data-theme="dark"] .storefront .text-accent {
+  color: color-mix(in srgb, var(--accent-text) 55%, white);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .storefront .text-brand,
-  :root:not([data-theme="light"]) .storefront .text-brand-dark {
-    color: color-mix(in srgb, var(--brand) 55%, white);
+  :root:not([data-theme="light"]) .storefront .text-accent {
+    color: color-mix(in srgb, var(--accent-text) 55%, white);
   }
 }
 
@@ -178,7 +221,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-jakarta), system-ui, sans-serif;
+  font-family: var(--font-outfit), system-ui, sans-serif;
 }
 
 /* Rows that scroll sideways (cuisine chips, category tabs) without a visible scrollbar. */

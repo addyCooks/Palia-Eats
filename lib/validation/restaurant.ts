@@ -24,6 +24,9 @@ export type RestaurantInput = {
   notification_phone: string | null;
   is_active: boolean;
   is_accepting_orders: boolean;
+  area: string | null;
+  owner_name: string | null;
+  commission_percent: number;
 };
 
 type ParseResult =
@@ -95,6 +98,19 @@ export function parseRestaurantForm(formData: FormData): ParseResult {
     return { ok: false, error: "Invalid image. Please upload it again." };
   }
 
+  // PaliaEats' share of each delivered order (default 8%).
+  const commissionRaw = String(formData.get("commission_percent") ?? "").trim();
+  const commission = commissionRaw === "" ? 8 : Number(commissionRaw);
+  if (!Number.isFinite(commission) || commission < 0 || commission > 50) {
+    return { ok: false, error: "Commission must be between 0 and 50 percent." };
+  }
+
+  const area = text(formData, "area");
+  const ownerName = text(formData, "owner_name");
+  if ((area && area.length > 60) || (ownerName && ownerName.length > 80)) {
+    return { ok: false, error: "Area or owner name is too long." };
+  }
+
   const cuisineTags = String(formData.get("cuisine_tags") ?? "")
     .split(",")
     .map((tag) => tag.trim())
@@ -125,6 +141,9 @@ export function parseRestaurantForm(formData: FormData): ParseResult {
       notification_phone: text(formData, "notification_phone"),
       is_active: formData.get("is_active") === "on",
       is_accepting_orders: formData.get("is_accepting_orders") === "on",
+      area,
+      owner_name: ownerName,
+      commission_percent: Math.round(commission * 100) / 100,
     },
   };
 }

@@ -1,0 +1,43 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ORDER_STATUS_LABELS } from "@/lib/orders/status";
+import type { ActiveOrderSummary } from "@/lib/queries/orders";
+import { LiveUpdates } from "@/components/LiveUpdates";
+
+// "Your order is Cooking · Blue Cafe · Track": follows the customer around the site until the
+// order is delivered. On phones it floats above the tab bar; on laptops it is a strip under
+// the header. It updates live as the restaurant moves the order along.
+export function ActiveOrderBanner({
+  order,
+  customerId,
+}: {
+  order: ActiveOrderSummary | null;
+  customerId: string;
+}) {
+  const pathname = usePathname();
+  // Already looking at orders, or busy paying: no need to point at it.
+  const hidden = pathname.startsWith("/orders") || pathname.startsWith("/checkout");
+
+  return (
+    <>
+      <LiveUpdates tables={[{ table: "orders", filter: `customer_id=eq.${customerId}` }]} />
+      {order && !hidden && (
+        <div className="fixed inset-x-3.5 bottom-[100px] z-20 lg:static lg:mx-auto lg:mt-2 lg:w-full lg:max-w-[1280px] lg:px-12">
+          <Link
+            href={`/orders/${order.id}`}
+            className="flex items-center gap-3 rounded-2xl bg-[#16120D] px-4 py-3 text-white shadow-float dark:bg-[#2A241C]"
+          >
+            <span className="size-2.5 shrink-0 animate-pulse rounded-full bg-brand" aria-hidden />
+            <span className="min-w-0 flex-1 truncate text-sm">
+              <b>Order #{order.order_number} · {ORDER_STATUS_LABELS[order.status]}</b>{" "}
+              <span className="text-[#D8D2C8]">· {order.restaurantName}</span>
+            </span>
+            <span className="shrink-0 text-sm font-bold text-brand">Track →</span>
+          </Link>
+        </div>
+      )}
+    </>
+  );
+}

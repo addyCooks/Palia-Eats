@@ -1,14 +1,19 @@
-// The green / red square used in Indian food apps to mark veg and non-veg items.
-export function VegMark({ isVeg }: { isVeg: boolean }) {
+// The square diet mark used by Indian food apps: green for veg, burnt orange for non-veg,
+// amber for egg (v2 colors: veg #15803D, non-veg #C2410C).
+export function VegMark({ isVeg, egg = false }: { isVeg: boolean; egg?: boolean }) {
+  const kind = isVeg ? "veg" : egg ? "egg" : "nonveg";
+  const color = { veg: "#15803D", egg: "#CA8A04", nonveg: "#C2410C" }[kind];
+  const label = { veg: "Vegetarian", egg: "Contains egg", nonveg: "Non-vegetarian" }[kind];
+
   return (
     <span
       role="img"
-      aria-label={isVeg ? "Vegetarian" : "Non-vegetarian"}
-      className={`inline-flex size-4 shrink-0 items-center justify-center rounded-sm border-2 ${
-        isVeg ? "border-green-600" : "border-red-600"
-      }`}
+      aria-label={label}
+      title={label}
+      style={{ borderColor: color }}
+      className="inline-grid size-3.5 shrink-0 place-items-center rounded-[3px] border-[1.5px]"
     >
-      <span className={`size-2 rounded-full ${isVeg ? "bg-green-600" : "bg-red-600"}`} />
+      <span style={{ backgroundColor: color }} className="size-1.5 rounded-full" />
     </span>
   );
 }

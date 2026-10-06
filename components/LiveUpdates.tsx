@@ -6,7 +6,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 
 export type LiveTable = {
-  table: "orders" | "restaurants" | "menu_items";
+  table: "orders" | "restaurants" | "menu_items" | "order_status_events";
   // Optional: only changes to matching rows, e.g. "id=eq.<uuid>"
   filter?: string;
 };

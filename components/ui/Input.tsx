@@ -6,27 +6,29 @@ type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
 };
 
+// v2 input: 50px tall, 1.5px border, saffron border on focus, red border + helper on error.
 export function Input({ label, error, id, className, ...props }: InputProps) {
   const inputId = id ?? props.name;
 
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={inputId} className="text-sm font-medium">
+        <label htmlFor={inputId} className="text-[13px] font-semibold text-stone-600">
           {label}
         </label>
       )}
       <input
         id={inputId}
+        aria-invalid={error ? true : undefined}
         className={cn(
-          "h-11 rounded-xl border bg-surface px-3 text-base outline-none",
-          "focus:border-brand focus:ring-2 focus:ring-brand/20",
-          error ? "border-red-500" : "border-border",
+          "h-[50px] rounded-xl border-[1.5px] bg-surface px-3.5 text-[15px] outline-none transition-colors",
+          "focus:border-brand disabled:bg-muted disabled:text-stone-500",
+          error ? "border-red-600" : "border-border",
           className,
         )}
         {...props}
       />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-[13px] text-red-700">{error}</p>}
     </div>
   );
 }

@@ -1,20 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
+import { DM_Serif_Display, Outfit } from "next/font/google";
 import "./globals.css";
 import { OfflineNotice } from "@/components/OfflineNotice";
 
-// Body text: Plus Jakarta Sans. Headings and the wordmark: Playfair Display (warm, a little
-// premium). Both come from the design system.
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+// Design system v2: Outfit for all interface text, DM Serif Display for headings.
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const dmSerif = DM_Serif_Display({
+  variable: "--font-dm-serif",
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: "400",
   style: ["normal", "italic"],
 });
 
@@ -28,8 +27,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fffaf3" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a1512" },
+    { media: "(prefers-color-scheme: light)", color: "#f7f6f3" },
+    { media: "(prefers-color-scheme: dark)", color: "#14110d" },
   ],
 };
 
@@ -42,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${jakarta.variable} ${playfair.variable} h-full antialiased`}
+      className={`${outfit.variable} ${dmSerif.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />

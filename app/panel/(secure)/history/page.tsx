@@ -1,114 +1,154 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Search } from "lucide-react";
 import { getPanelRestaurant } from "@/lib/panel/session";
-import { getPanelHistory } from "@/lib/queries/panel";
-import { formatPrice } from "@/lib/utils/format";
-import { formatClock, formatDayLabel, istDateKey, todayKeyIST } from "@/lib/utils/time";
+import { getPanelHistory, HISTORY_PAGE_SIZE, type HistoryFilter } from "@/lib/queries/panel";
+import { wholeRupees } from "@/lib/orders/stats";
+import { addDaysToKey, formatClock, formatDayLabel, istDateKey, todayKeyIST } from "@/lib/utils/time";
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
-import { Card } from "@/components/ui/Card";
+import { itemsLine } from "@/components/panel/KanbanOrderCard";
+import {
+  Cell,
+  DataRow,
+  DataTable,
+  FilterChips,
+  PageHeader,
+  Pagination,
+  SearchBox,
+  TableEmpty,
+  hrefWith,
+  pageNumber,
+  param,
+} from "@/components/ui/page";
 
-export const metadata: Metadata = { title: "History" };
+export const metadata: Metadata = { title: "Order history" };
+
+const CHIPS: { key: HistoryFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "delivered", label: "Delivered" },
+  { key: "cancelled", label: "Cancelled" },
+  { key: "week", label: "This week" },
+];
+
+const COLUMNS = "100px minmax(0,1.2fr) minmax(0,2fr) 90px 110px 130px";
+
+// "Today 8:12 PM", "Yesterday 7:58 PM", "Sun, 5 Oct"
+function when(iso: string): string {
+  const key = istDateKey(iso);
+  const today = todayKeyIST();
+  if (key === today) return `Today ${formatClock(iso)}`;
+  if (key === addDaysToKey(today, -1)) return `Yesterday ${formatClock(iso)}`;
+  return formatDayLabel(iso);
+}
 
 export default async function PanelHistoryPage({ searchParams }: PageProps<"/panel/history">) {
   const restaurant = await getPanelRestaurant();
   if (!restaurant) redirect("/panel/locked");
 
   const params = await searchParams;
-  const search = typeof params.q === "string" ? params.q : "";
-  const { stats, orders, searching } = await getPanelHistory(restaurant.id, search);
+  const search = param(params.q);
+  const rawFilter = param(params.show);
+  const filter: HistoryFilter = CHIPS.some((chip) => chip.key === rawFilter) ? (rawFilter as HistoryFilter) : "all";
+  const page = pageNumber(params.page);
 
-  // Group the list by Indian calendar day: "Today", then earlier days.
-  const todayKey = todayKeyIST();
-  const groups: { key: string; label: string; orders: typeof orders }[] = [];
-  for (const order of orders) {
-    const key = istDateKey(order.placed_at);
-    let group = groups.find((g) => g.key === key);
-    if (!group) {
-      group = { key, label: key === todayKey ? "Today" : formatDayLabel(order.placed_at), orders: [] };
-      groups.push(group);
-    }
-    group.orders.push(order);
-  }
+  const { orders, total, allTime, firstOrderAt, searching } = await getPanelHistory(restaurant.id, {
+    search,
+    filter,
+    page,
+  });
 
-  const figures = [
-    { label: "Today", value: String(stats.orders) },
-    { label: "Collected", value: formatPrice(stats.collected) },
-    { label: "Cancelled", value: String(stats.cancelled) },
-  ];
+  const keep = { q: search || undefined, show: filter === "all" ? undefined : filter };
+  const sub =
+    allTime === 0
+      ? "No orders yet"
+      : `${allTime.toLocaleString("en-IN")} ${allTime === 1 ? "order" : "orders"}${
+          firstOrderAt
+            ? ` since ${new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", month: "long" }).format(new Date(firstOrderAt))}`
+            : ""
+        }`;
+  const emptyText = searching || filter !== "all" ? "No orders match that." : "No orders yet. They will show up here.";
 
   return (
     <>
-      <h1 className="font-display text-2xl font-extrabold">History</h1>
+      <PageHeader title="Order history" sub={sub}>
+        <SearchBox
+          action="/panel/history"
+          value={search}
+          placeholder="Order number or customer"
+          keep={{ show: keep.show }}
+        />
+      </PageHeader>
 
-      <form role="search" className="flex gap-2">
-        <label className="flex h-12 flex-1 items-center gap-2.5 rounded-xl bg-surface px-3.5 shadow-card focus-within:ring-2 focus-within:ring-brand/30">
-          <Search className="size-4 shrink-0 text-stone-500" aria-hidden />
-          <span className="sr-only">Search by order number, name or phone</span>
-          <input
-            name="q"
-            defaultValue={search}
-            placeholder="Order number, name or phone"
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-stone-500"
-          />
-        </label>
-        <button
-          type="submit"
-          className="h-12 rounded-xl bg-brand-dark px-5 text-sm font-bold text-on-brand hover:bg-brand"
+      <FilterChips
+        label="Filter orders"
+        chips={CHIPS}
+        active={filter}
+        hrefFor={(key) => hrefWith("/panel/history", keep, { show: key === "all" ? undefined : key, page: undefined })}
+      />
+
+      {/* Laptop: a table */}
+      <div className="hidden md:block">
+        <DataTable
+          columns={COLUMNS}
+          headers={["ORDER", "CUSTOMER", "ITEMS", "TOTAL", "STATUS", "TIME"]}
+          empty={orders.length === 0 ? <TableEmpty>{emptyText}</TableEmpty> : undefined}
+          footer={
+            <Pagination
+              page={page}
+              pageSize={HISTORY_PAGE_SIZE}
+              total={total}
+              hrefFor={(n) => hrefWith("/panel/history", keep, { page: n > 1 ? String(n) : undefined })}
+            />
+          }
         >
-          Search
-        </button>
-      </form>
+          {orders.map((order) => (
+            <DataRow key={order.id} columns={COLUMNS}>
+              <Cell strong>#{order.order_number}</Cell>
+              <Cell strong>{order.customer_name}</Cell>
+              <Cell>
+                <span title={itemsLine(order.order_items)}>{itemsLine(order.order_items)}</span>
+              </Cell>
+              <Cell strong>{wholeRupees(order.total)}</Cell>
+              <span>
+                <OrderStatusBadge status={order.status} />
+              </span>
+              <Cell>{when(order.placed_at)}</Cell>
+            </DataRow>
+          ))}
+        </DataTable>
+      </div>
 
-      <dl className="grid grid-cols-3 gap-2 rounded-2xl bg-chrome p-4 text-white">
-        {figures.map((figure) => (
-          <div key={figure.label}>
-            <dt className="text-[11px] text-[#B8AC9D]">{figure.label}</dt>
-            <dd className="text-lg font-extrabold tabular-nums">{figure.value}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="-mt-3 text-xs text-stone-500">
-        Today&apos;s numbers. &ldquo;Collected&rdquo; is the cash on delivered orders.
-      </p>
-
-      {orders.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border p-8 text-center text-stone-500">
-          {searching ? "No orders match that search." : "No orders yet. They will show up here."}
-        </p>
-      ) : (
-        groups.map((group) => (
-          <section key={group.key} className="flex flex-col gap-2.5">
-            <h2 className="text-xs font-extrabold tracking-wider text-stone-500">{group.label.toUpperCase()}</h2>
-            <ul className="flex flex-col gap-2.5">
-              {group.orders.map((order) => (
-                <li key={order.id}>
-                  <Card className="flex flex-col gap-1.5 rounded-2xl border-0 p-3.5 shadow-card">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm font-bold tabular-nums">#{order.order_number}</span>
-                      <OrderStatusBadge status={order.status} />
-                    </div>
-                    <p className="text-sm font-semibold">
-                      {order.order_items.map((item) => `${item.quantity}× ${item.item_name}`).join(", ")}
-                    </p>
-                    <div className="flex items-center justify-between gap-3 text-[13px] text-stone-600">
-                      <span className="min-w-0 truncate">
-                        {order.customer_name} · {formatClock(order.placed_at)}
-                        {order.channel === "whatsapp" ? " · WhatsApp" : ""}
-                      </span>
-                      <b className="shrink-0 tabular-nums text-foreground">{formatPrice(order.total)}</b>
-                    </div>
-                    {order.rejection_reason && (
-                      <p className="text-xs text-red-700">Cancelled: {order.rejection_reason}</p>
-                    )}
-                  </Card>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
-      )}
-      <p className="text-xs text-stone-500">Showing up to the latest 80 orders.</p>
+      {/* Phone: cards */}
+      <div className="flex flex-col gap-2.5 md:hidden">
+        {orders.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border p-8 text-center text-stone-500">{emptyText}</p>
+        ) : (
+          orders.map((order) => (
+            <article key={order.id} className="flex flex-col gap-1.5 rounded-2xl bg-surface p-3.5 shadow-card">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-bold tabular-nums">#{order.order_number}</span>
+                <OrderStatusBadge status={order.status} />
+              </div>
+              <p className="text-sm font-semibold">{itemsLine(order.order_items)}</p>
+              <div className="flex items-center justify-between gap-3 text-[13px] text-stone-600">
+                <span className="min-w-0 truncate">
+                  {order.customer_name} · {when(order.placed_at)}
+                  {order.channel === "whatsapp" ? " · WhatsApp" : ""}
+                </span>
+                <b className="shrink-0 tabular-nums text-foreground">{wholeRupees(order.total)}</b>
+              </div>
+              {order.rejection_reason && <p className="text-xs text-red-700">Cancelled: {order.rejection_reason}</p>}
+            </article>
+          ))
+        )}
+        <div className="rounded-2xl bg-surface shadow-card">
+          <Pagination
+            page={page}
+            pageSize={HISTORY_PAGE_SIZE}
+            total={total}
+            hrefFor={(n) => hrefWith("/panel/history", keep, { page: n > 1 ? String(n) : undefined })}
+          />
+        </div>
+      </div>
     </>
   );
 }

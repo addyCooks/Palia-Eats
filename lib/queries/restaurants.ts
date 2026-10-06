@@ -7,7 +7,7 @@ export async function getAdminRestaurants(): Promise<AdminRestaurant[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("restaurants")
-    .select("*, restaurant_private(notification_email, notification_phone, panel_key_created_at)")
+    .select("*, restaurant_private(notification_email, notification_phone, panel_key_created_at, owner_name, commission_percent)")
     .order("name");
 
   if (error) throw new Error(`Could not load restaurants: ${error.message}`);
@@ -20,7 +20,7 @@ export async function getAdminRestaurant(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("restaurants")
-    .select("*, restaurant_private(notification_email, notification_phone, panel_key_created_at)")
+    .select("*, restaurant_private(notification_email, notification_phone, panel_key_created_at, owner_name, commission_percent)")
     .eq("id", id)
     .maybeSingle();
 

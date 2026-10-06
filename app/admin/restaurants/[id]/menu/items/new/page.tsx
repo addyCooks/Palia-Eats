@@ -5,7 +5,7 @@ import { getAdminMenu } from "@/lib/queries/menu";
 import { isUuid } from "@/lib/validation/menu";
 import { MenuItemForm } from "@/components/admin/MenuItemForm";
 
-export const metadata: Metadata = { title: "Add menu item" };
+export const metadata: Metadata = { title: "Add dish" };
 
 export default async function NewMenuItemPage({
   params,
@@ -19,17 +19,24 @@ export default async function NewMenuItemPage({
 
   const { categories } = await getAdminMenu(id);
 
+  if (categories.length === 0) {
+    return (
+      <p className="rounded-2xl border border-dashed border-border p-8 text-center text-stone-600">
+        Create a category first, on the{" "}
+        <Link href={`/admin/restaurants/${id}/menu`} className="font-semibold text-accent hover:underline">
+          menu page
+        </Link>
+        .
+      </p>
+    );
+  }
+
   return (
-    <>
-      <Link href={`/admin/restaurants/${id}/menu`} className="text-sm text-stone-500 hover:underline">
-        ← Menu
-      </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-bold">Add menu item</h1>
-      {categories.length === 0 ? (
-        <p className="text-stone-600">Create a category first, on the menu page.</p>
-      ) : (
-        <MenuItemForm restaurantId={id} categories={categories} defaultCategoryId={defaultCategoryId} />
-      )}
-    </>
+    <MenuItemForm
+      restaurantId={id}
+      categories={categories}
+      defaultCategoryId={defaultCategoryId}
+      backHref={`/admin/restaurants/${id}/menu`}
+    />
   );
 }

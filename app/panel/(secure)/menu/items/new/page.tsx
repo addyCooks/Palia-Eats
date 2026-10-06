@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getPanelRestaurant } from "@/lib/panel/session";
 import { getPanelMenu } from "@/lib/queries/panel";
-import { panelCreateItem, panelUpdateItem } from "@/lib/actions/panel-menu";
+import { panelCreateItem, panelUpdateItem, panelUploadDishPhoto } from "@/lib/actions/panel-menu";
 import { isUuid } from "@/lib/validation/menu";
 import { MenuItemForm } from "@/components/admin/MenuItemForm";
 
@@ -19,23 +19,26 @@ export default async function PanelNewItemPage({ searchParams }: PageProps<"/pan
   const defaultCategoryId =
     isUuid(wanted) && categories.some((category) => category.id === wanted) ? wanted : undefined;
 
+  if (categories.length === 0) {
+    return (
+      <p className="rounded-2xl border border-dashed border-border p-8 text-center text-stone-600">
+        Add a category first, on the{" "}
+        <Link href="/panel/menu" className="font-semibold text-accent hover:underline">
+          menu page
+        </Link>
+        .
+      </p>
+    );
+  }
+
   return (
-    <>
-      <Link href="/panel/menu" className="text-sm text-stone-500 hover:underline">
-        ← Menu
-      </Link>
-      <h1 className="text-xl font-bold">Add a dish</h1>
-      {categories.length === 0 ? (
-        <p className="text-stone-600">Add a category first, on the menu page.</p>
-      ) : (
-        <MenuItemForm
-          restaurantId={restaurant.id}
-          categories={categories}
-          defaultCategoryId={defaultCategoryId}
-          actions={{ create: panelCreateItem, update: panelUpdateItem }}
-          allowImage={false}
-        />
-      )}
-    </>
+    <MenuItemForm
+      restaurantId={restaurant.id}
+      categories={categories}
+      defaultCategoryId={defaultCategoryId}
+      actions={{ create: panelCreateItem, update: panelUpdateItem }}
+      serverUpload={panelUploadDishPhoto}
+      backHref="/panel/menu"
+    />
   );
 }

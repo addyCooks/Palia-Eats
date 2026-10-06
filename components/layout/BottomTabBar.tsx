@@ -2,54 +2,43 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Receipt, Search, ShoppingBag, User } from "lucide-react";
-import { useCart } from "@/components/cart/useCart";
+import { Home, Receipt, Search, User } from "lucide-react";
 
 const TABS = [
   { href: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
-  { href: "/#search", label: "Search", icon: Search, match: () => false },
-  { href: "/cart", label: "Cart", icon: ShoppingBag, match: (p: string) => p.startsWith("/cart") },
+  { href: "/search", label: "Search", icon: Search, match: (p: string) => p.startsWith("/search") },
   { href: "/orders", label: "Orders", icon: Receipt, match: (p: string) => p.startsWith("/orders") },
   { href: "/account", label: "Account", icon: User, match: (p: string) => p.startsWith("/account") },
 ] as const;
 
-// The floating pill of tabs at the bottom of customer pages on phones and tablets.
-// The active tab shows its name; the others are icons on small phones (labels from 768px up).
-// On laptops the header carries the same links instead.
+// The floating dark pill of tabs at the bottom of customer pages on phones and tablets
+// (v2 "PE Tabbar"): the active tab expands with a saffron fill and its name. The cart
+// button lives in the top bar. On laptops the header carries the same links instead.
 export function BottomTabBar() {
   const pathname = usePathname();
-  const { count } = useCart();
 
-  // Checkout needs full attention (and its own big button), so no tabs there.
-  if (pathname.startsWith("/checkout")) return null;
+  // Checkout and the cart have their own big button at the bottom, so no tabs there.
+  if (pathname.startsWith("/checkout") || pathname.startsWith("/cart")) return null;
 
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-2.5 bottom-3.5 z-30 flex justify-between gap-1 rounded-full border border-border bg-surface p-1.5 shadow-float md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:justify-center lg:hidden"
+      className="fixed bottom-6 left-1/2 z-30 flex h-16 -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#16120D] px-2 shadow-[0_10px_30px_rgba(0,0,0,.22)] lg:hidden dark:bg-[#2A241C]"
     >
       {TABS.map(({ href, label, icon: Icon, match }) => {
         const active = match(pathname);
-        const badge = label === "Cart" && count > 0 ? count : null;
         return (
           <Link
             key={label}
             href={href}
-            aria-label={badge ? `${label}, ${badge} items` : label}
+            aria-label={label}
             aria-current={active ? "page" : undefined}
-            className={`relative flex h-12 items-center justify-center gap-2 rounded-full text-sm font-bold transition-colors ${
-              active
-                ? "bg-brand-dark px-5 text-on-brand"
-                : "w-12 text-stone-500 hover:bg-muted md:w-auto md:px-4"
+            className={`flex h-12 min-w-12 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-colors ${
+              active ? "bg-brand px-[18px] text-on-brand" : "text-[#A39B90] hover:text-white"
             }`}
           >
-            <Icon className="size-[18px]" aria-hidden />
-            <span className={active ? "" : "hidden md:inline"}>{label}</span>
-            {badge && (
-              <span className="absolute right-1 top-1 flex min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-extrabold leading-4 text-on-brand md:static md:ml-0.5">
-                {badge}
-              </span>
-            )}
+            <Icon className="size-[19px]" strokeWidth={1.9} aria-hidden />
+            {active && label}
           </Link>
         );
       })}

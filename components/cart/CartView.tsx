@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
+import { lineKey, lineName } from "@/lib/cart/cart";
 import { formatPrice } from "@/lib/utils/format";
 import { useCart } from "@/components/cart/useCart";
 import { useCartSync } from "@/components/cart/useCartSync";
-import { EmptyCartIllustration, EmptyState } from "@/components/illustrations";
+import { ProblemScreen, problemActionClass } from "@/components/ui/ProblemScreen";
 import { QuantityStepper } from "@/components/cart/QuantityStepper";
 import { VegMark } from "@/components/menu/VegMark";
-import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 
 export function CartView() {
   const { cart, count, subtotal, total, changeQuantity, clearCart } = useCart();
@@ -18,20 +18,18 @@ export function CartView() {
   if (!restaurant || count === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-10">
-        <EmptyState
-          illustration={<EmptyCartIllustration />}
+        <ProblemScreen
+          glyph={<ShoppingBag className="size-[34px]" strokeWidth={2} />}
+          tone="dark"
           title="Your cart is empty"
           action={
-            <Link
-              href="/"
-              className="rounded-xl bg-brand px-5 py-3 font-medium text-on-brand hover:bg-brand-dark"
-            >
+            <Link href="/" className={problemActionClass}>
               Browse restaurants
             </Link>
           }
         >
-          Pick something tasty from one of our restaurants.
-        </EmptyState>
+          Pick something tasty from one of Palia&apos;s kitchens.
+        </ProblemScreen>
         {notices.map((notice) => (
           <p key={notice} className="text-sm text-amber-800">
             {notice}
@@ -47,11 +45,11 @@ export function CartView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold">Your cart</h1>
-        <p className="mt-1 text-stone-600">
+      <div className="flex flex-col gap-1">
+        <h1 className="font-display text-[38px] leading-none sm:text-[48px]">Your cart</h1>
+        <p className="text-[15px] text-stone-600">
           From{" "}
-          <Link href={`/restaurants/${restaurant.slug}`} className="font-medium text-brand hover:underline">
+          <Link href={`/restaurants/${restaurant.slug}`} className="font-semibold text-accent hover:underline">
             {restaurant.name}
           </Link>
         </p>
@@ -74,78 +72,77 @@ export function CartView() {
         </p>
       )}
 
-      <ul className="flex flex-col gap-3">
-        {cart.items.map((item) => (
-          <li key={item.menuItemId}>
-            <Card className="flex items-center gap-3 p-3">
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <p className="flex items-center gap-2 font-medium">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <ul className="flex flex-col overflow-hidden rounded-[20px] bg-surface shadow-card">
+          {cart.items.map((item) => (
+            <li key={lineKey(item)} className="flex items-center gap-3 border-b border-muted px-5 py-4 last:border-b-0">
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <p className="flex items-center gap-2 text-[15px] font-semibold">
                   <VegMark isVeg={item.isVeg} />
-                  <span className="truncate">{item.name}</span>
+                  <span className="truncate">{lineName(item)}</span>
                 </p>
-                <p className="text-sm text-stone-600">{formatPrice(item.price)} each</p>
+                <p className="text-[13px] text-stone-500">{formatPrice(item.price)} each</p>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <QuantityStepper
-                  quantity={item.quantity}
-                  itemName={item.name}
-                  onChange={(next) => changeQuantity(item.menuItemId, next)}
-                />
-                <span className="text-sm font-semibold">
-                  {formatPrice(item.price * item.quantity)}
-                </span>
-              </div>
-            </Card>
-          </li>
-        ))}
-      </ul>
+              <QuantityStepper
+                quantity={item.quantity}
+                itemName={lineName(item)}
+                onChange={(next) => changeQuantity(lineKey(item), next)}
+              />
+              <span className="w-20 text-right text-[15px] font-semibold tabular-nums">
+                {formatPrice(item.price * item.quantity)}
+              </span>
+            </li>
+          ))}
+        </ul>
 
-      <Card className="flex flex-col gap-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-stone-600">Subtotal</span>
-          <span>{formatPrice(subtotal)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-stone-600">Delivery fee</span>
-          <span>{restaurant.deliveryFee > 0 ? formatPrice(restaurant.deliveryFee) : "Free"}</span>
-        </div>
-        <div className="mt-1 flex justify-between border-t border-border pt-3 text-base font-bold">
-          <span>Total</span>
-          <span>{formatPrice(total)}</span>
-        </div>
-        <p className="text-xs text-stone-500">
-          Pay in cash when your order arrives. Final prices are confirmed at checkout.
-        </p>
-      </Card>
+        <aside className="flex flex-col gap-4 rounded-[20px] bg-surface p-[22px] shadow-card lg:sticky lg:top-24">
+          <div className="flex justify-between text-sm text-stone-600">
+            <span>Item total</span>
+            <span className="tabular-nums">{formatPrice(subtotal)}</span>
+          </div>
+          <div className="flex justify-between text-sm text-stone-600">
+            <span>Delivery</span>
+            <span className="tabular-nums">{restaurant.deliveryFee > 0 ? formatPrice(restaurant.deliveryFee) : "Free"}</span>
+          </div>
+          <div className="h-px bg-border" />
+          <div className="flex justify-between text-[17px] font-bold">
+            <span>Total</span>
+            <span className="tabular-nums">{formatPrice(total)}</span>
+          </div>
 
-      {belowMinimum && (
-        <p role="status" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-          Add {formatPrice(shortfall)} more to reach this restaurant&apos;s minimum order of{" "}
-          {formatPrice(restaurant.minOrderAmount)}.
-        </p>
-      )}
+          {belowMinimum && (
+            <p role="status" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+              Add {formatPrice(shortfall)} more to reach this restaurant&apos;s minimum order of{" "}
+              {formatPrice(restaurant.minOrderAmount)}.
+            </p>
+          )}
 
-      <div className="flex flex-col gap-3">
-        {belowMinimum || closed ? (
-          <Button size="lg" disabled>
-            Proceed to checkout
-          </Button>
-        ) : (
-          <Link
-            href="/checkout"
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 text-lg font-medium text-on-brand hover:bg-brand-dark"
+          {belowMinimum || closed ? (
+            <span
+              aria-disabled
+              className="flex h-[52px] cursor-not-allowed items-center justify-center rounded-xl bg-[#16120D] font-semibold text-white opacity-50 dark:bg-[#2A241C]"
+            >
+              Checkout
+            </span>
+          ) : (
+            <Link
+              href="/checkout"
+              className="flex h-[52px] items-center justify-center gap-2 rounded-xl bg-[#16120D] font-semibold text-white hover:bg-black dark:bg-[#2A241C]"
+            >
+              Checkout <span className="text-brand">→</span>
+            </Link>
+          )}
+          <p className="text-xs text-stone-500">Pay in cash or UPI when your order arrives. Final prices are confirmed at checkout.</p>
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm("Remove everything from your cart?")) clearCart();
+            }}
+            className="self-center text-sm font-medium text-stone-500 hover:text-red-700 hover:underline"
           >
-            Proceed to checkout
-          </Link>
-        )}
-        <Button
-          variant="ghost"
-          onClick={() => {
-            if (window.confirm("Remove everything from your cart?")) clearCart();
-          }}
-        >
-          Clear cart
-        </Button>
+            Clear cart
+          </button>
+        </aside>
       </div>
     </div>
   );

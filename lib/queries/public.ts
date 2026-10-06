@@ -15,6 +15,32 @@ export async function getActiveRestaurants(): Promise<Restaurant[]> {
   return (data ?? []) as Restaurant[];
 }
 
+export type PublicDish = MenuItem & {
+  restaurants: { name: string; slug: string; rating_avg: number | null; theme: Restaurant["theme"] };
+};
+
+// Dishes for the home page and search: available dishes of visible restaurants.
+// Without a search: bestsellers first. With one: dish names and descriptions that match.
+export async function getPublicDishes({ search = "", limit = 8 }: { search?: string; limit?: number } = {}) {
+  const supabase = await createClient();
+  // Keep only characters that can't break the filter syntax.
+  const q = search.replace(/[^\p{L}\p{N} '-]/gu, "").trim().slice(0, 40);
+
+  let query = supabase
+    .from("menu_items")
+    .select("*, restaurants!inner(name, slug, rating_avg, theme, is_active)")
+    .eq("is_available", true)
+    .eq("restaurants.is_active", true)
+    .order("is_bestseller", { ascending: false })
+    .order("sort_order")
+    .limit(limit);
+  if (q) query = query.or(`name.ilike.*${q}*,description.ilike.*${q}*`);
+
+  const { data, error } = await query;
+  if (error) throw new Error(`Could not load dishes: ${error.message}`);
+  return { dishes: (data ?? []) as PublicDish[], query: q };
+}
+
 export async function getRestaurantBySlug(slug: string): Promise<Restaurant | null> {
   const supabase = await createClient();
   const { data, error } = await supabase

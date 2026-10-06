@@ -1,7 +1,6 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { NoInternetIllustration } from "@/components/illustrations";
 
 function subscribe(onChange: () => void) {
   window.addEventListener("online", onChange);
@@ -25,12 +24,14 @@ export function OfflineNotice() {
   return (
     <div
       role="status"
-      className="sticky top-0 z-50 flex items-center gap-3 bg-[#7A1F1F] px-4 py-2 text-[#FFFAF3] shadow-md"
+      className="sticky top-0 z-50 flex items-center gap-3 bg-[#16120D] px-4 py-2.5 text-white shadow-md"
     >
-      <NoInternetIllustration className="h-10 w-11 shrink-0" />
+      <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-[10px] bg-brand font-display text-lg text-on-brand">
+        !
+      </span>
       <p className="text-sm">
-        <strong className="font-semibold">No internet connection.</strong> We&apos;ll reconnect on our own. Your
-        cart is safe.
+        <strong className="font-semibold">You&apos;re offline.</strong>{" "}
+        <span className="text-[#D8D2C8]">We&apos;ll reconnect on our own. Your cart is saved.</span>
       </p>
     </div>
   );

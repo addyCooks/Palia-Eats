@@ -3,11 +3,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAdminCustomer } from "@/lib/queries/admin";
 import { isUuid } from "@/lib/validation/menu";
-import { formatDateTime, formatPrice } from "@/lib/utils/format";
+import { formatDateTime } from "@/lib/utils/format";
+import { wholeRupees } from "@/lib/orders/stats";
+import { isCancelled } from "@/lib/orders/status";
+import { BlockCustomerButton } from "@/components/admin/BlockCustomerButton";
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
-import { Card } from "@/components/ui/Card";
+import { itemsLine } from "@/components/panel/KanbanOrderCard";
+import { Badge } from "@/components/ui/Badge";
+import { Cell, DataRow, DataTable, Kpi, PageHeader, Panel, TableEmpty } from "@/components/ui/page";
 
 export const metadata: Metadata = { title: "Customer" };
+
+const COLUMNS = "90px minmax(0,1.1fr) minmax(0,2fr) 90px 110px 150px";
 
 export default async function AdminCustomerPage({ params }: PageProps<"/admin/customers/[id]">) {
   const { id } = await params;
@@ -17,90 +24,84 @@ export default async function AdminCustomerPage({ params }: PageProps<"/admin/cu
   if (!customer) notFound();
 
   const { profile, email, addresses, orders } = customer;
-  const spent = orders
-    .filter((order) => order.status !== "cancelled" && order.status !== "rejected")
-    .reduce((sum, order) => sum + Number(order.total), 0);
+  const spent = orders.filter((order) => !isCancelled(order.status)).reduce((sum, order) => sum + Number(order.total), 0);
+  const name = profile.full_name ?? "No name yet";
 
   return (
     <>
-      <Link href="/admin/customers" className="text-sm text-stone-500 hover:underline">
-        ← All customers
-      </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-bold">{profile.full_name ?? "No name yet"}</h1>
+      <PageHeader
+        crumb={
+          <>
+            <Link href="/admin/customers" className="hover:underline">
+              Customers
+            </Link>{" "}
+            › {name}
+          </>
+        }
+        title={name}
+        sub={
+          <span className="flex flex-wrap items-center gap-2">
+            {profile.is_blocked && <Badge tone="error">Blocked</Badge>}
+            {profile.role === "admin" && <Badge tone="neutral">Admin</Badge>}
+            {email ?? (profile.whatsapp_phone ? "WhatsApp customer" : "No email")}
+            {profile.phone ? ` · ${profile.phone}` : ""}
+            {profile.created_at ? ` · joined ${formatDateTime(profile.created_at)}` : ""}
+          </span>
+        }
+      >
+        {profile.role !== "admin" && (
+          <BlockCustomerButton customerId={profile.id} blocked={Boolean(profile.is_blocked)} name={name} />
+        )}
+      </PageHeader>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="flex flex-col gap-2">
-          <h2 className="font-semibold">Details</h2>
-          <dl className="grid grid-cols-[6rem_1fr] gap-y-1 text-sm">
-            <dt className="text-stone-500">Email</dt>
-            <dd className="break-all">{email ?? (profile.whatsapp_phone ? "WhatsApp customer (no email)" : "-")}</dd>
-            <dt className="text-stone-500">Phone</dt>
-            <dd>{profile.phone ?? "-"}</dd>
-            <dt className="text-stone-500">Role</dt>
-            <dd className="capitalize">{profile.role}</dd>
-            <dt className="text-stone-500">Joined</dt>
-            <dd>{profile.created_at ? formatDateTime(profile.created_at) : "-"}</dd>
-            <dt className="text-stone-500">Orders</dt>
-            <dd>
-              {orders.length} · {formatPrice(spent)} spent
-            </dd>
-          </dl>
-        </Card>
-
-        <Card className="flex flex-col gap-2">
-          <h2 className="font-semibold">Saved addresses</h2>
-          {addresses.length === 0 ? (
-            <p className="text-sm text-stone-500">None saved.</p>
-          ) : (
-            <ul className="flex flex-col gap-2 text-sm">
-              {addresses.map((address) => (
-                <li key={address.id}>
-                  <strong>{address.label}</strong>
-                  {address.is_default ? " (default)" : ""}
-                  <br />
-                  {address.address_line}
-                  {address.landmark ? `, near ${address.landmark}` : ""}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        <Kpi size="md" dark label="Orders" value={String(orders.length)} />
+        <Kpi size="md" label="Spent" value={wholeRupees(spent)} delta="excluding cancelled" />
+        <Kpi size="md" label="Cancelled" value={String(orders.filter((order) => isCancelled(order.status)).length)} />
+        <Kpi
+          size="md"
+          label="Last order"
+          value={orders[0] ? new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" }).format(new Date(orders[0].placed_at)) : "—"}
+        />
       </div>
 
-      <h2 className="mb-3 mt-8 text-lg font-semibold">Order history</h2>
-      {orders.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border p-6 text-center text-stone-500">
-          No orders yet.
-        </p>
-      ) : (
-        <ul className="flex flex-col gap-2">
-          {orders.map((order) => (
-            <li key={order.id}>
-              <Card className="flex flex-col gap-1 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-semibold">
-                    #{order.order_number} · {order.restaurants?.name ?? "Restaurant"}
-                  </p>
-                  <OrderStatusBadge status={order.status} />
-                </div>
-                <p className="text-sm text-stone-600">
-                  {order.order_items.map((item) => `${item.quantity} × ${item.item_name}`).join(", ")}
-                </p>
-                <p className="text-sm text-stone-600">
-                  {formatPrice(order.total)} · {formatDateTime(order.placed_at)}
-                  {order.channel === "whatsapp" ? " · via WhatsApp" : ""}
-                </p>
-                {order.rejection_reason && (
-                  <p className="text-sm text-red-700">
-                    Cancelled
-                    {order.cancelled_by ? ` by ${order.cancelled_by}` : ""}: {order.rejection_reason}
-                  </p>
-                )}
-              </Card>
-            </li>
-          ))}
-        </ul>
-      )}
+      <Panel title="Saved addresses">
+        {addresses.length === 0 ? (
+          <p className="text-sm text-stone-500">None saved.</p>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {addresses.map((address) => (
+              <li key={address.id} className="rounded-xl bg-background p-3.5 text-sm">
+                <strong>{address.label}</strong>
+                {address.is_default ? " (default)" : ""}
+                <br />
+                {address.address_line}
+                {address.landmark ? `, near ${address.landmark}` : ""}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
+
+      <h2 className="font-display text-[30px] leading-none">Order history</h2>
+      <DataTable
+        columns={COLUMNS}
+        headers={["ORDER", "RESTAURANT", "ITEMS", "TOTAL", "STATUS", "PLACED"]}
+        empty={orders.length === 0 ? <TableEmpty>No orders yet.</TableEmpty> : undefined}
+      >
+        {orders.map((order) => (
+          <DataRow key={order.id} columns={COLUMNS} href={`/admin/orders/${order.id}`}>
+            <Cell strong>#{order.order_number}</Cell>
+            <Cell strong>{order.restaurants?.name ?? "—"}</Cell>
+            <Cell>{itemsLine(order.order_items)}</Cell>
+            <Cell strong>{wholeRupees(order.total)}</Cell>
+            <span>
+              <OrderStatusBadge status={order.status} />
+            </span>
+            <Cell>{formatDateTime(order.placed_at)}</Cell>
+          </DataRow>
+        ))}
+      </DataTable>
     </>
   );
 }

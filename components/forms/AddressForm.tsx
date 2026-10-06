@@ -1,23 +1,25 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import {
   createAddress,
   updateAddress,
   type AccountFormState,
 } from "@/lib/actions/account";
 import type { Address } from "@/types/app";
-import { Button } from "@/components/ui/Button";
+import { keepValues } from "@/lib/forms";
 import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
+import { FormToggle } from "@/components/ui/Toggle";
 
-// One form for both "add address" (no props) and "edit address".
+// One form for both "add address" (no props) and "edit address" (v2 8d).
 type AddressFormProps = {
   address?: Address;
   defaultPhone?: string | null;
   // "/checkout" when the customer came from checkout: we send them back after saving
   next?: string;
 };
+
+const TYPES = ["Home", "Work", "Other"] as const;
 
 export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
   const isEdit = Boolean(address);
@@ -26,56 +28,84 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
     undefined,
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const startType = address ? (address.label === "Home" || address.label === "Work" ? address.label : "Other") : "Home";
+  const [type, setType] = useState<(typeof TYPES)[number]>(startType);
+  const [customLabel, setCustomLabel] = useState(startType === "Other" ? (address?.label ?? "") : "");
 
   // Clear the "add" form after a successful save.
   useEffect(() => {
-    if (!isEdit && state?.saved) formRef.current?.reset();
+    if (!isEdit && state?.saved) {
+      formRef.current?.reset();
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the chips with the form
+      setType("Home");
+      setCustomLabel("");
+    }
   }, [isEdit, state]);
 
+  const label = type === "Other" ? customLabel.trim() || "Other" : type;
+
   return (
-    <form ref={formRef} action={formAction} className="flex flex-col gap-4">
+    <form ref={formRef} onSubmit={keepValues(formAction)} className="flex flex-col gap-3.5">
       {address && <input type="hidden" name="addressId" value={address.id} />}
       {next && <input type="hidden" name="next" value={next} />}
+      <input type="hidden" name="label" value={label} />
 
       <Input
-        label="Name this address"
-        name="label"
-        placeholder="Home, Work, Mom's place..."
-        defaultValue={address?.label}
-        maxLength={30}
-        required
-      />
-      <Textarea
-        label="Full address"
+        label="House / shop number, street"
         name="address_line"
-        placeholder="House / flat no., street, area"
+        placeholder="House 14, Ward 6"
         defaultValue={address?.address_line}
         maxLength={300}
         required
       />
       <Input
-        label="Landmark (optional)"
+        label="Landmark"
         name="landmark"
-        placeholder="Near the temple"
+        placeholder="Near Hanuman Mandir"
         defaultValue={address?.landmark ?? ""}
         maxLength={100}
       />
       <Input
-        label="Phone for delivery (optional)"
+        label="Phone for the rider"
         name="phone"
         type="tel"
+        inputMode="numeric"
         placeholder="98765 43210"
         defaultValue={address?.phone ?? defaultPhone ?? ""}
       />
-      <label className="flex items-center gap-3 text-sm">
-        <input
-          type="checkbox"
-          name="is_default"
-          defaultChecked={address?.is_default ?? false}
-          disabled={address?.is_default}
-          className="size-5 accent-brand"
-        />
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-1.5 text-[13px] font-semibold text-stone-600">Save as</legend>
+        <div className="flex gap-2">
+          {TYPES.map((option) => (
+            <button
+              key={option}
+              type="button"
+              aria-pressed={type === option}
+              onClick={() => setType(option)}
+              className={`h-[42px] flex-1 rounded-[10px] text-sm font-semibold transition-colors ${
+                type === option ? "bg-deep text-brand" : "bg-surface text-stone-700 shadow-card"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+        {type === "Other" && (
+          <input
+            value={customLabel}
+            onChange={(event) => setCustomLabel(event.target.value)}
+            maxLength={30}
+            placeholder="Name it, e.g. Mom's place"
+            aria-label="Name for this address"
+            className="mt-1 h-[50px] rounded-xl border-[1.5px] border-border bg-surface px-3.5 text-[15px] outline-none focus:border-brand"
+          />
+        )}
+      </fieldset>
+
+      <label className="flex items-center justify-between gap-3 text-sm font-medium">
         {address?.is_default ? "This is your default address" : "Use as my default address"}
+        <FormToggle name="is_default" defaultChecked={address?.is_default ?? false} label="Default address" />
       </label>
 
       {state?.error && (
@@ -84,14 +114,18 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
         </p>
       )}
       {state?.saved && (
-        <p role="status" className="rounded-xl bg-green-50 p-3 text-sm text-green-800">
+        <p role="status" className="rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
           Address saved.
         </p>
       )}
 
-      <Button type="submit" disabled={pending}>
-        {pending ? "Saving..." : isEdit ? "Save address" : "Add address"}
-      </Button>
+      <button
+        type="submit"
+        disabled={pending}
+        className="mt-1 h-14 rounded-[14px] bg-brand text-base font-bold text-on-brand hover:bg-brand-dark disabled:opacity-60"
+      >
+        {pending ? "Saving…" : "Save address"}
+      </button>
     </form>
   );
 }

@@ -21,13 +21,13 @@ export function StaffOrderCard({ order, updateStatus, restaurantName }: StaffOrd
       <div className="flex items-start justify-between gap-3">
         <div>
           {isNew && (
-            <p className="mb-0.5 flex items-center gap-1.5 text-xs font-extrabold tracking-wide text-brand-dark">
+            <p className="mb-0.5 flex items-center gap-1.5 text-xs font-bold tracking-wide text-accent">
               <span className="size-2 animate-pulse rounded-full bg-brand" aria-hidden />
               NEW ORDER
             </p>
           )}
           <p className="text-lg font-bold">Order #{order.order_number}</p>
-          {restaurantName && <p className="text-sm font-medium text-brand">{restaurantName}</p>}
+          {restaurantName && <p className="text-sm font-medium text-accent">{restaurantName}</p>}
           <p className="text-sm text-stone-500">{formatDateTime(order.placed_at)}</p>
         </div>
         <OrderStatusBadge status={order.status} />
@@ -52,7 +52,7 @@ export function StaffOrderCard({ order, updateStatus, restaurantName }: StaffOrd
 
       <div className="text-sm">
         <p className="font-semibold">{order.customer_name}</p>
-        <a href={`tel:${order.customer_phone}`} className="text-brand hover:underline">
+        <a href={`tel:${order.customer_phone}`} className="text-accent hover:underline">
           {order.customer_phone}
         </a>
         <p className="mt-1 whitespace-pre-line text-stone-700">{address.address_line}</p>

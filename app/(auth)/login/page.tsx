@@ -27,7 +27,10 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
   return (
     <>
-      <h1 className="text-xl font-semibold">Log in</h1>
+      <div className="flex flex-col gap-1.5 sm:text-center">
+        <h1 className="font-display text-[34px] leading-[1.05]">Welcome back</h1>
+        <p className="text-[15px] text-stone-600">Log in to order from Palia&apos;s kitchens.</p>
+      </div>
       {error && ERROR_MESSAGES[error] && (
         <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
           {ERROR_MESSAGES[error]}
@@ -37,7 +40,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       <LoginForm next={next ?? undefined} />
       <p className="text-center text-sm text-stone-600">
         New here?{" "}
-        <Link href={signupHref} className="font-medium text-brand hover:underline">
+        <Link href={signupHref} className="font-semibold text-accent hover:underline">
           Create an account
         </Link>
       </p>

@@ -19,7 +19,7 @@ export const getProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
-    .select("id, role, full_name, phone, whatsapp_opt_in")
+    .select("id, role, full_name, phone, whatsapp_opt_in, is_blocked")
     .eq("id", user.id)
     .single();
 

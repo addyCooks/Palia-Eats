@@ -9,7 +9,7 @@ import { REFRESH_CART_CODES, orderErrorMessage } from "@/lib/orders/errors";
 
 export type PlaceOrderInput = {
   restaurantId: string;
-  items: { id: string; quantity: number }[];
+  items: { id: string; quantity: number; variant?: "full" | "half" }[];
   addressId: string;
   notes: string;
   expectedTotal: number;
@@ -34,7 +34,8 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
         isUuid(String(item?.id)) &&
         Number.isInteger(item.quantity) &&
         item.quantity >= 1 &&
-        item.quantity <= 20,
+        item.quantity <= 20 &&
+        (item.variant === undefined || item.variant === "full" || item.variant === "half"),
     );
 
   if (
@@ -50,7 +51,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("place_order", {
     p_restaurant_id: input.restaurantId,
-    p_items: input.items.map((item) => ({ id: item.id, quantity: item.quantity })),
+    p_items: input.items.map((item) => ({ id: item.id, quantity: item.quantity, variant: item.variant ?? "full" })),
     p_address_id: input.addressId,
     p_notes: String(input.notes ?? "").slice(0, 400) || null,
     p_expected_total: Math.round(input.expectedTotal * 100) / 100,

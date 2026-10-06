@@ -33,13 +33,15 @@ import { SESSION_IDLE_MS, getSession, saveSessionData } from "@/lib/whatsapp/ses
 
 export type Send = (to: string, message: OutMessage) => Promise<SendResult>;
 
-type CartLine = { id: string; qty: number };
+type Size = "full" | "half";
+type CartLine = { id: string; qty: number; variant?: Size }; // no variant = full plate
 
 type State = {
-  step: "idle" | "qty" | "address" | "name" | "confirm";
+  step: "idle" | "size" | "qty" | "address" | "name" | "confirm";
   restaurantId?: string;
   categoryId?: string;
   itemId?: string;
+  variant?: Size; // plate size chosen for itemId
   cart: CartLine[];
   address?: { text?: string; lat?: number; lng?: number; savedId?: string };
 };
@@ -65,6 +67,7 @@ function loadState(session: Awaited<ReturnType<typeof getSession>>): State {
     restaurantId: data.restaurantId,
     categoryId: data.categoryId,
     itemId: data.itemId,
+    variant: data.variant === "half" ? "half" : data.variant === "full" ? "full" : undefined,
     cart: Array.isArray(data.cart) ? data.cart.filter((l) => l && typeof l.id === "string" && l.qty > 0) : [],
     address: data.address,
   };
@@ -82,7 +85,13 @@ function pageOf<T>(all: T[], page: number): { slice: T[]; more: number | null } 
 }
 
 const itemDescription = (item: BotItem) =>
-  `${formatPrice(item.price)} · ${item.is_veg ? "Veg" : "Non-veg"}${item.description ? ` · ${item.description}` : ""}`;
+  `${formatPrice(item.price)}${item.half_price !== null ? ` (half ${formatPrice(item.half_price)})` : ""} · ${
+    item.is_veg ? "Veg" : item.contains_egg ? "Egg" : "Non-veg"
+  }${item.description ? ` · ${item.description}` : ""}`;
+
+const sizeOf = (line: { variant?: Size }): Size => (line.variant === "half" ? "half" : "full");
+const plateName = (item: BotItem, size: Size) => (size === "half" ? `${item.name} (Half)` : item.name);
+const platePrice = (item: BotItem, size: Size) => (size === "half" ? item.half_price : item.price);
 
 // ------------------------------------------------------------------ messages
 
@@ -180,7 +189,7 @@ async function closedNotice(ctx: Ctx, state: State, restaurant: BotRestaurant): 
 
 type Priced = {
   restaurant: BotRestaurant;
-  lines: { item: BotItem; qty: number; total: number }[];
+  lines: { item: BotItem; qty: number; size: Size; total: number }[];
   subtotal: number;
   fee: number;
   total: number;
@@ -201,12 +210,18 @@ async function priceCart(state: State): Promise<Priced | null> {
 
   for (const line of state.cart) {
     const item = byId.get(line.id);
+    const size = sizeOf(line);
     if (!item || !item.is_available) {
       notices.push(`${item?.name ?? "A dish"} is no longer available, so it was removed.`);
       continue;
     }
+    const price = platePrice(item, size);
+    if (price === null) {
+      notices.push(`${item.name} no longer comes as a half plate, so it was removed.`);
+      continue;
+    }
     kept.push(line);
-    lines.push({ item, qty: line.qty, total: Math.round(item.price * line.qty * 100) / 100 });
+    lines.push({ item, qty: line.qty, size, total: Math.round(price * line.qty * 100) / 100 });
   }
   state.cart = kept; // mutate: the caller saves the cleaned cart
 
@@ -216,7 +231,7 @@ async function priceCart(state: State): Promise<Priced | null> {
 }
 
 function summaryText(priced: Priced): string {
-  const lines = priced.lines.map((l) => `${l.qty} × ${l.item.name} — ${formatPrice(l.total)}`);
+  const lines = priced.lines.map((l) => `${l.qty} × ${plateName(l.item, l.size)} — ${formatPrice(l.total)}`);
   return (
     `*${priced.restaurant.name}*\n${lines.join("\n")}\n\n` +
     `Items ${formatPrice(priced.subtotal)}\nDelivery ${formatPrice(priced.fee)}\n*Total ${formatPrice(priced.total)}* (cash on delivery)`
@@ -246,6 +261,26 @@ async function showCart(ctx: Ctx, state: State, intro = ""): Promise<State> {
   return { ...state, step: "idle" };
 }
 
+// A dish with a half plate: ask "Half or Full?" first.
+async function askSize(ctx: Ctx, state: State, itemId: string): Promise<State> {
+  if (!state.restaurantId) return showRestaurants(ctx, state);
+  const [item] = await getItems(state.restaurantId, [itemId]);
+  if (!item || !item.is_available) {
+    await ctx.send(ctx.to, text("Sorry, that dish just sold out."));
+    return state.categoryId ? showItems(ctx, state, state.categoryId, 0) : showCategories(ctx, state);
+  }
+  if (item.half_price === null) return askQuantity(ctx, { ...state, variant: "full" }, itemId);
+  await ctx.send(ctx.to, {
+    type: "buttons",
+    body: `${item.name}\nHalf plate or full plate?`,
+    buttons: [
+      { id: "s:half", title: `Half ${formatPrice(item.half_price)}`.slice(0, 20) },
+      { id: "s:full", title: `Full ${formatPrice(item.price)}`.slice(0, 20) },
+    ],
+  });
+  return { ...state, step: "size", itemId, variant: undefined };
+}
+
 async function askQuantity(ctx: Ctx, state: State, itemId: string): Promise<State> {
   if (!state.restaurantId) return showRestaurants(ctx, state);
   const [item] = await getItems(state.restaurantId, [itemId]);
@@ -253,16 +288,18 @@ async function askQuantity(ctx: Ctx, state: State, itemId: string): Promise<Stat
     await ctx.send(ctx.to, text("Sorry, that dish just sold out."));
     return state.categoryId ? showItems(ctx, state, state.categoryId, 0) : showCategories(ctx, state);
   }
+  const size = sizeOf(state);
+  const price = platePrice(item, size) ?? item.price;
   await ctx.send(ctx.to, {
     type: "buttons",
-    body: `${item.name} — ${formatPrice(item.price)}\nHow many would you like? Tap a number, or type one (up to ${MAX_QTY}).`,
+    body: `${plateName(item, size)} — ${formatPrice(price)}\nHow many would you like? Tap a number, or type one (up to ${MAX_QTY}).`,
     buttons: [
       { id: "q:1", title: "1" },
       { id: "q:2", title: "2" },
       { id: "q:3", title: "3" },
     ],
   });
-  return { ...state, step: "qty", itemId };
+  return { ...state, step: "qty", itemId, variant: size };
 }
 
 async function addToCart(ctx: Ctx, state: State, qty: number): Promise<State> {
@@ -273,19 +310,24 @@ async function addToCart(ctx: Ctx, state: State, qty: number): Promise<State> {
     return showCategories(ctx, { ...state, itemId: undefined });
   }
 
+  const size = sizeOf(state);
+  if (size === "half" && item.half_price === null) {
+    await ctx.send(ctx.to, text(`${item.name} doesn't come as a half plate any more.`));
+    return askQuantity(ctx, { ...state, variant: "full" }, item.id);
+  }
   const cart = state.cart.map((l) => ({ ...l }));
-  const line = cart.find((l) => l.id === item.id);
+  const line = cart.find((l) => l.id === item.id && sizeOf(l) === size);
   if (line) line.qty = Math.min(MAX_QTY, line.qty + qty);
   else if (cart.length >= MAX_LINES) {
     await ctx.send(ctx.to, text(`Your cart is full (${MAX_LINES} different dishes). Send *checkout* to order what's in it.`));
     return { ...state, step: "idle" };
-  } else cart.push({ id: item.id, qty });
+  } else cart.push({ id: item.id, qty, variant: size });
 
-  const next: State = { ...state, step: "idle", itemId: undefined, cart };
+  const next: State = { ...state, step: "idle", itemId: undefined, variant: undefined, cart };
   const priced = await priceCart(next);
   await ctx.send(ctx.to, {
     type: "buttons",
-    body: `Added ${qty} × ${item.name} ✅\n\n${priced ? summaryText(priced) : ""}`,
+    body: `Added ${qty} × ${plateName(item, size)} ✅\n\n${priced ? summaryText(priced) : ""}`,
     buttons: [
       { id: "a:menu", title: "Add more" },
       { id: "a:cart", title: "View cart" },
@@ -393,7 +435,7 @@ async function placeOrder(ctx: Ctx, state: State): Promise<State> {
     p_uid: ctx.customer.id,
     p_channel: "whatsapp",
     p_restaurant_id: priced.restaurant.id,
-    p_items: state.cart.map((l) => ({ id: l.id, quantity: l.qty })),
+    p_items: state.cart.map((l) => ({ id: l.id, quantity: l.qty, variant: sizeOf(l) })),
     p_address_id: addressId,
     p_notes: null,
     p_expected_total: priced.total,
@@ -418,7 +460,7 @@ async function placeOrder(ctx: Ctx, state: State): Promise<State> {
     ctx.to,
     text(
       `Order #${order?.order_number ?? ""} placed ✅\n${priced.restaurant.name} has received your order.\n\n` +
-        `${priced.lines.map((l) => `${l.qty} × ${l.item.name}`).join("\n")}\n\n` +
+        `${priced.lines.map((l) => `${l.qty} × ${plateName(l.item, l.size)}`).join("\n")}\n\n` +
         `Total ${formatPrice(Number(order?.total ?? priced.total))}, pay cash on delivery.\n\n` +
         `I'll message you here when it's being cooked, on its way, and delivered. Send *status* any time.`,
     ),
@@ -504,7 +546,11 @@ async function handleReply(ctx: Ctx, state: State, id: string): Promise<State> {
     case "ip":
       return state.categoryId ? showItems(ctx, state, state.categoryId, Number.isInteger(num) ? num : 0) : showCategories(ctx, state);
     case "i":
-      return isId ? askQuantity(ctx, state, value) : showCategories(ctx, state);
+      return isId ? askSize(ctx, state, value) : showCategories(ctx, state);
+    case "s":
+      return (value === "half" || value === "full") && state.step === "size" && state.itemId
+        ? askQuantity(ctx, { ...state, variant: value }, state.itemId)
+        : showCart(ctx, state);
     case "q":
       return Number.isInteger(num) && num >= 1 && num <= MAX_QTY && state.step === "qty"
         ? addToCart(ctx, state, num)
@@ -568,6 +614,13 @@ async function handleText(ctx: Ctx, state: State, raw: string): Promise<State> {
   if (["checkout", "pay", "place order"].includes(lower)) return startCheckout(ctx, state);
 
   // ---- answers to what we just asked
+  if (state.step === "size" && state.itemId) {
+    if (["half", "half plate", "h"].includes(lower)) return askQuantity(ctx, { ...state, variant: "half" }, state.itemId);
+    if (["full", "full plate", "f"].includes(lower)) return askQuantity(ctx, { ...state, variant: "full" }, state.itemId);
+    await ctx.send(ctx.to, text("Please tap Half or Full (or send *half* / *full*)."));
+    return state;
+  }
+
   if (state.step === "qty") {
     const qty = Number(lower);
     if (Number.isInteger(qty) && qty >= 1 && qty <= MAX_QTY) return addToCart(ctx, state, qty);

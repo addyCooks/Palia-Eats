@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getPanelRestaurant } from "@/lib/panel/session";
 import { getPanelMenu } from "@/lib/queries/panel";
-import { panelCreateItem, panelDeleteItem, panelUpdateItem } from "@/lib/actions/panel-menu";
+import {
+  panelCreateItem,
+  panelDeleteItem,
+  panelUpdateItem,
+  panelUploadDishPhoto,
+} from "@/lib/actions/panel-menu";
 import { isUuid } from "@/lib/validation/menu";
 import { MenuItemForm } from "@/components/admin/MenuItemForm";
 import { DeleteItemButton } from "@/components/admin/DeleteItemButton";
@@ -24,16 +28,13 @@ export default async function PanelEditItemPage({ params }: PageProps<"/panel/me
 
   return (
     <>
-      <Link href="/panel/menu" className="text-sm text-stone-500 hover:underline">
-        ← Menu
-      </Link>
-      <h1 className="text-xl font-bold">{item.name}</h1>
       <MenuItemForm
         restaurantId={restaurant.id}
         categories={categories}
         item={item}
         actions={{ create: panelCreateItem, update: panelUpdateItem }}
-        allowImage={false}
+        serverUpload={panelUploadDishPhoto}
+        backHref="/panel/menu"
       />
       <DeleteItemButton
         restaurantId={restaurant.id}

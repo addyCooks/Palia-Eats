@@ -1,5 +1,6 @@
 "use client";
 
+import { keepValues } from "@/lib/forms";
 import { useActionState } from "react";
 import { login } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
@@ -9,7 +10,7 @@ export function LoginForm({ next }: { next?: string }) {
   const [state, formAction, pending] = useActionState(login, undefined);
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form onSubmit={keepValues(formAction)} className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next ?? ""} />
       <Input
         label="Email"
@@ -30,7 +31,7 @@ export function LoginForm({ next }: { next?: string }) {
           {state.error}
         </p>
       )}
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" size="lg" className="h-[54px]" disabled={pending}>
         {pending ? "Logging in..." : "Log in"}
       </Button>
     </form>

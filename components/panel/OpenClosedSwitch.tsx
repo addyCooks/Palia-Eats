@@ -37,21 +37,21 @@ export function OpenClosedSwitch({ accepting, status }: OpenClosedSwitchProps) {
         aria-checked={accepting}
         onClick={toggle}
         disabled={isPending}
-        className={`flex w-full items-center justify-between gap-4 rounded-[18px] p-[18px] text-left text-white transition-colors disabled:opacity-70 ${
-          accepting ? "bg-[#1F9D55]" : "bg-[#4A3F36]"
+        className={`flex w-full items-center justify-between gap-4 rounded-[18px] p-[18px] text-left transition-colors disabled:opacity-70 ${
+          accepting ? "bg-brand text-on-brand" : "bg-[#16120D] text-white dark:bg-[#2A241C]"
         }`}
       >
         <span>
-          <span className="block text-lg font-extrabold">{accepting ? "Accepting orders" : "Paused"}</span>
-          <span className="block text-sm opacity-90">{isPending ? "Updating…" : subtitle}</span>
+          <span className="block text-lg font-bold">{accepting ? "Accepting orders" : "Paused"}</span>
+          <span className="block text-sm opacity-85">{isPending ? "Updating…" : subtitle}</span>
         </span>
         <span
-          className={`flex h-[34px] w-[60px] shrink-0 rounded-full bg-white/30 p-[3px] ${
-            accepting ? "justify-end" : "justify-start"
+          className={`flex h-[34px] w-[60px] shrink-0 rounded-full p-[3px] ${
+            accepting ? "justify-end bg-[#1A1206]/20" : "justify-start bg-white/20"
           }`}
           aria-hidden
         >
-          <span className="size-7 rounded-full bg-white" />
+          <span className={`size-7 rounded-full ${accepting ? "bg-[#1A1206]" : "bg-white"}`} />
         </span>
       </button>
       {error && (
