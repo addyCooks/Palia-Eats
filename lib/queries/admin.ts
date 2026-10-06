@@ -448,7 +448,7 @@ export async function getAdminCustomers({
   const [profiles, orders, addresses, emails] = await Promise.all([
     supabase.from("profiles").select("id, role, full_name, phone, whatsapp_phone, created_at, is_blocked").limit(5000),
     supabase.from("orders").select("customer_id, total, status, placed_at").limit(20000),
-    supabase.from("customer_addresses").select("user_id, landmark, address_line, is_default").limit(10000),
+    supabase.from("customer_addresses").select("user_id, landmark, address_line, phone, is_default").limit(10000),
     emailsById(),
   ]);
   if (profiles.error) throw new Error(`Could not load customers: ${profiles.error.message}`);
@@ -463,7 +463,7 @@ export async function getAdminCustomers({
     stats.set(order.customer_id, entry);
   }
 
-  const homes = new Map<string, { landmark: string | null; address_line: string }>();
+  const homes = new Map<string, { landmark: string | null; address_line: string; phone: string | null }>();
   for (const address of addresses.data ?? []) {
     if (!homes.has(address.user_id) || address.is_default) homes.set(address.user_id, address);
   }
@@ -476,7 +476,8 @@ export async function getAdminCustomers({
       id: profile.id,
       role: profile.role,
       full_name: profile.full_name,
-      phone: profile.phone,
+      // Their account phone, else the one on their default address.
+      phone: profile.phone ?? homes.get(profile.id)?.phone ?? null,
       email: emails.get(profile.id) ?? null,
       whatsapp_phone: profile.whatsapp_phone ?? null,
       created_at: profile.created_at ?? null,
@@ -511,7 +512,7 @@ export async function getAdminCustomers({
     customers: filtered.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE),
     matching: filtered.length,
     registered: all.filter((customer) => customer.role === "customer").length,
-    newThisWeek: all.filter((customer) => customer.state === "New").length,
+    newThisWeek: all.filter((customer) => customer.role === "customer" && customer.state === "New").length,
   };
 }
 

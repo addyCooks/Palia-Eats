@@ -8,11 +8,13 @@ export type SidebarItem = {
   href: string;
   label: string;
   badge?: string;
-  // Extra paths that should also light this item up (e.g. /panel/menu/items/... for Menu)
   match?: "exact" | "prefix";
+  // Other pages that belong under this item (e.g. the message log under Settings)
+  also?: string[];
 };
 
 function isActive(pathname: string, item: SidebarItem) {
+  if (item.also?.some((path) => pathname === path || pathname.startsWith(`${path}/`))) return true;
   if (item.match === "exact") return pathname === item.href;
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }

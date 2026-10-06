@@ -9,7 +9,7 @@ const ITEMS = [
   { href: "/admin/restaurants", label: "Restaurants" },
   { href: "/admin/customers", label: "Customers" },
   { href: "/admin/riders", label: "Riders" },
-  { href: "/admin/settings", label: "Settings" },
+  { href: "/admin/settings", label: "Settings", also: ["/admin/notifications"] },
 ];
 
 // Every page under /admin goes through this check. Non-admins are redirected.

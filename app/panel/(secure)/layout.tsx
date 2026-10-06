@@ -21,7 +21,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
     { href: "/panel/history", label: "Order history" },
     { href: "/panel/menu", label: "Menu" },
     { href: "/panel/sales", label: "Sales" },
-    { href: "/panel/settings", label: "Settings" },
+    { href: "/panel/settings", label: "Settings", also: ["/panel/share"] },
   ];
 
   return (

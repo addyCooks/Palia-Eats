@@ -1,4 +1,4 @@
-import { formatDateTime, formatPrice } from "@/lib/utils/format";
+import { formatPrice } from "@/lib/utils/format";
 import type { OrderItem, Order } from "@/types/app";
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
 import { OrderActions, type UpdateOrderStatus } from "@/components/order/OrderActions";
@@ -7,29 +7,25 @@ import { Card } from "@/components/ui/Card";
 type StaffOrderCardProps = {
   order: Order & { order_items: OrderItem[] };
   updateStatus: UpdateOrderStatus;
-  restaurantName?: string; // shown in the admin, where orders from every restaurant mix
 };
 
-// One order as the restaurant (or the admin) sees it: what to cook, who to deliver to,
-// and the button for the next step.
-export function StaffOrderCard({ order, updateStatus, restaurantName }: StaffOrderCardProps) {
+// The order card on the admin's order page: what to cook, who to deliver to, and the
+// button for the next step. (The page heading already shows the number, restaurant and time.)
+export function StaffOrderCard({ order, updateStatus }: StaffOrderCardProps) {
   const address = order.delivery_address;
   const isNew = order.status === "pending";
 
   return (
     <Card className={`flex flex-col gap-3 rounded-[18px] border-0 p-4 shadow-card ${isNew ? "ring-2 ring-brand" : ""}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          {isNew && (
-            <p className="mb-0.5 flex items-center gap-1.5 text-xs font-bold tracking-wide text-accent">
-              <span className="size-2 animate-pulse rounded-full bg-brand" aria-hidden />
-              NEW ORDER
-            </p>
-          )}
-          <p className="text-lg font-bold">Order #{order.order_number}</p>
-          {restaurantName && <p className="text-sm font-medium text-accent">{restaurantName}</p>}
-          <p className="text-sm text-stone-500">{formatDateTime(order.placed_at)}</p>
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        {isNew ? (
+          <p className="flex items-center gap-1.5 text-xs font-bold tracking-[2px] text-accent">
+            <span className="size-2 animate-pulse rounded-full bg-brand" aria-hidden />
+            NEW ORDER
+          </p>
+        ) : (
+          <h2 className="text-[17px] font-semibold">Order details</h2>
+        )}
         <OrderStatusBadge status={order.status} />
       </div>
 

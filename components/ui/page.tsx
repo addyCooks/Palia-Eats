@@ -115,7 +115,8 @@ export function FilterChips({
   );
 }
 
-// White table card. On narrow screens it scrolls sideways instead of squashing columns.
+// White table card. On laptops and tablets: columns with a header row. On phones each row
+// becomes a compact wrapped line (no sideways scrolling); the header row is hidden.
 export function DataTable({
   columns,
   headers,
@@ -134,11 +135,11 @@ export function DataTable({
   const style = { gridTemplateColumns: columns } as CSSProperties;
   return (
     <div className="overflow-hidden rounded-[18px] bg-surface shadow-card">
-      <div className="overflow-x-auto">
-        <div style={{ minWidth }}>
+      <div className="md:overflow-x-auto">
+        <div style={{ "--table-min": `${minWidth}px` } as CSSProperties} className="md:min-w-[var(--table-min)]">
           <div
             style={style}
-            className="grid gap-4 border-b border-muted px-5 py-3.5 text-xs font-semibold tracking-[.5px] text-stone-500"
+            className="hidden gap-4 border-b border-muted px-5 py-3.5 text-xs font-semibold tracking-[.5px] text-stone-500 md:grid"
           >
             {headers.map((header) => (
               <span key={header}>{header}</span>
@@ -163,9 +164,10 @@ export function DataRow({
   children: ReactNode;
   className?: string;
 }) {
-  const style = { gridTemplateColumns: columns } as CSSProperties;
+  const style = { "--cols": columns } as CSSProperties;
   const classes = cn(
-    "grid min-h-[58px] items-center gap-4 border-b border-muted px-5 py-2 text-sm last:border-b-0",
+    "flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-muted px-4 py-3 text-sm last:border-b-0",
+    "md:grid md:min-h-[58px] md:gap-4 md:px-5 md:py-2 md:[grid-template-columns:var(--cols)]",
     href && "transition-colors hover:bg-background",
     className,
   );
@@ -185,7 +187,7 @@ export function Cell({ children, strong, className }: { children: ReactNode; str
   return (
     <span
       className={cn(
-        "min-w-0 truncate",
+        "min-w-0 max-w-full truncate",
         strong ? "font-semibold text-foreground" : "text-stone-600",
         className,
       )}

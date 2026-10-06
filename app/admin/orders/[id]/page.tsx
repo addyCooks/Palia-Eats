@@ -43,7 +43,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
       />
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <StaffOrderCard order={order} updateStatus={adminUpdateOrderStatus} restaurantName={order.restaurants?.name} />
+        <StaffOrderCard order={order} updateStatus={adminUpdateOrderStatus} />
 
         <div className="flex flex-col gap-5">
           <Panel title="Rider">
