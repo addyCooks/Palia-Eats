@@ -27,7 +27,7 @@ export function HoursForm({ openingTime, closingTime, closedDays }: HoursFormPro
     <form onSubmit={keepValues(formAction)}>
       <Card className="flex flex-col gap-4">
         <div>
-          <h2 className="text-lg font-semibold">Opening hours</h2>
+          <h2 className="text-[17px] font-semibold">Opening hours</h2>
           <p className="text-sm text-stone-600">
             Customers can only order between these times, on the days you&apos;re open. Leave both times
             empty to be open all day.
@@ -45,7 +45,7 @@ export function HoursForm({ openingTime, closingTime, closedDays }: HoursFormPro
           </p>
         )}
         {state?.saved && (
-          <p role="status" className="rounded-xl bg-green-50 p-3 text-sm text-green-800">
+          <p role="status" className="rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
             Hours saved.
           </p>
         )}

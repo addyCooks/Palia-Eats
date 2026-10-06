@@ -43,6 +43,7 @@ export function OrderAlerts({ newOrderCount }: { newOrderCount: number }) {
     <Button
       variant="secondary"
       size="sm"
+      className="h-10 rounded-[10px] bg-surface"
       onClick={() => {
         if (!soundOn) beep(); // also lets the browser allow sound later
         setSoundOn(!soundOn);

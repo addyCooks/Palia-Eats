@@ -11,7 +11,7 @@ export function SignupForm({ next }: { next?: string }) {
 
   if (state?.message) {
     return (
-      <p role="status" className="rounded-xl bg-green-50 p-4 text-sm text-green-800">
+      <p role="status" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
         {state.message}
       </p>
     );

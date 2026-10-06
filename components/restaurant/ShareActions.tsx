@@ -88,7 +88,7 @@ export function ShareActions({ url, name, slug, whatsappUrl }: ShareActionsProps
         value={url}
         aria-label="Ordering link"
         onFocus={(e) => e.currentTarget.select()}
-        className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm"
+        className="h-11 w-full rounded-xl border-[1.5px] border-border bg-background px-3.5 text-sm"
       />
       <div className="flex flex-wrap gap-2">
         <Button size="sm" onClick={copyLink}>
@@ -106,13 +106,13 @@ export function ShareActions({ url, name, slug, whatsappUrl }: ShareActionsProps
       </div>
       {whatsappUrl && (
         <div className="flex flex-col gap-2 border-t border-border pt-3">
-          <p className="text-sm font-medium">Order on WhatsApp</p>
+          <p className="text-sm font-semibold">Order on WhatsApp</p>
           <input
             readOnly
             value={whatsappUrl}
             aria-label="WhatsApp ordering link"
             onFocus={(e) => e.currentTarget.select()}
-            className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm"
+            className="h-11 w-full rounded-xl border-[1.5px] border-border bg-background px-3.5 text-sm"
           />
           <div>
             <Button size="sm" variant="secondary" onClick={copyWhatsApp}>
@@ -121,7 +121,7 @@ export function ShareActions({ url, name, slug, whatsappUrl }: ShareActionsProps
           </div>
         </div>
       )}
-      <p role="status" className="min-h-5 text-sm text-green-700">
+      <p role="status" className="min-h-5 text-sm font-medium text-accent">
         {note}
       </p>
     </div>

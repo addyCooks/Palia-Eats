@@ -12,16 +12,16 @@ type ClosedBannerProps = {
 export function ClosedBanner({ status, variant }: ClosedBannerProps) {
   if (variant === "card") {
     return (
-      <div className="absolute inset-x-0 top-0 bg-black px-4 py-3 text-center text-base font-bold uppercase tracking-wide text-white">
+      <div className="absolute inset-x-0 top-0 bg-[#16120D]/90 px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-[2px] text-white">
         {status.label}
       </div>
     );
   }
 
   return (
-    <div role="status" className="bg-black px-4 py-5 text-center text-white">
-      <p className="text-xl font-bold uppercase tracking-wide sm:text-2xl">{status.label}</p>
-      <p className="mt-1 text-sm text-white/80">
+    <div role="status" className="bg-[#16120D] px-4 py-5 text-center text-white">
+      <p className="font-display text-[26px] leading-tight sm:text-[30px]">{status.label}</p>
+      <p className="mt-1 text-sm text-[#D8D2C8]">
         You can look at the menu, but ordering is switched off until they&apos;re back.
       </p>
     </div>

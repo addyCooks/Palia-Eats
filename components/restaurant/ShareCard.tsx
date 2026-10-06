@@ -15,9 +15,9 @@ export async function ShareCard({ name, slug }: { name: string; slug: string }) 
   });
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+    <section className="flex flex-col gap-4 rounded-[18px] bg-surface p-5 shadow-card">
       <div>
-        <h2 className="text-lg font-semibold">Share your ordering link</h2>
+        <h2 className="text-[17px] font-semibold">Share your ordering link</h2>
         <p className="text-sm text-stone-600">
           Customers who open this link or scan the QR code land straight on {name}&apos;s menu.
           Put it on your Instagram, WhatsApp status, menu cards or the counter.
@@ -29,7 +29,7 @@ export async function ShareCard({ name, slug }: { name: string; slug: string }) 
         <div
           role="img"
           aria-label={`QR code for ${name}`}
-          className="size-40 shrink-0 overflow-hidden rounded-xl border border-border bg-white [&>svg]:size-full"
+          className="size-40 shrink-0 overflow-hidden rounded-[14px] border-[1.5px] border-border bg-white [&>svg]:size-full"
           dangerouslySetInnerHTML={{ __html: svg }}
         />
         <ShareActions url={url} name={name} slug={slug} whatsappUrl={restaurantWhatsAppUrl(slug)} />

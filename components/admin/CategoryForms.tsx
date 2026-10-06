@@ -124,7 +124,7 @@ export function CategoryRow({
           {saveState?.error ?? deleteState?.error}
         </p>
       )}
-      {saveState?.saved && <p className="text-sm text-green-700">Saved.</p>}
+      {saveState?.saved && <p className="text-sm text-stone-600">Saved.</p>}
     </div>
   );
 }

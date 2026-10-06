@@ -43,7 +43,7 @@ export function PanelKeyCard({ restaurantId, createdAt }: PanelKeyCardProps) {
           <p className="font-medium text-amber-900">
             Copy this link now. For security it can&apos;t be shown again.
           </p>
-          <code className="break-all rounded-lg bg-surface p-2 text-xs">{state.link}</code>
+          <code className="break-all rounded-[10px] bg-surface p-2.5 text-xs">{state.link}</code>
           <Button type="button" size="sm" variant="secondary" onClick={copyLink}>
             {copied ? "Copied!" : "Copy link"}
           </Button>
