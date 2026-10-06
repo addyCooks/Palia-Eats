@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getPanelRestaurant } from "@/lib/panel/session";
 import { getRestaurantStatus } from "@/lib/utils/hours";
-import { OpenClosedSwitch } from "@/components/panel/OpenClosedSwitch";
+import { PanelNav } from "@/components/panel/PanelNav";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 // Every page in the panel passes through here: no valid link/cookie, no entry.
 export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
@@ -10,40 +10,29 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
   if (!restaurant) redirect("/panel/locked");
 
   const status = getRestaurantStatus(restaurant);
+  const live = status.canOrder;
 
   return (
-    <>
-      <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-3 px-4">
-          <p className="truncate font-bold">{restaurant.name}</p>
-          <nav className="flex items-center gap-1 text-sm">
-            <Link href="/panel" className="rounded-lg px-3 py-2 hover:bg-muted">
-              Orders
-            </Link>
-            <Link href="/panel/menu" className="rounded-lg px-3 py-2 hover:bg-muted">
-              Menu
-            </Link>
-            <Link href="/panel/settings" className="rounded-lg px-3 py-2 hover:bg-muted">
-              Settings
-            </Link>
-            <Link href="/panel/share" className="rounded-lg px-3 py-2 hover:bg-muted">
-              Share
-            </Link>
-            <Link
-              href={`/restaurants/${restaurant.slug}`}
-              className="rounded-lg px-3 py-2 text-stone-500 hover:bg-muted"
-              target="_blank"
+    <div className="flex min-h-full flex-1 flex-col bg-muted">
+      <header className="bg-chrome text-white">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 px-4 pb-4 pt-5">
+          <p className="truncate font-display text-[22px] font-extrabold">{restaurant.name}</p>
+          <div className="flex shrink-0 items-center gap-1">
+            <span
+              className={`flex h-[34px] items-center gap-2 rounded-full px-3 text-[13px] font-extrabold ${
+                live ? "bg-[#1F9D55]" : "bg-[#4A3F36]"
+              }`}
             >
-              My page ↗
-            </Link>
-          </nav>
+              <span className="size-[7px] rounded-full bg-white" aria-hidden />
+              {restaurant.is_accepting_orders ? (live ? "Accepting" : "Closed now") : "Paused"}
+            </span>
+            <ThemeToggle className="text-white hover:bg-white/10" />
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-6">
-        <OpenClosedSwitch accepting={restaurant.is_accepting_orders} status={status} />
-        {children}
-      </main>
-    </>
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-28">{children}</main>
+      <PanelNav />
+    </div>
   );
 }

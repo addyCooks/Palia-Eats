@@ -3,14 +3,14 @@
 import { useState, useTransition } from "react";
 import { setAcceptingOrders } from "@/lib/actions/panel";
 import type { RestaurantStatus } from "@/lib/utils/hours";
-import { Button } from "@/components/ui/Button";
 
 type OpenClosedSwitchProps = {
   accepting: boolean;
   status: RestaurantStatus;
 };
 
-// The big "we are open / closed for orders" button at the top of the panel.
+// The big "accepting orders / paused" switch. One tap flips it, and customers see the change
+// straight away.
 export function OpenClosedSwitch({ accepting, status }: OpenClosedSwitchProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -23,38 +23,42 @@ export function OpenClosedSwitch({ accepting, status }: OpenClosedSwitchProps) {
     });
   }
 
+  const subtitle = accepting
+    ? status.state === "closed"
+      ? `${status.label}. Customers can't order outside your opening hours.`
+      : "Customers can order right now. Tap to pause."
+    : "Customers can see your menu but can't order. Tap to resume.";
+
   return (
-    <div
-      className={`flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between ${
-        accepting ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"
-      }`}
-    >
-      <div>
-        <p className={`text-lg font-bold ${accepting ? "text-green-900" : "text-red-900"}`}>
-          {accepting ? "We're OPEN for orders" : "We're CLOSED for orders"}
-        </p>
-        <p className="text-sm text-stone-700">
-          {accepting
-            ? status.state === "closed"
-              ? `${status.label}. Customers can't order outside your opening hours.`
-              : "Customers can place orders right now."
-            : "Customers can see your menu but can't order."}
-        </p>
-        {error && (
-          <p role="alert" className="mt-1 text-sm text-red-700">
-            {error}
-          </p>
-        )}
-      </div>
-      <Button
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        role="switch"
+        aria-checked={accepting}
         onClick={toggle}
         disabled={isPending}
-        variant={accepting ? "danger" : "primary"}
-        size="lg"
-        className="shrink-0"
+        className={`flex w-full items-center justify-between gap-4 rounded-[18px] p-[18px] text-left text-white transition-colors disabled:opacity-70 ${
+          accepting ? "bg-[#1F9D55]" : "bg-[#4A3F36]"
+        }`}
       >
-        {isPending ? "Updating…" : accepting ? "Close for orders" : "Open for orders"}
-      </Button>
+        <span>
+          <span className="block text-lg font-extrabold">{accepting ? "Accepting orders" : "Paused"}</span>
+          <span className="block text-sm opacity-90">{isPending ? "Updating…" : subtitle}</span>
+        </span>
+        <span
+          className={`flex h-[34px] w-[60px] shrink-0 rounded-full bg-white/30 p-[3px] ${
+            accepting ? "justify-end" : "justify-start"
+          }`}
+          aria-hidden
+        >
+          <span className="size-7 rounded-full bg-white" />
+        </span>
+      </button>
+      {error && (
+        <p role="alert" className="text-sm text-red-700">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

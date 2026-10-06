@@ -17,9 +17,15 @@ export function StaffOrderCard({ order, updateStatus, restaurantName }: StaffOrd
   const isNew = order.status === "pending";
 
   return (
-    <Card className={`flex flex-col gap-3 ${isNew ? "border-2 border-amber-400" : ""}`}>
+    <Card className={`flex flex-col gap-3 rounded-[18px] border-0 p-4 shadow-card ${isNew ? "ring-2 ring-brand" : ""}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
+          {isNew && (
+            <p className="mb-0.5 flex items-center gap-1.5 text-xs font-extrabold tracking-wide text-brand-dark">
+              <span className="size-2 animate-pulse rounded-full bg-brand" aria-hidden />
+              NEW ORDER
+            </p>
+          )}
           <p className="text-lg font-bold">Order #{order.order_number}</p>
           {restaurantName && <p className="text-sm font-medium text-brand">{restaurantName}</p>}
           <p className="text-sm text-stone-500">{formatDateTime(order.placed_at)}</p>
@@ -55,7 +61,7 @@ export function StaffOrderCard({ order, updateStatus, restaurantName }: StaffOrd
 
       <div className="flex items-center justify-between text-sm">
         <span className="text-stone-600">Cash on delivery</span>
-        <span className="text-lg font-bold">{formatPrice(order.total)}</span>
+        <span className="text-lg font-bold tabular-nums">{formatPrice(order.total)}</span>
       </div>
       <p className="-mt-2 text-xs text-stone-500">
         Items {formatPrice(order.subtotal)} + delivery{" "}

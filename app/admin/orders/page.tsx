@@ -34,7 +34,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
             aria-current={tab.key === filter ? "page" : undefined}
             className={`rounded-full border px-4 py-1.5 text-sm font-medium ${
               tab.key === filter
-                ? "border-brand bg-brand text-white"
+                ? "border-brand bg-brand text-on-brand"
                 : "border-border bg-surface hover:bg-muted"
             }`}
           >

@@ -17,8 +17,9 @@ export function DefaultStorefront({ restaurant, categories, items }: StorefrontP
   const brand = restaurant.theme.brand ?? "#ea580c";
   const brandDark = restaurant.theme.brandDark ?? brand;
 
-  // Overriding these two variables re-colors every `bg-brand` / `text-brand` below.
-  const themeStyle = { "--brand": brand, "--brand-dark": brandDark } as CSSProperties;
+  // Overriding these variables re-colors every `bg-brand` / `text-brand` below. Text on the
+  // brand color stays white, in dark mode too (the restaurant picked a color for white text).
+  const themeStyle = { "--brand": brand, "--brand-dark": brandDark, "--on-brand": "#ffffff" } as CSSProperties;
 
   const sections = categories
     .map((category) => ({
@@ -31,7 +32,7 @@ export function DefaultStorefront({ restaurant, categories, items }: StorefrontP
   const unavailable = !status.canOrder;
 
   return (
-    <div style={themeStyle} className="flex flex-1 flex-col bg-background">
+    <div style={themeStyle} className="storefront flex flex-1 flex-col bg-background">
       {/* Everything except the floating cart bar. The grayscale filter lives on this
           wrapper only, because a filter would break the cart bar's fixed position. */}
       <div className={`flex flex-1 flex-col ${unavailable ? "grayscale" : ""}`}>

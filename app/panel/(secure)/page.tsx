@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getPanelRestaurant } from "@/lib/panel/session";
 import { getPanelOrders } from "@/lib/queries/panel";
 import { updateOrderStatus } from "@/lib/actions/panel";
+import { getRestaurantStatus } from "@/lib/utils/hours";
+import { OpenClosedSwitch } from "@/components/panel/OpenClosedSwitch";
 import { LiveUpdates } from "@/components/LiveUpdates";
 import { OrderAlerts } from "@/components/panel/OrderAlerts";
 import { StaffOrderCard } from "@/components/order/StaffOrderCard";
@@ -15,8 +17,13 @@ export default async function PanelOrdersPage() {
 
   return (
     <>
+      <OpenClosedSwitch
+        accepting={restaurant.is_accepting_orders}
+        status={getRestaurantStatus(restaurant)}
+      />
+
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-bold">
+        <h1 className="font-display text-2xl font-extrabold">
           Active orders{" "}
           <span className="text-base font-normal text-stone-500">({active.length})</span>
         </h1>
@@ -43,7 +50,7 @@ export default async function PanelOrdersPage() {
 
       {recent.length > 0 && (
         <section className="flex flex-col gap-4">
-          <h2 className="text-lg font-bold">Recent orders</h2>
+          <h2 className="font-display text-xl font-bold">Recent orders</h2>
           <ul className="flex flex-col gap-4">
             {recent.map((order) => (
               <li key={order.id}>

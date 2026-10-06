@@ -1,15 +1,134 @@
 @import "tailwindcss";
 
-/* PaliaEats design tokens. Individual restaurant storefronts can override
-   --brand / --brand-dark with their own theme colors later. */
+/* ---------------------------------------------------------------------------
+   PaliaEats design tokens (from the design system: warm cream, saffron, deep chili).
+   Individual restaurant storefronts override --brand / --brand-dark / --on-brand with
+   their own theme colors.
+   --------------------------------------------------------------------------- */
 :root {
-  --background: #fafaf9;
-  --foreground: #1c1917;
-  --surface: #ffffff;
-  --muted: #f5f5f4;
-  --border: #e7e5e4;
-  --brand: #ea580c;
-  --brand-dark: #c2410c;
+  --background: #fffaf3; /* warm cream page */
+  --foreground: #1f1b16; /* ink */
+  --surface: #ffffff; /* cards */
+  --muted: #f7f1e8; /* quiet fills, panel background */
+  --border: #efe6da;
+  --brand: #e8590c; /* spiced saffron-orange */
+  --brand-dark: #c2410c; /* hover / pressed */
+  --on-brand: #ffffff; /* text on top of --brand */
+  --deep: #7a1f1f; /* deep chili / maroon */
+  --gold: #f4b942; /* turmeric */
+  --chrome: #1f1b16; /* dark bars: restaurant panel header and tab bar */
+  --shadow-card: 0 4px 20px rgba(122, 31, 31, 0.08);
+  --shadow-float: 0 12px 40px rgba(122, 31, 31, 0.16);
+
+  /* Muted text and neutral lines. The whole app uses these Tailwind "stone" shades, so
+     re-pointing them here (and in dark mode below) re-themes everything at once. */
+  --color-stone-300: #d9cfc1;
+  --color-stone-500: #6b6258;
+  --color-stone-600: #5c544b;
+  --color-stone-700: #4a4239;
+
+  /* Status tints (cancelled, delivered, cooking ...) */
+  --color-red-50: #fdecec;
+  --color-red-100: #fdecec;
+  --color-red-200: #f5c2c2;
+  --color-red-300: #eda5a5;
+  --color-red-600: #d63031;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+  --color-red-900: #7f1d1d;
+  --color-green-50: #e3f5ea;
+  --color-green-100: #e3f5ea;
+  --color-green-300: #a7ddba;
+  --color-green-600: #1f9d55;
+  --color-green-700: #187a43;
+  --color-green-800: #14532d;
+  --color-green-900: #14532d;
+  --color-amber-50: #fff6dd;
+  --color-amber-100: #fdefc3;
+  --color-amber-400: #e0a100;
+  --color-amber-800: #7a5500;
+  --color-amber-900: #5f4200;
+}
+
+/* Dark mode: warm charcoal, never pure black; saffron lifts to #F07A3A for contrast. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #1a1512;
+    --foreground: #f5ede3;
+    --surface: #26201b;
+    --muted: #2f2721;
+    --border: #3a312a;
+    --brand: #f07a3a;
+    --brand-dark: #f5915a;
+    --on-brand: #1a1512;
+    --deep: #4a1717;
+    --chrome: #120e0b;
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.35);
+    --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.5);
+    --color-stone-300: #3a312a;
+    --color-stone-500: #b5a898;
+    --color-stone-600: #c9bdae;
+    --color-stone-700: #ddd2c4;
+    --color-red-50: #3a1c1c;
+    --color-red-100: #4a2020;
+    --color-red-200: #6b2a2a;
+    --color-red-300: #7f3333;
+    --color-red-600: #ff8a80;
+    --color-red-700: #ff9c93;
+    --color-red-800: #ffa59b;
+    --color-red-900: #ffb4ab;
+    --color-green-50: #16301f;
+    --color-green-100: #1b3a27;
+    --color-green-300: #2e6b45;
+    --color-green-600: #3bbf74;
+    --color-green-700: #5fd592;
+    --color-green-800: #7be0a0;
+    --color-green-900: #9aeab8;
+    --color-amber-50: #3a2e10;
+    --color-amber-100: #4a3a12;
+    --color-amber-400: #b8870f;
+    --color-amber-800: #f4c95d;
+    --color-amber-900: #f8d77f;
+  }
+}
+
+:root[data-theme="dark"] {
+  --background: #1a1512;
+  --foreground: #f5ede3;
+  --surface: #26201b;
+  --muted: #2f2721;
+  --border: #3a312a;
+  --brand: #f07a3a;
+  --brand-dark: #f5915a;
+  --on-brand: #1a1512;
+  --deep: #4a1717;
+  --chrome: #120e0b;
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.35);
+  --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.5);
+  --color-stone-300: #3a312a;
+  --color-stone-500: #b5a898;
+  --color-stone-600: #c9bdae;
+  --color-stone-700: #ddd2c4;
+  --color-red-50: #3a1c1c;
+  --color-red-100: #4a2020;
+  --color-red-200: #6b2a2a;
+  --color-red-300: #7f3333;
+  --color-red-600: #ff8a80;
+  --color-red-700: #ff9c93;
+  --color-red-800: #ffa59b;
+  --color-red-900: #ffb4ab;
+  --color-green-50: #16301f;
+  --color-green-100: #1b3a27;
+  --color-green-300: #2e6b45;
+  --color-green-600: #3bbf74;
+  --color-green-700: #5fd592;
+  --color-green-800: #7be0a0;
+  --color-green-900: #9aeab8;
+  --color-amber-50: #3a2e10;
+  --color-amber-100: #4a3a12;
+  --color-amber-400: #b8870f;
+  --color-amber-800: #f4c95d;
+  --color-amber-900: #f8d77f;
 }
 
 @theme inline {
@@ -20,12 +139,64 @@
   --color-border: var(--border);
   --color-brand: var(--brand);
   --color-brand-dark: var(--brand-dark);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-on-brand: var(--on-brand);
+  --color-deep: var(--deep);
+  --color-gold: var(--gold);
+  --color-chrome: var(--chrome);
+  --shadow-card: var(--shadow-card);
+  --shadow-float: var(--shadow-float);
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+}
+
+/* A restaurant picks its own brand color, which may be dark (navy, maroon). In dark mode,
+   brand-colored TEXT on a storefront is lightened so it stays readable. */
+:root[data-theme="dark"] .storefront .text-brand,
+:root[data-theme="dark"] .storefront .text-brand-dark {
+  color: color-mix(in srgb, var(--brand) 55%, white);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .storefront .text-brand,
+  :root:not([data-theme="light"]) .storefront .text-brand-dark {
+    color: color-mix(in srgb, var(--brand) 55%, white);
+  }
+}
+
+/* The page colors follow the theme smoothly but quietly. */
+html {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+}
+
+/* Rows that scroll sideways (cuisine chips, category tabs) without a visible scrollbar. */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Respect people who ask their phone for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

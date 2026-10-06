@@ -55,7 +55,7 @@ export default async function AdminMenuPage({
               <h2 className="text-lg font-semibold">{category.name}</h2>
               <Link
                 href={`/admin/restaurants/${id}/menu/items/new?category=${category.id}`}
-                className="rounded-xl bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-dark"
+                className="rounded-xl bg-brand px-3 py-2 text-sm font-medium text-on-brand hover:bg-brand-dark"
               >
                 Add item
               </Link>

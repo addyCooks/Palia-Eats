@@ -51,7 +51,7 @@ export function AddToCartButton({ restaurant, item, canOrder }: AddToCartButtonP
     <button
       type="button"
       onClick={handleAdd}
-      className="h-9 rounded-xl border border-brand px-6 text-sm font-semibold text-brand hover:bg-brand hover:text-white"
+      className="h-9 rounded-xl border border-brand px-6 text-sm font-semibold text-brand hover:bg-brand hover:text-on-brand"
     >
       Add
     </button>

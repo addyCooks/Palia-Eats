@@ -7,6 +7,7 @@ import { isUuid } from "@/lib/validation/menu";
 import { formatDateTime, formatPrice } from "@/lib/utils/format";
 import { isOrderOverdue } from "@/lib/orders/overdue";
 import { LiveUpdates } from "@/components/LiveUpdates";
+import { CancelledIllustration, OrderDelayedIllustration } from "@/components/illustrations";
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
 import { OrderTimeline } from "@/components/order/OrderTimeline";
 import { Card } from "@/components/ui/Card";
@@ -54,27 +55,33 @@ export default async function OrderPage({
       </div>
 
       {overdue && (
-        <p role="status" className="rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
-          This is taking longer than usual.{" "}
-          {restaurant?.phone ? (
-            <>
-              You can call {restaurant.name} on{" "}
-              <a href={`tel:${restaurant.phone}`} className="font-semibold underline">
-                {restaurant.phone}
-              </a>
-              .
-            </>
-          ) : (
-            "Please try again in a few minutes."
-          )}
-        </p>
+        <div role="status" className="flex items-center gap-4 rounded-2xl bg-amber-50 p-4 text-amber-900">
+          <OrderDelayedIllustration className="h-20 w-[90px] shrink-0 rounded-xl bg-[#FFFAF3]" />
+          <p className="text-sm">
+            <strong className="block text-base">This is taking longer than usual.</strong>
+            {restaurant?.phone ? (
+              <>
+                You can call {restaurant.name} on{" "}
+                <a href={`tel:${restaurant.phone}`} className="font-semibold underline">
+                  {restaurant.phone}
+                </a>
+                .
+              </>
+            ) : (
+              "Please try again in a few minutes."
+            )}
+          </p>
+        </div>
       )}
 
       {(order.status === "cancelled" || order.status === "rejected") ? (
-        <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-          This order was cancelled.
-          {order.rejection_reason ? ` Reason: ${order.rejection_reason}` : ""}
-        </p>
+        <div role="alert" className="flex items-center gap-4 rounded-2xl bg-red-50 p-4 text-red-800">
+          <CancelledIllustration className="h-20 w-[90px] shrink-0 rounded-xl bg-[#FFFAF3]" />
+          <p className="text-sm">
+            <strong className="block text-base">This order was cancelled.</strong>
+            {order.rejection_reason ? `Reason: ${order.rejection_reason}` : "The restaurant couldn't complete it."}
+          </p>
+        </div>
       ) : (
         <Card>
           <OrderTimeline status={order.status} />

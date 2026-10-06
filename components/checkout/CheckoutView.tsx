@@ -58,7 +58,7 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
             {notice}
           </p>
         ))}
-        <Link href="/" className="rounded-xl bg-brand px-5 py-3 font-medium text-white hover:bg-brand-dark">
+        <Link href="/" className="rounded-xl bg-brand px-5 py-3 font-medium text-on-brand hover:bg-brand-dark">
           Browse restaurants
         </Link>
       </div>

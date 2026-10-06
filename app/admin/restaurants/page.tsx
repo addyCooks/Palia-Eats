@@ -16,7 +16,7 @@ export default async function AdminRestaurantsPage() {
         <h1 className="text-2xl font-bold">Restaurants</h1>
         <Link
           href="/admin/restaurants/new"
-          className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-dark"
+          className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-on-brand hover:bg-brand-dark"
         >
           Add restaurant
         </Link>

@@ -1,17 +1,25 @@
 import Link from "next/link";
+import { EmptyState, SpilledIllustration } from "@/components/illustrations";
 
 export default function NotFound() {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-4 px-4 py-20 text-center">
-      <p className="text-5xl font-bold text-brand">404</p>
-      <h1 className="text-2xl font-bold">Page not found</h1>
-      <p className="text-stone-600">That page doesn&apos;t exist, or it has moved.</p>
-      <Link
-        href="/"
-        className="rounded-xl bg-brand px-5 py-3 font-medium text-white hover:bg-brand-dark"
+    <main className="flex flex-1 items-center justify-center px-4 py-16">
+      <EmptyState
+        tone="maroon"
+        illustration={<SpilledIllustration />}
+        title="Oops, that page spilled"
+        action={
+          <Link
+            href="/"
+            className="rounded-xl bg-[#F4B942] px-5 py-3 font-semibold text-[#1F1B16] hover:bg-[#f7c862]"
+          >
+            Back to PaliaEats
+          </Link>
+        }
       >
-        Back to PaliaEats
-      </Link>
+        <p className="font-mono text-xs tracking-widest text-[#F4B942]">404</p>
+        That page doesn&apos;t exist, or it has moved.
+      </EmptyState>
     </main>
   );
 }

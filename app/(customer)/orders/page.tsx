@@ -21,7 +21,7 @@ export default async function OrdersPage() {
       {orders.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-16 text-center">
           <p className="text-stone-600">You haven&apos;t placed any orders yet.</p>
-          <Link href="/" className="rounded-xl bg-brand px-5 py-3 font-medium text-white hover:bg-brand-dark">
+          <Link href="/" className="rounded-xl bg-brand px-5 py-3 font-medium text-on-brand hover:bg-brand-dark">
             Browse restaurants
           </Link>
         </div>

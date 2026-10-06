@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatPrice } from "@/lib/utils/format";
 import { useCart } from "@/components/cart/useCart";
 import { useCartSync } from "@/components/cart/useCartSync";
+import { EmptyCartIllustration, EmptyState } from "@/components/illustrations";
 import { QuantityStepper } from "@/components/cart/QuantityStepper";
 import { VegMark } from "@/components/menu/VegMark";
 import { Button } from "@/components/ui/Button";
@@ -16,20 +17,26 @@ export function CartView() {
 
   if (!restaurant || count === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <h1 className="text-2xl font-bold">Your cart is empty</h1>
+      <div className="flex flex-col items-center gap-4 py-10">
+        <EmptyState
+          illustration={<EmptyCartIllustration />}
+          title="Your cart is empty"
+          action={
+            <Link
+              href="/"
+              className="rounded-xl bg-brand px-5 py-3 font-medium text-on-brand hover:bg-brand-dark"
+            >
+              Browse restaurants
+            </Link>
+          }
+        >
+          Pick something tasty from one of our restaurants.
+        </EmptyState>
         {notices.map((notice) => (
           <p key={notice} className="text-sm text-amber-800">
             {notice}
           </p>
         ))}
-        <p className="text-stone-600">Pick something tasty from one of our restaurants.</p>
-        <Link
-          href="/"
-          className="rounded-xl bg-brand px-5 py-3 font-medium text-white hover:bg-brand-dark"
-        >
-          Browse restaurants
-        </Link>
       </div>
     );
   }
@@ -126,7 +133,7 @@ export function CartView() {
         ) : (
           <Link
             href="/checkout"
-            className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 text-lg font-medium text-white hover:bg-brand-dark"
+            className="inline-flex h-12 items-center justify-center rounded-xl bg-brand px-6 text-lg font-medium text-on-brand hover:bg-brand-dark"
           >
             Proceed to checkout
           </Link>

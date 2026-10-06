@@ -15,7 +15,7 @@ export function CartBar({ restaurantId }: { restaurantId: string }) {
     <div className="fixed inset-x-0 bottom-0 z-20 p-4">
       <Link
         href="/cart"
-        className="mx-auto flex w-full max-w-3xl items-center justify-between rounded-2xl bg-brand px-5 py-4 font-semibold text-white shadow-lg hover:bg-brand-dark"
+        className="mx-auto flex w-full max-w-3xl items-center justify-between rounded-2xl bg-brand px-5 py-4 font-semibold text-on-brand shadow-lg hover:bg-brand-dark"
       >
         <span>
           {count} {count === 1 ? "item" : "items"}

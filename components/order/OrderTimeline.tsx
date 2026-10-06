@@ -25,9 +25,9 @@ export function OrderTimeline({ status }: { status: OrderStatus }) {
                 aria-current={active ? "step" : undefined}
                 className={`flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
                   done
-                    ? "bg-brand text-white"
+                    ? "bg-brand text-on-brand"
                     : active
-                      ? "bg-brand text-white ring-4 ring-brand/25"
+                      ? "bg-brand text-on-brand ring-4 ring-brand/25"
                       : "bg-border text-stone-500"
                 }`}
               >

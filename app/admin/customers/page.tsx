@@ -23,7 +23,7 @@ export default async function AdminCustomersPage({ searchParams }: PageProps<"/a
           aria-label="Search customers"
           className="h-11 flex-1 rounded-xl border border-border bg-surface px-3 outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
         />
-        <button type="submit" className="rounded-xl bg-brand px-5 font-medium text-white hover:bg-brand-dark">
+        <button type="submit" className="rounded-xl bg-brand px-5 font-medium text-on-brand hover:bg-brand-dark">
           Search
         </button>
       </form>

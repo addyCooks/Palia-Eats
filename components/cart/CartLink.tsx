@@ -15,7 +15,7 @@ export function CartLink() {
     >
       Cart
       {count > 0 && (
-        <span className="flex min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-semibold text-white">
+        <span className="flex min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-xs font-semibold text-on-brand">
           {count}
         </span>
       )}

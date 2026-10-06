@@ -71,7 +71,7 @@ export function OrderActions({ orderId, status, updateStatus }: OrderActionsProp
           id={`cancel-${orderId}`}
           value={choice}
           onChange={(e) => setChoice(e.target.value)}
-          className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+          className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
         >
           {CANCEL_REASONS.map((reason) => (
             <option key={reason} value={reason}>
@@ -86,7 +86,7 @@ export function OrderActions({ orderId, status, updateStatus }: OrderActionsProp
             onChange={(e) => setOtherText(e.target.value)}
             maxLength={MAX_REASON_LENGTH}
             placeholder="Type the reason"
-            className="rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm"
+            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm"
           />
         )}
         <div className="flex flex-wrap gap-2">
@@ -109,10 +109,10 @@ export function OrderActions({ orderId, status, updateStatus }: OrderActionsProp
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => change(next.status)} disabled={isPending}>
+        <Button size="lg" className="min-w-44 flex-1" onClick={() => change(next.status)} disabled={isPending}>
           {isPending ? "Updating…" : next.label}
         </Button>
-        <Button variant="ghost" onClick={() => setCancelling(true)} disabled={isPending}>
+        <Button size="lg" variant="ghost" onClick={() => setCancelling(true)} disabled={isPending}>
           Cancel order
         </Button>
       </div>

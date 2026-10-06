@@ -1,20 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth/session";
+import { startOfTodayIST } from "@/lib/utils/time";
 import type { Order, OrderItem } from "@/types/app";
 
 // Admin-only reads. They use the logged-in admin's session, so database rules
 // (RLS) decide what is visible; no special key is needed.
 
 const ACTIVE_STATUSES = ["pending", "accepted", "preparing", "out_for_delivery"];
-
-// Midnight at the start of today in Indian time, as an ISO timestamp.
-function startOfTodayIST(): string {
-  const offset = 5.5 * 60 * 60 * 1000;
-  const istNow = new Date(Date.now() + offset);
-  istNow.setUTCHours(0, 0, 0, 0);
-  return new Date(istNow.getTime() - offset).toISOString();
-}
 
 export async function getAdminOverview() {
   const supabase = await createClient();

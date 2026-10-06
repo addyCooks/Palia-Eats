@@ -37,7 +37,7 @@ export default async function AdminNotificationsPage({
               href={tab.href}
               aria-current={active ? "page" : undefined}
               className={`rounded-full border px-4 py-1.5 text-sm font-medium ${
-                active ? "border-brand bg-brand text-white" : "border-border bg-surface hover:bg-muted"
+                active ? "border-brand bg-brand text-on-brand" : "border-border bg-surface hover:bg-muted"
               }`}
             >
               {tab.label}
