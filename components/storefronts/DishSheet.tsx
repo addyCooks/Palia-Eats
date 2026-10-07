@@ -6,6 +6,7 @@ import { isOtherRestaurant, lineKey, toCartRestaurant, type PlateSize } from "@/
 import { formatPrice } from "@/lib/utils/format";
 import { dishPhoto } from "@/lib/utils/placeholder";
 import { useCart } from "@/components/cart/useCart";
+import { FavouriteButton } from "@/components/favourites/FavouriteButton";
 import { VegMark } from "@/components/menu/VegMark";
 import { Photo } from "@/components/ui/Photo";
 import type { MenuItem, Restaurant } from "@/types/app";
@@ -19,11 +20,13 @@ export function DishSheet({
   restaurant,
   canOrder,
   onClose,
+  favourite,
 }: {
   item: MenuItem;
   restaurant: Restaurant;
   canOrder: boolean;
   onClose: () => void;
+  favourite?: { on: boolean; signedIn: boolean; onChange: (on: boolean) => void };
 }) {
   const { cart, addItem, changeQuantity } = useCart();
   const [size, setSize] = useState<PlateSize>("full");
@@ -74,6 +77,17 @@ export function DishSheet({
         >
           <X className="size-[18px]" aria-hidden />
         </button>
+        {favourite && (
+          <FavouriteButton
+            kind="dish"
+            id={item.id}
+            name={item.name}
+            initial={favourite.on}
+            signedIn={favourite.signedIn}
+            onChange={favourite.onChange}
+            className="absolute left-5 top-5"
+          />
+        )}
         <div className="relative mt-6 size-[220px] overflow-hidden rounded-full shadow-[0_24px_50px_rgba(0,0,0,.25)] sm:size-[250px]">
           <Photo src={dishPhoto(item)} alt={item.name} sizes="250px" />
         </div>

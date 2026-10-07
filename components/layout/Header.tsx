@@ -50,6 +50,9 @@ export async function Header({ className = "" }: { className?: string }) {
                 <Link href="/account/addresses" className="rounded-lg px-3 py-2 hover:bg-muted">
                   Saved addresses
                 </Link>
+                <Link href="/account/favourites" className="rounded-lg px-3 py-2 hover:bg-muted">
+                  Favourites
+                </Link>
                 {profile.role === "admin" && (
                   <Link href="/admin" className="rounded-lg px-3 py-2 hover:bg-muted">
                     Admin

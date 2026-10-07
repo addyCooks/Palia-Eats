@@ -18,8 +18,14 @@ declare
   total_orders int;
   rider1 uuid;
   rider2 uuid;
+  item_id uuid;
+  hidden_id uuid;
 begin
   select id into rest_id from public.restaurants where slug = 'brown-pizza';
+  select id into item_id from public.menu_items where restaurant_id = rest_id limit 1;
+  -- A restaurant hidden from the website (nobody may heart it).
+  insert into public.restaurants (slug, name, is_active) values ('rls-test-hidden', 'Hidden', false)
+    returning id into hidden_id;
   -- What each person SHOULD see, worked out from the real data, so the test keeps
   -- working when restaurants, menu items or orders are added or removed.
   select count(*) into exp_rest from public.restaurants where is_active;
@@ -59,6 +65,10 @@ begin
   begin perform 1 from public.order_status_events; raise exception 'FAIL: visitor can read order timelines';
   exception when insufficient_privilege then null; end;
   begin perform 1 from public.order_ratings; raise exception 'FAIL: visitor can read ratings';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.favourite_restaurants; raise exception 'FAIL: visitor can read favourite restaurants';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.favourite_dishes; raise exception 'FAIL: visitor can read favourite dishes';
   exception when insufficient_privilege then null; end;
   begin insert into public.restaurants (slug, name) values ('hack', 'hack'); raise exception 'FAIL: visitor can create restaurant';
   exception when insufficient_privilege then null; end;
@@ -123,6 +133,25 @@ begin
   begin insert into public.customer_addresses (user_id, address_line) values (other_id, 'Not mine');
     raise exception 'FAIL: customer added address for someone else';
   exception when insufficient_privilege then null; end;
+  -- Favourites: own hearts only, and only for restaurants / dishes on the website.
+  insert into public.favourite_restaurants (user_id, restaurant_id) values (cust_id, rest_id);
+  insert into public.favourite_dishes (user_id, menu_item_id) values (cust_id, item_id);
+  select count(*) into n from public.favourite_restaurants;
+  if n <> 1 then raise exception 'FAIL: customer should see 1 favourite restaurant, saw %', n; end if;
+  select count(*) into n from public.favourite_dishes;
+  if n <> 1 then raise exception 'FAIL: customer should see 1 favourite dish, saw %', n; end if;
+  begin insert into public.favourite_restaurants (user_id, restaurant_id) values (other_id, rest_id);
+    raise exception 'FAIL: customer added a favourite for someone else';
+  exception when insufficient_privilege then null; end;
+  begin insert into public.favourite_dishes (user_id, menu_item_id) values (other_id, item_id);
+    raise exception 'FAIL: customer added a favourite dish for someone else';
+  exception when insufficient_privilege then null; end;
+  begin insert into public.favourite_restaurants (user_id, restaurant_id) values (cust_id, hidden_id);
+    raise exception 'FAIL: customer could heart a hidden restaurant';
+  exception when insufficient_privilege then null; end;
+  begin update public.favourite_dishes set user_id = other_id;
+    raise exception 'FAIL: customer could move a favourite to someone else';
+  exception when insufficient_privilege then null; end;
   reset role;
 
   -- ============ Another customer ============
@@ -134,6 +163,13 @@ begin
   if n <> 0 then raise exception 'FAIL: other customer can see someone elses address'; end if;
   select count(*) into n from public.order_status_events;
   if n <> 0 then raise exception 'FAIL: other customer can see someone elses order timeline'; end if;
+  select count(*) into n from public.favourite_restaurants;
+  if n <> 0 then raise exception 'FAIL: other customer can see someone elses favourite restaurants'; end if;
+  select count(*) into n from public.favourite_dishes;
+  if n <> 0 then raise exception 'FAIL: other customer can see someone elses favourite dishes'; end if;
+  delete from public.favourite_dishes;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL: other customer removed someone elses favourite'; end if;
   reset role;
 
   -- ============ Admin ============
@@ -194,6 +230,9 @@ begin
   if n <> 1 then raise exception 'FAIL: customer should see the 1 rider on their order, saw %', n; end if;
   select count(*) into n from public.restaurant_payouts;
   if n <> 0 then raise exception 'FAIL: customer can read payouts'; end if;
+  delete from public.favourite_dishes where menu_item_id = item_id;
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: customer cannot remove own favourite dish'; end if;
   reset role;
 
   -- ============ Server-side admin client (service role) ============

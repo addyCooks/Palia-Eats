@@ -11,6 +11,7 @@ export const metadata: Metadata = { title: "My account" };
 const LINKS = [
   { href: "/orders", label: "My orders" },
   { href: "/account/addresses", label: "Saved addresses" },
+  { href: "/account/favourites", label: "Favourites" },
 ] as const;
 
 // Account (v2 6f on phones: dark name card and a list of links; 5e on laptops: the

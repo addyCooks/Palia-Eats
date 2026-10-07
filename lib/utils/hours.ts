@@ -80,6 +80,28 @@ export function getRestaurantStatus(
   return { state: "open", label: "Open now", canOrder: true };
 }
 
+// When a closed restaurant opens next: "today at 6:00 PM", "tomorrow at 11:00 AM",
+// "on Monday at 11:00 AM" (or "tomorrow" when it has no set hours). Null when it never
+// opens (closed every day). Only looks at hours and days off, not the pause switch.
+export function nextOpening(restaurant: HoursFields, now: Date = new Date()): string | null {
+  const { minutes, day } = localNow(now);
+  const closedDays = restaurant.closed_days ?? [];
+  const start = restaurant.opening_time ? toMinutes(restaurant.opening_time) : null;
+  const end = restaurant.closing_time ? toMinutes(restaurant.closing_time) : null;
+  const hasWindow = start !== null && end !== null && start !== end;
+  const at = hasWindow && restaurant.opening_time ? ` at ${formatTime(restaurant.opening_time)}` : "";
+
+  for (let ahead = 0; ahead <= 7; ahead++) {
+    const weekday = (day + ahead) % 7;
+    if (closedDays.includes(weekday)) continue;
+    if (ahead === 0 && (!hasWindow || minutes >= start)) continue; // already past today's opening
+    if (ahead === 0) return `today${at}`;
+    if (ahead === 1) return `tomorrow${at}`;
+    return `on ${DAY_NAMES[weekday]}${at}`;
+  }
+  return null;
+}
+
 // "Closed on Monday, Tuesday" (or null when open every day)
 export function describeClosedDays(closedDays: number[] | null | undefined): string | null {
   if (!closedDays?.length) return null;

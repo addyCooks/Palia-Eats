@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ChevronLeft, Share2, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart/useCart";
 
 const circle =
   "relative flex size-10 items-center justify-center rounded-full bg-white text-[#1F1B16] shadow-md transition-transform active:scale-95";
 
-// The three round buttons floating on a storefront's cover photo: back, share, cart.
-export function CoverActions({ name }: { name: string }) {
+// The round buttons floating on a storefront's cover photo: back, share, extras passed
+// in (the favourite heart), cart.
+export function CoverActions({ name, children }: { name: string; children?: ReactNode }) {
   const { count } = useCart();
   const [note, setNote] = useState<string | null>(null);
 
@@ -42,6 +43,7 @@ export function CoverActions({ name }: { name: string }) {
         <button type="button" onClick={share} className={circle} aria-label="Share this restaurant">
           <Share2 className="size-[18px]" aria-hidden />
         </button>
+        {children}
         <Link href="/cart" className={circle} aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}>
           <ShoppingBag className="size-[18px]" aria-hidden />
           {count > 0 && (

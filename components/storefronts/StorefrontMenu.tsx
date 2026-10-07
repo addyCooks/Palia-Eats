@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
+import type { FavouriteState } from "@/lib/queries/favourites";
 import type { MenuCategory, MenuItem, Restaurant } from "@/types/app";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { CartPanel } from "@/components/cart/CartPanel";
@@ -17,15 +18,19 @@ export function StorefrontMenu({
   restaurant,
   sections,
   canOrder,
+  favourites,
 }: {
   restaurant: Restaurant;
   sections: Section[];
   canOrder: boolean;
+  favourites: FavouriteState;
 }) {
   const [query, setQuery] = useState("");
   const [vegOnly, setVegOnly] = useState(false);
   const [active, setActive] = useState<string | null>(sections[0]?.category.id ?? null);
   const [openItem, setOpenItem] = useState<MenuItem | null>(null);
+  // Hearted dishes, kept here so a dish reopened later shows its heart correctly.
+  const [favouriteDishes, setFavouriteDishes] = useState(() => new Set(favourites.dishIds));
   const tabsRef = useRef<HTMLDivElement>(null);
 
   const needle = query.trim().toLowerCase();
@@ -209,7 +214,24 @@ export function StorefrontMenu({
       </div>
 
       {openItem && (
-        <DishSheet item={openItem} restaurant={restaurant} canOrder={canOrder} onClose={() => setOpenItem(null)} />
+        <DishSheet
+          key={openItem.id}
+          item={openItem}
+          restaurant={restaurant}
+          canOrder={canOrder}
+          onClose={() => setOpenItem(null)}
+          favourite={{
+            on: favouriteDishes.has(openItem.id),
+            signedIn: favourites.signedIn,
+            onChange: (on) =>
+              setFavouriteDishes((current) => {
+                const next = new Set(current);
+                if (on) next.add(openItem.id);
+                else next.delete(openItem.id);
+                return next;
+              }),
+          }}
+        />
       )}
     </div>
   );

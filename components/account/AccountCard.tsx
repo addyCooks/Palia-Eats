@@ -6,6 +6,7 @@ const LINKS = [
   { href: "/orders", label: "My orders" },
   { href: "/account", label: "My details" },
   { href: "/account/addresses", label: "Saved addresses" },
+  { href: "/account/favourites", label: "Favourites" },
 ] as const;
 
 // The account card beside My orders / account pages on laptops (v2 5e) and on top of the

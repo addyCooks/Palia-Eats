@@ -5,6 +5,7 @@ import { describeClosedDays, formatTime, getRestaurantStatus } from "@/lib/utils
 import { restaurantCover } from "@/lib/utils/placeholder";
 import { CartBar } from "@/components/cart/CartBar";
 import { ClosedBanner } from "@/components/restaurant/ClosedBanner";
+import { FavouriteButton } from "@/components/favourites/FavouriteButton";
 import { CoverActions } from "@/components/storefronts/CoverActions";
 import { StorefrontMenu } from "@/components/storefronts/StorefrontMenu";
 import { Photo } from "@/components/ui/Photo";
@@ -13,7 +14,7 @@ const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
 
 // The standard restaurant website (v2 5b on laptops, 6a on phones). Accent colors come
 // from the restaurant's own theme.
-export function DefaultStorefront({ restaurant, categories, items }: StorefrontProps) {
+export function DefaultStorefront({ restaurant, categories, items, favourites }: StorefrontProps) {
   const status = getRestaurantStatus(restaurant);
   const brand = restaurant.theme.brand ?? "#f5a524";
   const brandDark = restaurant.theme.brandDark ?? brand;
@@ -70,7 +71,16 @@ export function DefaultStorefront({ restaurant, categories, items }: StorefrontP
         <div className="relative h-[250px] w-full bg-[#16120D] lg:hidden">
           <Photo src={cover} alt="" sizes="100vw" priority />
           <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-transparent" />
-          <CoverActions name={restaurant.name} />
+          <CoverActions name={restaurant.name}>
+            <FavouriteButton
+              kind="restaurant"
+              id={restaurant.id}
+              name={restaurant.name}
+              initial={favourites.restaurant}
+              signedIn={favourites.signedIn}
+              look="cover"
+            />
+          </CoverActions>
         </div>
         <header className="relative mx-4 -mt-10 flex flex-col gap-2 rounded-[20px] bg-surface p-[18px] shadow-float lg:hidden">
           <div className="flex items-start justify-between gap-3">
@@ -101,6 +111,15 @@ export function DefaultStorefront({ restaurant, categories, items }: StorefrontP
             <Photo src={cover} alt="" sizes="60vw" priority />
             <div className="absolute inset-0 bg-gradient-to-r from-[#16120D] via-[#16120D]/20 to-transparent" />
           </div>
+          <FavouriteButton
+            kind="restaurant"
+            id={restaurant.id}
+            name={restaurant.name}
+            initial={favourites.restaurant}
+            signedIn={favourites.signedIn}
+            look="cover"
+            className="absolute right-5 top-5 z-10"
+          />
           <div className="relative flex h-full w-[52%] flex-col justify-center gap-3 p-10">
             {kicker && <span className="text-xs font-semibold uppercase tracking-[2px] text-brand">{kicker}</span>}
             <h1 className="font-display text-[54px] leading-none">{restaurant.name}</h1>
@@ -121,7 +140,7 @@ export function DefaultStorefront({ restaurant, categories, items }: StorefrontP
         </section>
 
         <div className="mx-auto w-full max-w-[1280px] flex-1 px-4 pb-32 lg:px-12 lg:pb-12 lg:pt-8">
-          <StorefrontMenu restaurant={restaurant} sections={sections} canOrder={status.canOrder} />
+          <StorefrontMenu restaurant={restaurant} sections={sections} canOrder={status.canOrder} favourites={favourites} />
 
           {/* About and contact */}
           {(restaurant.description || restaurant.about || restaurant.address_text || restaurant.phone || closedDays) && (
