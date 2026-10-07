@@ -70,6 +70,10 @@ begin
   exception when insufficient_privilege then null; end;
   begin perform 1 from public.favourite_dishes; raise exception 'FAIL: visitor can read favourite dishes';
   exception when insufficient_privilege then null; end;
+  begin perform 1 from public.open_reminders; raise exception 'FAIL: visitor can read reminders';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.cron_keys; raise exception 'FAIL: visitor can read the timer key';
+  exception when insufficient_privilege then null; end;
   begin insert into public.restaurants (slug, name) values ('hack', 'hack'); raise exception 'FAIL: visitor can create restaurant';
   exception when insufficient_privilege then null; end;
   begin update public.menu_items set price = 0; raise exception 'FAIL: visitor can change prices';
@@ -152,6 +156,20 @@ begin
   begin update public.favourite_dishes set user_id = other_id;
     raise exception 'FAIL: customer could move a favourite to someone else';
   exception when insufficient_privilege then null; end;
+  -- Reminders: own only, visible restaurants only; the timer key and timer are server-only.
+  insert into public.open_reminders (user_id, restaurant_id) values (cust_id, rest_id);
+  select count(*) into n from public.open_reminders;
+  if n <> 1 then raise exception 'FAIL: customer should see 1 reminder, saw %', n; end if;
+  begin insert into public.open_reminders (user_id, restaurant_id) values (other_id, rest_id);
+    raise exception 'FAIL: customer added a reminder for someone else';
+  exception when insufficient_privilege then null; end;
+  begin insert into public.open_reminders (user_id, restaurant_id) values (cust_id, hidden_id);
+    raise exception 'FAIL: customer could ask for a hidden restaurant reminder';
+  exception when insufficient_privilege then null; end;
+  begin perform 1 from public.cron_keys; raise exception 'FAIL: customer can read the timer key';
+  exception when insufficient_privilege then null; end;
+  begin perform public.run_open_reminders(); raise exception 'FAIL: customer can run the reminder timer';
+  exception when insufficient_privilege then null; end;
   reset role;
 
   -- ============ Another customer ============
@@ -170,6 +188,8 @@ begin
   delete from public.favourite_dishes;
   get diagnostics n = row_count;
   if n <> 0 then raise exception 'FAIL: other customer removed someone elses favourite'; end if;
+  select count(*) into n from public.open_reminders;
+  if n <> 0 then raise exception 'FAIL: other customer can see someone elses reminders'; end if;
   reset role;
 
   -- ============ Admin ============

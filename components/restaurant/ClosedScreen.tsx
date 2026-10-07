@@ -1,21 +1,31 @@
 import Link from "next/link";
 import type { Restaurant } from "@/types/app";
+import type { ReminderState } from "@/lib/queries/reminders";
 import { nextOpening, type RestaurantStatus } from "@/lib/utils/hours";
+import { RemindMeButton } from "@/components/restaurant/RemindMeButton";
 import { SeeMenuLink } from "@/components/restaurant/SeeMenuLink";
 import { ProblemScreen, problemActionClass } from "@/components/ui/ProblemScreen";
 
+// "Remind me at 11 AM" / "Remind me at 6:30 PM" when it opens today or tomorrow.
+function remindLabel(paused: boolean, when: string | null): string {
+  if (paused) return "Remind me when they’re back";
+  const time = when?.match(/^(?:today|tomorrow) at (.+)$/)?.[1];
+  return time ? `Remind me at ${time.replace(":00 ", " ")}` : "Remind me when they open";
+}
+
 // "Restaurant closed" (v2 8f): shown instead of the restaurant page while it isn't taking
-// orders. Says when it opens again and points to kitchens that are open now. The menu
-// can still be looked at (black and white, without ordering).
-// The design's "Remind me at 11 AM" is left out: we don't send reminders.
+// orders. Says when it opens again, points to kitchens that are open now, offers an
+// email when it opens, and still lets people look at the menu (black and white).
 export function ClosedScreen({
   restaurant,
   status,
   openElsewhere,
+  reminder,
 }: {
   restaurant: Restaurant;
   status: RestaurantStatus;
   openElsewhere: number;
+  reminder: ReminderState;
 }) {
   const paused = status.state === "paused";
   const when = paused ? null : nextOpening(restaurant);
@@ -35,7 +45,19 @@ export function ClosedScreen({
             {openElsewhere > 0 ? "See open restaurants" : "See all restaurants"}
           </Link>
         }
-        secondary={<SeeMenuLink />}
+        secondary={
+          <div className="flex flex-col items-center gap-4">
+            <RemindMeButton
+              restaurantId={restaurant.id}
+              restaurantName={restaurant.name}
+              label={remindLabel(paused, when)}
+              state={reminder}
+            />
+            <span className="text-[13px] font-medium text-stone-500">
+              <SeeMenuLink />
+            </span>
+          </div>
+        }
       >
         {paused
           ? "They’ve paused new orders for a little while. Please check back soon."

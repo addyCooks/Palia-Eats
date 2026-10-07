@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getFavouriteState } from "@/lib/queries/favourites";
 import { getActiveRestaurants, getPublicMenu, getRestaurantBySlug } from "@/lib/queries/public";
+import { getReminderState } from "@/lib/queries/reminders";
 import { getRestaurantStatus } from "@/lib/utils/hours";
 import { LiveUpdates } from "@/components/LiveUpdates";
 import { ClosedScreen } from "@/components/restaurant/ClosedScreen";
@@ -38,14 +39,15 @@ export default async function RestaurantPage({ params, searchParams }: PageProps
   // Not taking orders: the closed screen first (v2 8f), unless they chose to see the menu.
   const status = getRestaurantStatus(restaurant);
   if (!status.canOrder && menu !== "1") {
-    const openElsewhere = (await getActiveRestaurants()).filter(
+    const [others, reminder] = await Promise.all([getActiveRestaurants(), getReminderState(restaurant.id)]);
+    const openElsewhere = others.filter(
       (other) => other.id !== restaurant.id && getRestaurantStatus(other).canOrder,
     ).length;
     return (
       <>
         {/* Opens the menu by itself when the restaurant switches orders back on */}
         <LiveUpdates tables={[{ table: "restaurants", filter: `id=eq.${restaurant.id}` }]} />
-        <ClosedScreen restaurant={restaurant} status={status} openElsewhere={openElsewhere} />
+        <ClosedScreen restaurant={restaurant} status={status} openElsewhere={openElsewhere} reminder={reminder} />
       </>
     );
   }
