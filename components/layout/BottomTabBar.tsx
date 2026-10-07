@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Receipt, Search, ShoppingBag } from "lucide-react";
+import { ClipboardList, Home, Search, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart/useCart";
 
 const TABS = [
   { href: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
   { href: "/search", label: "Search", icon: Search, match: (p: string) => p.startsWith("/search") },
-  { href: "/orders", label: "Orders", icon: Receipt, match: (p: string) => p.startsWith("/orders") },
+  { href: "/orders", label: "Orders", icon: ClipboardList, match: (p: string) => p.startsWith("/orders") },
   { href: "/cart", label: "Cart", icon: ShoppingBag, match: (p: string) => p.startsWith("/cart") },
 ] as const;
 
