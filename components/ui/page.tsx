@@ -136,7 +136,7 @@ export function DataTable({
   return (
     <div className="overflow-hidden rounded-[18px] bg-surface shadow-card">
       <div className="md:overflow-x-auto">
-        <div style={{ "--table-min": `${minWidth}px` } as CSSProperties} className="md:min-w-[var(--table-min)]">
+        <div style={{ "--table-min": `${minWidth}px` } as CSSProperties} className="stagger-rows md:min-w-[var(--table-min)]">
           <div
             style={style}
             className="hidden gap-4 border-b border-muted px-5 py-3.5 text-xs font-semibold tracking-[.5px] text-stone-500 md:grid"
@@ -263,7 +263,7 @@ export function Kpi({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col gap-1.5 rounded-[18px] p-5",
+        "lift flex min-w-0 flex-col gap-1.5 rounded-[18px] p-5",
         dark ? "bg-[#16120D] text-brand dark:bg-[#2A241C]" : "bg-surface text-foreground shadow-card",
       )}
     >
@@ -288,12 +288,16 @@ export function Bars({
   const tones = { hot: "bg-[#C2410C]", high: "bg-brand", low: "bg-[#FDE7BC] dark:bg-[#3A2C14]" };
   return (
     <div className="flex items-end gap-2 sm:gap-3" style={{ height }}>
-      {bars.map((bar) => (
+      {bars.map((bar, i) => (
         <div key={bar.label} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
-          {bar.display && <span className="text-[11px] font-semibold text-stone-600">{bar.display}</span>}
+          {bar.display && (
+            <span className="anim-fade-in text-[11px] font-semibold text-stone-600" style={{ animationDelay: `${300 + i * 60}ms` }}>
+              {bar.display}
+            </span>
+          )}
           <div
-            className={cn("w-full rounded-md", tones[bar.tone])}
-            style={{ height: `${Math.max(2, Math.round((bar.value / max) * 86))}%` }}
+            className={cn("pe-grow w-full rounded-md", tones[bar.tone])}
+            style={{ height: `${Math.max(2, Math.round((bar.value / max) * 86))}%`, animationDelay: `${150 + i * 60}ms` }}
             title={`${bar.label}: ${bar.display ?? bar.value}`}
           />
           <span className="text-[11px] text-stone-500 sm:text-xs">{bar.label}</span>

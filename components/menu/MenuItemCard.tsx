@@ -21,7 +21,7 @@ export function MenuItemCard({ item, action, onOpen }: MenuItemCardProps) {
   const soldOut = !item.is_available;
 
   return (
-    <li id={`dish-${item.id}`} className="flex scroll-mt-40 items-center gap-4 rounded-[18px] bg-surface py-4 pl-[18px] pr-3.5 shadow-[0_6px_20px_rgba(120,70,0,.05)] transition-shadow duration-300 hover:shadow-[0_14px_34px_rgba(120,70,0,.12)] sm:gap-5 sm:py-[18px] sm:pl-[22px] sm:pr-[18px] dark:shadow-none">
+    <li id={`dish-${item.id}`} className="flex scroll-mt-40 items-center gap-4 rounded-[18px] bg-surface py-4 pl-[18px] pr-3.5 shadow-[0_6px_20px_rgba(120,70,0,.05)] transition-shadow duration-500 hover:shadow-[0_14px_34px_rgba(120,70,0,.12)] sm:gap-5 sm:py-[18px] sm:pl-[22px] sm:pr-[18px] dark:shadow-none">
       <div className={`flex min-w-0 flex-1 flex-col gap-1.5 ${soldOut ? "opacity-60" : ""}`}>
         <div className="flex items-center gap-2">
           <VegMark isVeg={item.is_veg} egg={item.contains_egg} />

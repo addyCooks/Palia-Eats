@@ -30,7 +30,7 @@ export default async function PanelSalesPage() {
         </a>
       </PageHeader>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+      <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <Kpi
           dark
           label="Revenue"

@@ -35,7 +35,7 @@ export function RestaurantCard({
     <Link
       href={`/restaurants/${restaurant.slug}`}
       // Not taking orders: the whole tile turns black and white
-      className={`group flex flex-col overflow-hidden rounded-[18px] bg-surface shadow-[0_10px_30px_rgba(120,70,0,.07)] transition-[box-shadow,transform] duration-300 hover:-translate-y-1 hover:shadow-float active:scale-[.99] dark:shadow-none ${
+      className={`group flex flex-col overflow-hidden rounded-[18px] bg-surface shadow-[0_10px_30px_rgba(120,70,0,.07)] transition-[box-shadow,transform] duration-500 hover:-translate-y-1 hover:shadow-float active:scale-[.99] dark:shadow-none ${
         unavailable ? "grayscale" : ""
       }`}
     >
@@ -44,7 +44,7 @@ export function RestaurantCard({
           src={restaurantCover(restaurant)}
           alt=""
           sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
         {tag && (
           <span className="absolute left-3.5 top-3.5 flex h-[26px] items-center rounded-[7px] bg-[#16120D] px-2.5 text-xs font-semibold text-brand">

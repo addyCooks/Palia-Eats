@@ -36,7 +36,7 @@ export function BottomTabBar() {
             href={href}
             aria-label={label}
             aria-current={active ? "page" : undefined}
-            className={`press relative flex h-12 min-w-12 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+            className={`press relative flex h-12 min-w-12 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-500 ${
               active ? "bg-brand px-[18px] text-on-brand" : "text-[#A39B90] hover:text-white"
             }`}
           >

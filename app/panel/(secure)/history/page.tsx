@@ -118,7 +118,7 @@ export default async function PanelHistoryPage({ searchParams }: PageProps<"/pan
       </div>
 
       {/* Phone: cards */}
-      <div className="flex flex-col gap-2.5 md:hidden">
+      <div className="stagger flex flex-col gap-2.5 md:hidden">
         {orders.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border p-8 text-center text-stone-500">{emptyText}</p>
         ) : (

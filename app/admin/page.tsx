@@ -73,7 +73,7 @@ export default async function AdminHomePage({ searchParams }: PageProps<"/admin"
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+      <div className="stagger grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <Kpi
           dark
           size="md"

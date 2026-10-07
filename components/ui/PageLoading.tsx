@@ -7,7 +7,7 @@ export function PageLoading({ label = "Cooking up your page" }: { label?: string
     <div
       role="status"
       aria-live="polite"
-      className="anim-fade-in flex min-h-[70dvh] flex-1 flex-col items-center justify-center gap-4 py-16"
+      className="anim-loader flex min-h-[70dvh] flex-1 flex-col items-center justify-center gap-4 py-16"
     >
       <CookingPot className="size-28" />
       <LoadingLine label={label} />

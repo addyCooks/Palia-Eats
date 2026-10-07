@@ -84,12 +84,12 @@ export function MenuTable({
         </DataTable>
       </div>
 
-      <div className="flex flex-col gap-5 md:hidden">
+      <div className="stagger flex flex-col gap-5 md:hidden">
         {categories.map((category) => {
           const list = sorted.filter((item) => item.category_id === category.id);
           if (list.length === 0) return null;
           return (
-            <section key={category.id} className="flex flex-col gap-2.5">
+            <section key={category.id} className="stagger flex flex-col gap-2.5">
               <h2 className="font-display text-xl">{category.name}</h2>
               {list.map((item) => (
                 <article key={item.id} className="flex items-center gap-3 rounded-[18px] bg-surface p-3 shadow-card">

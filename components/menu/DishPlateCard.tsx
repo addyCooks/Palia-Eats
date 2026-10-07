@@ -22,7 +22,7 @@ export function DishPlateCard({ dish, highlight = false }: { dish: PublicDish; h
   return (
     <Link
       href={`/restaurants/${dish.restaurants.slug}#dish-${dish.id}`}
-      className={`relative flex h-full flex-col items-center gap-2 rounded-2xl px-3.5 pb-3.5 pt-16 text-center transition-transform hover:-translate-y-0.5 lg:gap-2.5 lg:px-5 lg:pb-5 lg:pt-[86px] ${
+      className={`relative flex h-full flex-col items-center gap-2 rounded-2xl px-3.5 pb-3.5 pt-16 text-center transition-transform duration-500 hover:-translate-y-1 lg:gap-2.5 lg:px-5 lg:pb-5 lg:pt-[86px] ${
         highlight ? "bg-brand text-on-brand shadow-saffron" : "bg-surface shadow-card"
       }`}
     >

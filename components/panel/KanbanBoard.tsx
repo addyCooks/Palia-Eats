@@ -94,7 +94,7 @@ export function KanbanBoard({ orders }: { orders: PanelOrder[] }) {
 
       <div
         ref={scroller}
-        className="scrollbar-none -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:grid-cols-4 lg:items-start lg:gap-[18px] lg:overflow-visible lg:px-0"
+        className="stagger scrollbar-none -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:grid-cols-4 lg:items-start lg:gap-[18px] lg:overflow-visible lg:px-0"
       >
         {COLUMNS.map((column, index) => {
           const list = grouped[index];
@@ -116,7 +116,7 @@ export function KanbanBoard({ orders }: { orders: PanelOrder[] }) {
                 setDragging(null);
                 if (order) move(order, index);
               }}
-              className={`flex w-[86%] shrink-0 snap-start flex-col gap-3 rounded-[18px] bg-muted p-3.5 transition-[box-shadow,background-color] duration-200 sm:w-[60%] lg:w-auto ${
+              className={`flex w-[86%] shrink-0 snap-start flex-col gap-3 rounded-[18px] bg-muted p-3.5 transition-[box-shadow,background-color] duration-300 sm:w-[60%] lg:w-auto ${
                 target ? "outline-2 outline-dashed outline-brand/60" : ""
               } ${over === index ? "bg-amber-50 outline-brand" : ""}`}
             >
