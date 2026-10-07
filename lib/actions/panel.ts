@@ -8,6 +8,7 @@ import { isUuid } from "@/lib/validation/menu";
 import { handleOrderEvent } from "@/lib/orders/events";
 import { MAX_REASON_LENGTH } from "@/lib/orders/cancel-reasons";
 import { parseClosedDays } from "@/lib/validation/restaurant";
+import { emailRestaurantReady } from "@/lib/email/application-emails";
 
 export type PanelActionResult = { error?: string };
 
@@ -133,4 +134,22 @@ export async function updatePanelHours(
   revalidatePath(`/restaurants/${restaurant.slug}`);
   revalidatePath("/");
   return { saved: true };
+}
+
+// A newly approved restaurant (still hidden while setting up) tells the admin its menu
+// is ready to go on the website. The admin then makes it visible.
+export async function panelReadyToGoLive(): Promise<PanelActionResult> {
+  const restaurant = await getPanelRestaurant();
+  if (!restaurant) return { error: SESSION_EXPIRED };
+  if (!restaurant.setting_up) return {};
+
+  const admin = createAdminClient();
+  const { count } = await admin
+    .from("menu_items")
+    .select("id", { count: "exact", head: true })
+    .eq("restaurant_id", restaurant.id);
+  if (!count) return { error: "Add at least one dish to your menu first." };
+
+  after(() => emailRestaurantReady({ id: restaurant.id, name: restaurant.name, dishes: count }));
+  return {};
 }

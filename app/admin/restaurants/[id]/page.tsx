@@ -6,7 +6,7 @@ import { isUuid } from "@/lib/validation/menu";
 import { compactRupees, formatMinutes, wholeRupees } from "@/lib/orders/stats";
 import { formatKeyRange, formatKeyShort, istDateKey } from "@/lib/utils/time";
 import { restaurantAvatar } from "@/lib/utils/placeholder";
-import { MarkPaidButton, PauseOrdersButton } from "@/components/admin/RestaurantActions";
+import { MakeVisibleButton, MarkPaidButton, PauseOrdersButton } from "@/components/admin/RestaurantActions";
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
 import { Badge } from "@/components/ui/Badge";
 import { Photo } from "@/components/ui/Photo";
@@ -20,9 +20,15 @@ export default async function AdminRestaurantPage({ params }: PageProps<"/admin/
 
   const detail = await getAdminRestaurantDetail(id);
   if (!detail) notFound();
-  const { restaurant, ownerName, notificationEmail, commissionPercent, week, current, due } = detail;
+  const { restaurant, ownerName, notificationEmail, settingUp, commissionPercent, week, current, due } = detail;
 
-  const state = !restaurant.is_active ? "PENDING" : restaurant.is_accepting_orders ? "LIVE" : "PAUSED";
+  const state = !restaurant.is_active
+    ? settingUp
+      ? "SETTING UP"
+      : "PENDING"
+    : restaurant.is_accepting_orders
+      ? "LIVE"
+      : "PAUSED";
   const joined = restaurant.created_at
     ? new Intl.DateTimeFormat("en-IN", { month: "short", year: "numeric", timeZone: "Asia/Kolkata" }).format(
         new Date(restaurant.created_at),
@@ -63,7 +69,13 @@ export default async function AdminRestaurantPage({ params }: PageProps<"/admin/
             <h1 className="font-display text-[30px] leading-none sm:text-[36px]">{restaurant.name}</h1>
             <span
               className={`flex h-[26px] items-center rounded-[7px] px-2.5 text-xs font-bold ${
-                state === "LIVE" ? "bg-brand text-on-brand" : state === "PAUSED" ? "bg-[#2A241C] text-[#D8D2C8]" : "bg-[#3A1A14] text-[#FF8A7A]"
+                state === "LIVE"
+                  ? "bg-brand text-on-brand"
+                  : state === "PAUSED"
+                    ? "bg-[#2A241C] text-[#D8D2C8]"
+                    : state === "SETTING UP"
+                      ? "bg-[#3A2C14] text-brand"
+                      : "bg-[#3A1A14] text-[#FF8A7A]"
               }`}
             >
               {state}
@@ -72,6 +84,7 @@ export default async function AdminRestaurantPage({ params }: PageProps<"/admin/
           <p className="text-sm text-[#D8D2C8]">{facts.join(" · ")}</p>
         </div>
         <div className="flex flex-wrap gap-2.5">
+          {!restaurant.is_active && <MakeVisibleButton restaurantId={restaurant.id} name={restaurant.name} />}
           <PauseOrdersButton restaurantId={restaurant.id} accepting={restaurant.is_accepting_orders} />
           <Link
             href={`/admin/restaurants/${id}/menu`}

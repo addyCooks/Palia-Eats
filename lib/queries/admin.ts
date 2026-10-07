@@ -318,7 +318,7 @@ export async function getAdminRestaurantDetail(id: string) {
   const [restaurant, orders, recent, payouts] = await Promise.all([
     supabase
       .from("restaurants")
-      .select("*, restaurant_private(owner_name, commission_percent, notification_email)")
+      .select("*, restaurant_private(owner_name, commission_percent, notification_email, setting_up)")
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -373,6 +373,7 @@ export async function getAdminRestaurantDetail(id: string) {
     restaurant: restaurant.data as Restaurant,
     ownerName: (priv?.owner_name as string | null) ?? null,
     notificationEmail: (priv?.notification_email as string | null) ?? null,
+    settingUp: Boolean(priv?.setting_up),
     commissionPercent,
     week: {
       orders: thisWeek.filter((row) => !isCancelled(row.status)).length,

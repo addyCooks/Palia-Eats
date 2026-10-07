@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { adminSetAccepting } from "@/lib/actions/restaurants";
+import { adminMakeVisible } from "@/lib/actions/applications";
 import { markPayoutPaid } from "@/lib/actions/admin";
 
 // "Pause orders" / "Resume orders" in the restaurant hero.
@@ -23,6 +24,33 @@ export function PauseOrdersButton({ restaurantId, accepting }: { restaurantId: s
         className="inline-flex h-11 items-center rounded-xl bg-[#2A241C] px-[18px] text-sm font-semibold text-white hover:bg-[#3A3228] disabled:opacity-60"
       >
         {isPending ? "Updating…" : accepting ? "Pause orders" : "Resume orders"}
+      </button>
+      {error && <span className="text-xs text-[#FF8A7A]">{error}</span>}
+    </span>
+  );
+}
+
+// "Make visible": a hidden restaurant (for example a newly approved one that was setting
+// up) goes on the website.
+export function MakeVisibleButton({ restaurantId, name }: { restaurantId: string; name: string }) {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <span className="flex flex-col gap-1">
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => {
+          if (!window.confirm(`Show ${name} to customers on the website now?`)) return;
+          startTransition(async () => {
+            setError(null);
+            const result = await adminMakeVisible({ restaurantId });
+            if (result.error) setError(result.error);
+          });
+        }}
+        className="inline-flex h-11 items-center rounded-xl bg-brand px-[18px] text-sm font-bold text-on-brand hover:bg-brand-dark disabled:opacity-60"
+      >
+        {isPending ? "Updating…" : "Make visible"}
       </button>
       {error && <span className="text-xs text-[#FF8A7A]">{error}</span>}
     </span>

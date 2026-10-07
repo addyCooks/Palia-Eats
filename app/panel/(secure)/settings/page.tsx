@@ -36,7 +36,11 @@ export default async function PanelSettingsPage() {
 
       <div className="grid items-start gap-5 lg:grid-cols-2">
         <div className="flex flex-col gap-5">
-          <OpenClosedSwitch accepting={restaurant.is_accepting_orders} status={getRestaurantStatus(restaurant)} />
+          <OpenClosedSwitch
+          accepting={restaurant.is_accepting_orders}
+          status={getRestaurantStatus(restaurant)}
+          settingUp={restaurant.setting_up}
+        />
           <HoursForm
             openingTime={restaurant.opening_time}
             closingTime={restaurant.closing_time}

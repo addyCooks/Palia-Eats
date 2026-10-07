@@ -35,7 +35,11 @@ export default async function PanelOrdersPage() {
     <>
       {/* On a laptop the sidebar has this switch; on a phone it sits on top */}
       <div className="lg:hidden">
-        <OpenClosedSwitch accepting={restaurant.is_accepting_orders} status={getRestaurantStatus(restaurant)} />
+        <OpenClosedSwitch
+          accepting={restaurant.is_accepting_orders}
+          status={getRestaurantStatus(restaurant)}
+          settingUp={restaurant.setting_up}
+        />
       </div>
 
       <PageHeader title="Live orders" sub={`${formatLongToday()} · ${formatClock(now)}`}>

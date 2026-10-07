@@ -7,11 +7,13 @@ import type { RestaurantStatus } from "@/lib/utils/hours";
 type OpenClosedSwitchProps = {
   accepting: boolean;
   status: RestaurantStatus;
+  // Newly approved and not on the website yet: no orders can come in either way.
+  settingUp?: boolean;
 };
 
 // The big "accepting orders / paused" switch. One tap flips it, and customers see the change
 // straight away.
-export function OpenClosedSwitch({ accepting, status }: OpenClosedSwitchProps) {
+export function OpenClosedSwitch({ accepting, status, settingUp = false }: OpenClosedSwitchProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +25,9 @@ export function OpenClosedSwitch({ accepting, status }: OpenClosedSwitchProps) {
     });
   }
 
-  const subtitle = accepting
+  const subtitle = settingUp
+    ? "You’re not on PaliaEats yet. Orders start once we make you visible."
+    : accepting
     ? status.state === "closed"
       ? `${status.label}. Customers can't order outside your opening hours.`
       : "Customers can order right now. Tap to pause."

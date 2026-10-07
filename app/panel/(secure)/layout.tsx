@@ -3,6 +3,7 @@ import { getPanelRestaurant } from "@/lib/panel/session";
 import { countNewPanelOrders } from "@/lib/queries/panel";
 import { getRestaurantStatus } from "@/lib/utils/hours";
 import { PanelNav } from "@/components/panel/PanelNav";
+import { SetupBanner } from "@/components/panel/SetupBanner";
 import { SidebarAcceptingCard } from "@/components/panel/SidebarAcceptingCard";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -13,7 +14,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
   if (!restaurant) redirect("/panel/locked");
 
   const status = getRestaurantStatus(restaurant);
-  const live = status.canOrder;
+  const live = status.canOrder && !restaurant.setting_up;
   const newOrders = await countNewPanelOrders(restaurant.id);
 
   const items = [
@@ -32,7 +33,9 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
         items={items}
         footer={
           <>
-            <SidebarAcceptingCard name={restaurant.name} accepting={restaurant.is_accepting_orders} />
+            {!restaurant.setting_up && (
+              <SidebarAcceptingCard name={restaurant.name} accepting={restaurant.is_accepting_orders} />
+            )}
             <ThemeToggle className="self-start text-[#D8D2C8] hover:bg-white/10" />
           </>
         }
@@ -53,7 +56,13 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
                 }`}
               >
                 <span className={`size-[7px] rounded-full ${live ? "bg-[#1A1206]" : "bg-[#D8D2C8]"}`} aria-hidden />
-                {restaurant.is_accepting_orders ? (live ? "Accepting" : "Closed now") : "Paused"}
+                {restaurant.setting_up
+                  ? "Setting up"
+                  : restaurant.is_accepting_orders
+                    ? live
+                      ? "Accepting"
+                      : "Closed now"
+                    : "Paused"}
               </span>
               <ThemeToggle className="text-white hover:bg-white/10" />
             </div>
@@ -61,6 +70,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
         </header>
 
         <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-5 pb-28 lg:max-w-none lg:gap-6 lg:px-8 lg:py-7 lg:pb-10">
+          {restaurant.setting_up && <SetupBanner name={restaurant.name} />}
           {children}
         </main>
         <PanelNav newOrders={newOrders} />

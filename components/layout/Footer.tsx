@@ -66,6 +66,9 @@ export function Footer() {
               <span className="text-stone-600">Pay cash or UPI on delivery</span>
             )}
             <span className="text-stone-600">Delivered by the restaurant</span>
+            <Link href="/join" className="font-semibold text-accent hover:underline">
+              Own a restaurant? Join PaliaEats
+            </Link>
           </div>
         </div>
       </div>

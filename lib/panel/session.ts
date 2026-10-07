@@ -17,11 +17,13 @@ export type PanelRestaurant = {
   closed_days: number[];
   // Secret name of this restaurant's live-ping channel (see 0007_realtime.sql)
   realtime_topic: string;
+  // Approved but not on the website yet (see 0015_restaurant_applications.sql)
+  setting_up: boolean;
 };
 
 // Checks a panel token and returns the restaurant it opens, or null.
 // A token is valid when: the signature is good, it hasn't expired, the restaurant is
-// active, and it was issued AFTER the admin's last "generate a new link" (that is how
+// active (or newly approved and still setting up), and it was issued AFTER the admin's last "generate a new link" (that is how
 // old links get cancelled).
 export async function resolvePanelToken(token: string): Promise<PanelRestaurant | null> {
   const claims = verifyPanelToken(token);
@@ -33,16 +35,18 @@ export async function resolvePanelToken(token: string): Promise<PanelRestaurant 
   const { data } = await admin
     .from("restaurants")
     .select(
-      "id, slug, name, is_active, is_accepting_orders, opening_time, closing_time, closed_days, restaurant_private(panel_key_created_at, realtime_topic)",
+      "id, slug, name, is_active, is_accepting_orders, opening_time, closing_time, closed_days, restaurant_private(panel_key_created_at, realtime_topic, setting_up)",
     )
     .eq("id", claims.restaurantId)
     .maybeSingle();
 
-  if (!data || !data.is_active) return null;
+  if (!data) return null;
 
   const privateRow = Array.isArray(data.restaurant_private)
     ? data.restaurant_private[0]
     : data.restaurant_private;
+  const settingUp = !data.is_active && Boolean(privateRow?.setting_up);
+  if (!data.is_active && !settingUp) return null;
   const validSince = privateRow?.panel_key_created_at
     ? Math.floor(new Date(privateRow.panel_key_created_at).getTime() / 1000)
     : 0;
@@ -58,6 +62,7 @@ export async function resolvePanelToken(token: string): Promise<PanelRestaurant 
     closing_time: data.closing_time,
     closed_days: data.closed_days ?? [],
     realtime_topic: privateRow.realtime_topic,
+    setting_up: settingUp,
   };
 }
 

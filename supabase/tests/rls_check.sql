@@ -74,6 +74,8 @@ begin
   exception when insufficient_privilege then null; end;
   begin perform 1 from public.cron_keys; raise exception 'FAIL: visitor can read the timer key';
   exception when insufficient_privilege then null; end;
+  begin perform 1 from public.restaurant_applications; raise exception 'FAIL: visitor can read restaurant requests';
+  exception when insufficient_privilege then null; end;
   begin insert into public.restaurants (slug, name) values ('hack', 'hack'); raise exception 'FAIL: visitor can create restaurant';
   exception when insufficient_privilege then null; end;
   begin update public.menu_items set price = 0; raise exception 'FAIL: visitor can change prices';
@@ -170,6 +172,13 @@ begin
   exception when insufficient_privilege then null; end;
   begin perform public.run_open_reminders(); raise exception 'FAIL: customer can run the reminder timer';
   exception when insufficient_privilege then null; end;
+  -- Restaurant requests: admin only (the public form is saved by the server).
+  select count(*) into n from public.restaurant_applications;
+  if n <> 0 then raise exception 'FAIL: customer can read restaurant requests'; end if;
+  begin insert into public.restaurant_applications (restaurant_name, owner_name, phone, email, area, address)
+      values ('Sneaky', 'Me', '9876500004', 'me@example.com', 'Chowk', 'Somewhere');
+    raise exception 'FAIL: customer can add a restaurant request directly';
+  exception when insufficient_privilege then null; end;
   reset role;
 
   -- ============ Another customer ============
@@ -241,6 +250,11 @@ begin
   if n <> 1 then raise exception 'FAIL: admin cannot assign a rider'; end if;
   insert into public.restaurant_payouts (restaurant_id, week_start, week_end, gross, commission_percent, commission, net)
     values (rest_id, date '2000-01-03', date '2000-01-09', 100, 8, 8, 92);
+  insert into public.restaurant_applications (restaurant_name, owner_name, phone, email, area, address)
+    values ('Test Kitchen', 'Owner', '9876500003', 'owner@example.com', 'Chowk', 'Main road');
+  update public.restaurant_applications set status = 'rejected', reject_reason = 'Test' where restaurant_name = 'Test Kitchen';
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: admin cannot handle restaurant requests'; end if;
   reset role;
 
   -- ============ Customer again: now sees only the rider on their order ============

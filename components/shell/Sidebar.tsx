@@ -85,11 +85,14 @@ export function TopNav({ items }: { items: SidebarItem[] }) {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`flex h-9 shrink-0 items-center rounded-[10px] px-3.5 text-[13px] font-medium ${
+            className={`flex h-9 shrink-0 items-center gap-1.5 rounded-[10px] px-3.5 text-[13px] font-medium ${
               active ? "bg-brand text-on-brand" : "text-[#D8D2C8] hover:text-white"
             }`}
           >
             {item.label}
+            {item.badge && (
+              <span className={`text-xs font-bold ${active ? "" : "text-brand"}`}>{item.badge}</span>
+            )}
           </Link>
         );
       })}

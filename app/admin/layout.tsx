@@ -1,20 +1,23 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { logout } from "@/lib/actions/auth";
+import { countPendingApplications } from "@/lib/queries/applications";
 import { Sidebar, SidebarWordmark, TopNav } from "@/components/shell/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
-const ITEMS = [
-  { href: "/admin", label: "Dashboard", match: "exact" as const },
-  { href: "/admin/orders", label: "Orders" },
-  { href: "/admin/restaurants", label: "Restaurants" },
-  { href: "/admin/customers", label: "Customers" },
-  { href: "/admin/riders", label: "Riders" },
-  { href: "/admin/settings", label: "Settings", also: ["/admin/notifications"] },
-];
 
 // Every page under /admin goes through this check. Non-admins are redirected.
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const profile = await requireAdmin();
+  const waiting = await countPendingApplications();
+
+  const ITEMS = [
+    { href: "/admin", label: "Dashboard", match: "exact" as const },
+    { href: "/admin/orders", label: "Orders" },
+    { href: "/admin/restaurants", label: "Restaurants" },
+    { href: "/admin/requests", label: "Requests", badge: waiting > 0 ? String(waiting) : undefined },
+    { href: "/admin/customers", label: "Customers" },
+    { href: "/admin/riders", label: "Riders" },
+    { href: "/admin/settings", label: "Settings", also: ["/admin/notifications"] },
+  ];
 
   return (
     <div className="flex min-h-full flex-1 bg-background">
