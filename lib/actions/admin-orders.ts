@@ -15,10 +15,12 @@ export async function adminUpdateOrderStatus(input: {
   orderId: string;
   status: string;
   reason?: string;
+  undo?: boolean;
 }): Promise<{ error?: string }> {
   await requireAdmin();
 
-  const allowed = ["preparing", "out_for_delivery", "delivered", "cancelled"];
+  // "pending" = one step back from Cooking (undo); the database allows one step back only.
+  const allowed = ["pending", "preparing", "out_for_delivery", "delivered", "cancelled"];
   if (!isUuid(String(input?.orderId)) || !allowed.includes(input.status)) {
     return { error: "That change isn't allowed." };
   }
@@ -45,9 +47,9 @@ export async function adminUpdateOrderStatus(input: {
   }
   if (!data?.length) return { error: "Order not found." };
 
-  after(() =>
-    handleOrderEvent({ type: "status_changed", orderId: input.orderId, status: input.status }),
-  );
+  if (!input.undo) {
+    after(() => handleOrderEvent({ type: "status_changed", orderId: input.orderId, status: input.status }));
+  }
   revalidatePath("/admin/orders", "layout");
   revalidatePath("/admin");
   return {};

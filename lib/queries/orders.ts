@@ -74,3 +74,31 @@ export async function getMyActiveOrder(): Promise<ActiveOrderSummary | null> {
     restaurantName: restaurant?.name ?? "your restaurant",
   };
 }
+
+export type RatePromptOrder = { id: string; order_number: number; restaurantName: string; deliveredAt: string };
+
+// The customer's most recent delivered order (last 3 days) that they haven't rated yet,
+// for the "How was your meal?" sheet on their next visit.
+export async function getRatePromptOrder(): Promise<RatePromptOrder | null> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("orders")
+    .select("id, order_number, status_updated_at, restaurants(name), order_ratings(order_id)")
+    .eq("status", "delivered")
+    .gte("status_updated_at", new Date(Date.now() - 3 * 24 * 3_600_000).toISOString())
+    .order("status_updated_at", { ascending: false })
+    .limit(3);
+
+  const unrated = (data ?? []).find((row) => {
+    const rating = row.order_ratings as unknown;
+    return Array.isArray(rating) ? rating.length === 0 : !rating;
+  });
+  if (!unrated) return null;
+  const restaurant = Array.isArray(unrated.restaurants) ? unrated.restaurants[0] : unrated.restaurants;
+  return {
+    id: unrated.id,
+    order_number: unrated.order_number,
+    restaurantName: restaurant?.name ?? "the restaurant",
+    deliveredAt: unrated.status_updated_at,
+  };
+}

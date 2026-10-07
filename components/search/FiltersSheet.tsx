@@ -113,7 +113,7 @@ export function FiltersSheet({
           onClose={() => setOpen(false)}
           onClick={(event) => event.target === dialogRef.current && close()}
           aria-label="Filters"
-          className="m-0 mt-auto max-h-[92dvh] w-full max-w-none overflow-y-auto rounded-t-[30px] bg-background p-0 text-foreground backdrop:bg-black/50 sm:m-auto sm:max-w-[460px] sm:rounded-[30px]"
+          className="sheet m-0 mt-auto max-h-[92dvh] w-full max-w-none overflow-y-auto rounded-t-[30px] bg-background p-0 text-foreground backdrop:bg-black/50 sm:m-auto sm:max-w-[460px] sm:rounded-[30px]"
         >
           <div className="flex flex-col gap-[22px] px-[22px] pb-4 pt-3 sm:pt-6">
             <span className="h-[5px] w-11 self-center rounded-full bg-stone-300 sm:hidden" aria-hidden />

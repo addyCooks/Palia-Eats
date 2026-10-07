@@ -4,6 +4,7 @@ import { countRecentNotificationProblems, getAdminDashboard, type DashboardRange
 import { compactRupees, formatMinutes, percentChange, signed } from "@/lib/orders/stats";
 import { formatClock, formatLongToday } from "@/lib/utils/time";
 import { LiveUpdates } from "@/components/LiveUpdates";
+import { getRealtimeToken } from "@/lib/auth/session";
 import { Bars, Kpi, PageHeader, Panel, param } from "@/components/ui/page";
 
 export const metadata: Metadata = { title: "Admin" };
@@ -28,7 +29,7 @@ export default async function AdminHomePage({ searchParams }: PageProps<"/admin"
   return (
     <>
       {/* The numbers change the moment an order is placed or updated */}
-      <LiveUpdates tables={[{ table: "orders" }]} />
+      <LiveUpdates tables={[{ table: "orders" }]} accessToken={await getRealtimeToken()} />
 
       <PageHeader
         title={range.key === "today" ? "Today in Palia" : range.key === "week" ? "This week in Palia" : "This month in Palia"}

@@ -12,9 +12,11 @@ import { LiveUpdates } from "@/components/LiveUpdates";
 export function ActiveOrderBanner({
   order,
   customerId,
+  accessToken,
 }: {
   order: ActiveOrderSummary | null;
   customerId: string;
+  accessToken: string | null;
 }) {
   const pathname = usePathname();
   // Already looking at orders, or busy paying: no need to point at it.
@@ -22,14 +24,19 @@ export function ActiveOrderBanner({
 
   return (
     <>
-      <LiveUpdates tables={[{ table: "orders", filter: `customer_id=eq.${customerId}` }]} />
+      {/* The order pages listen for themselves */}
+      {!hidden && (
+        <LiveUpdates tables={[{ table: "orders", filter: `customer_id=eq.${customerId}` }]} accessToken={accessToken} />
+      )}
       {order && !hidden && (
         <div className="fixed inset-x-3.5 bottom-[100px] z-20 lg:static lg:mx-auto lg:mt-2 lg:w-full lg:max-w-[1280px] lg:px-12">
           <Link
             href={`/orders/${order.id}`}
-            className="flex items-center gap-3 rounded-2xl bg-[#16120D] px-4 py-3 text-white shadow-float dark:bg-[#2A241C]"
+            className="press anim-pop-in flex items-center gap-3 rounded-2xl bg-[#16120D] px-4 py-3 text-white shadow-float dark:bg-[#2A241C]"
           >
-            <span className="size-2.5 shrink-0 animate-pulse rounded-full bg-brand" aria-hidden />
+            <span className="relative size-2.5 shrink-0 rounded-full bg-brand" aria-hidden>
+              <span className="pe-ring absolute inset-0 rounded-full bg-brand" />
+            </span>
             <span className="min-w-0 flex-1 truncate text-sm">
               <b>Order #{order.order_number} · {ORDER_STATUS_LABELS[order.status]}</b>{" "}
               <span className="text-[#D8D2C8]">· {order.restaurantName}</span>

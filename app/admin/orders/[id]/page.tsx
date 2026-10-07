@@ -7,6 +7,7 @@ import { isUuid } from "@/lib/validation/menu";
 import { formatDateTime } from "@/lib/utils/format";
 import { ACTIVE_STATUSES } from "@/lib/orders/status";
 import { LiveUpdates } from "@/components/LiveUpdates";
+import { getRealtimeToken } from "@/lib/auth/session";
 import { RiderPicker } from "@/components/admin/RiderPicker";
 import { OrderTimeline } from "@/components/order/OrderTimeline";
 import { StaffOrderCard } from "@/components/order/StaffOrderCard";
@@ -26,7 +27,7 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
 
   return (
     <>
-      <LiveUpdates tables={[{ table: "orders", filter: `id=eq.${order.id}` }]} />
+      <LiveUpdates tables={[{ table: "orders", filter: `id=eq.${order.id}` }]} accessToken={await getRealtimeToken()} />
       <PageHeader
         crumb={
           <>

@@ -186,7 +186,7 @@ export function StorefrontMenu({
                   {items.length} {items.length === 1 ? "dish" : "dishes"}
                 </span>
               </div>
-              <ul className="flex flex-col gap-3 lg:gap-[18px]">
+              <ul className="stagger flex flex-col gap-3 lg:gap-[18px]">
                 {items.map((item) => (
                   <MenuItemCard
                     key={item.id}

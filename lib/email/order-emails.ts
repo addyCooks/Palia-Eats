@@ -2,7 +2,8 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPanelToken } from "@/lib/panel/token";
 import { logNotification } from "@/lib/notifications/log";
-import { button, deliver, escapeHtml, itemRowsHtml, siteUrl } from "@/lib/email/shared";
+import { deliver, escapeHtml, siteUrl } from "@/lib/email/shared";
+import { emailButton, emailDetails, emailItems, emailLayout, emailNote, emailParagraph, emailSmall } from "@/lib/email/layout";
 import { formatDateTime, formatPrice } from "@/lib/utils/format";
 import type { OrderItem } from "@/types/app";
 
@@ -45,19 +46,21 @@ export async function sendOrderPlacedEmails(orderId: string, customerEmail: stri
           `Customer: ${order.customer_name}, ${order.customer_phone}\n` +
           `Address: ${address.address_line}${address.landmark ? `\nLandmark: ${address.landmark}` : ""}\n\n` +
           `Open your orders panel: ${panelLink}\n`,
-        html:
-          `<div style="font-family:Arial,sans-serif;max-width:480px">` +
-          `<h2 style="margin:0 0 4px">New order #${order.order_number}</h2>` +
-          `<p style="color:#666;margin:0 0 16px">${escapeHtml(placedAt)}</p>` +
-          `<table style="width:100%;border-collapse:collapse;border-top:1px solid #ddd;border-bottom:1px solid #ddd">${itemRowsHtml(items)}</table>` +
-          `<p style="font-size:18px"><strong>Total ${formatPrice(order.total)}</strong> · cash on delivery</p>` +
-          (order.customer_notes
-            ? `<p style="background:#fffbeb;padding:8px;border-radius:8px"><strong>Note:</strong> ${escapeHtml(order.customer_notes)}</p>`
-            : "") +
-          `<p><strong>${escapeHtml(order.customer_name)}</strong><br>${escapeHtml(order.customer_phone)}<br>` +
-          `${escapeHtml(address.address_line)}${address.landmark ? `<br>Landmark: ${escapeHtml(address.landmark)}` : ""}</p>` +
-          button(panelLink, "Open your orders panel") +
-          `<p style="color:#888;font-size:12px">This link is private. Anyone with it can manage your orders.</p></div>`,
+        html: emailLayout({
+          preheader: `New order #${order.order_number}, ${formatPrice(order.total)}. Open your panel to accept it.`,
+          kicker: `New order · ${placedAt}`,
+          title: `Order #${order.order_number} for ${restaurant.name}`,
+          content:
+            emailItems(items, formatPrice(order.total), "Total · cash on delivery") +
+            (order.customer_notes ? emailNote("Note:", order.customer_notes) : "") +
+            emailDetails([
+              ["Customer", order.customer_name],
+              ["Phone", order.customer_phone],
+              ["Address", `${address.address_line}${address.landmark ? `\nLandmark: ${address.landmark}` : ""}`],
+            ]) +
+            emailButton(panelLink, "Open your orders panel") +
+            emailSmall("This button is private. Anyone with it can manage your orders."),
+        }),
       });
     } else {
       console.error(`[email] No notification email set for the restaurant of order ${orderId}.`);
@@ -82,15 +85,20 @@ export async function sendOrderPlacedEmails(orderId: string, customerEmail: stri
           `Hi ${order.customer_name},\n\nYour order #${order.order_number} from ${restaurant?.name ?? "the restaurant"} has been placed.\n\n` +
           items.map((i) => `${i.quantity} x ${i.item_name}  ${formatPrice(i.line_total)}`).join("\n") +
           `\n\nTotal: ${formatPrice(order.total)} - pay in cash on delivery.\n\nTrack it here: ${orderLink}\n\nRegards,\n${restaurant?.name ?? "the restaurant"}\n`,
-        html:
-          `<div style="font-family:Arial,sans-serif;max-width:480px">` +
-          `<h2 style="margin:0 0 8px">Order placed!</h2>` +
-          `<p>Hi ${escapeHtml(order.customer_name)}, ${escapeHtml(restaurant?.name ?? "the restaurant")} has your order <strong>#${order.order_number}</strong>.</p>` +
-          `<table style="width:100%;border-collapse:collapse;border-top:1px solid #ddd;border-bottom:1px solid #ddd">${itemRowsHtml(items)}</table>` +
-          `<p style="font-size:18px"><strong>Total ${formatPrice(order.total)}</strong><br><span style="font-size:14px;color:#666">Pay in cash on delivery</span></p>` +
-          button(orderLink, "Track your order") +
-          `<p style="color:#444">Regards,<br>${escapeHtml(restaurant?.name ?? "the restaurant")}</p>` +
-          `</div>`,
+        html: emailLayout({
+          brand: restaurant?.name ?? "Your order",
+          preheader: `${restaurant?.name ?? "The restaurant"} has your order #${order.order_number}.`,
+          kicker: `Order #${order.order_number} · Placed`,
+          title: "Order placed!",
+          content:
+            emailParagraph(
+              `Hi ${escapeHtml(order.customer_name)}, ${escapeHtml(restaurant?.name ?? "the restaurant")} has your order and will start cooking in a minute.`,
+            ) +
+            emailItems(items, formatPrice(order.total), "To pay · cash or UPI on delivery") +
+            emailButton(orderLink, "Track your order") +
+            emailSmall(`Regards,<br>${escapeHtml(restaurant?.name ?? "the restaurant")}`),
+          footer: `${restaurant?.name ?? "Your restaurant"} · ordered on PaliaEats`,
+        }),
       });
     }
   } catch (error) {

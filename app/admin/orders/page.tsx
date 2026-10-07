@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ADMIN_PAGE_SIZE, getAdminOrders, type AdminOrderFilter } from "@/lib/queries/admin";
 import { wholeRupees } from "@/lib/orders/stats";
 import { LiveUpdates } from "@/components/LiveUpdates";
+import { getRealtimeToken } from "@/lib/auth/session";
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
 import {
   Cell,
@@ -46,7 +47,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
         title="All orders"
         sub={`${today} today across ${restaurantsToday} ${restaurantsToday === 1 ? "restaurant" : "restaurants"}`}
       >
-        <LiveUpdates tables={[{ table: "orders" }]} showStatus />
+        <LiveUpdates tables={[{ table: "orders" }]} accessToken={await getRealtimeToken()} showStatus />
         <SearchBox
           action="/admin/orders"
           value={search}

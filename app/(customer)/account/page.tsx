@@ -47,7 +47,7 @@ export default async function AccountPage() {
             >
               <span className="size-2 rounded-full bg-brand" aria-hidden />
               <span className="flex-1">{link.label}</span>
-              <span className="text-accent" aria-hidden>
+              <span className="-mt-1.5 text-[44px] font-light leading-none text-accent" aria-hidden>
                 ›
               </span>
             </Link>
@@ -59,7 +59,7 @@ export default async function AccountPage() {
             >
               <span className="size-2 rounded-full bg-brand" aria-hidden />
               <span className="flex-1">Log out</span>
-              <span aria-hidden>›</span>
+              <span className="-mt-1.5 text-[44px] font-light leading-none" aria-hidden>›</span>
             </button>
           </form>
         </nav>

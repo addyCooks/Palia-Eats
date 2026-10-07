@@ -7,6 +7,7 @@ import { wholeRupees } from "@/lib/orders/stats";
 import { addDaysToKey, formatClock, formatDayLabel, istDateKey, todayKeyIST } from "@/lib/utils/time";
 import { dishPhoto } from "@/lib/utils/placeholder";
 import { LiveUpdates } from "@/components/LiveUpdates";
+import { getRealtimeToken } from "@/lib/auth/session";
 import { AccountCard } from "@/components/account/AccountCard";
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
 import { ReorderButton } from "@/components/order/ReorderButton";
@@ -30,7 +31,7 @@ export default async function OrdersPage() {
 
   return (
     <main className="mx-auto grid w-full max-w-[1280px] flex-1 items-start gap-8 px-4 pb-28 pt-6 sm:px-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:px-12 lg:pb-14 lg:pt-8">
-      <LiveUpdates tables={[{ table: "orders", filter: `customer_id=eq.${profile.id}` }]} />
+      <LiveUpdates tables={[{ table: "orders", filter: `customer_id=eq.${profile.id}` }]} accessToken={await getRealtimeToken()} />
       <div className="hidden lg:block">
         <AccountCard profile={profile} active="/orders" />
       </div>
@@ -51,7 +52,7 @@ export default async function OrdersPage() {
             When you order, you can follow it here from the kitchen to your door.
           </ProblemScreen>
         ) : (
-          <ul className="flex flex-col gap-3 sm:gap-4">
+          <ul className="stagger flex flex-col gap-3 sm:gap-4">
             {orders.map((order) => {
               const live = ACTIVE_STATUSES.includes(order.status);
               const first = order.order_items[0];

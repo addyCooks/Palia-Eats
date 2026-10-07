@@ -35,7 +35,7 @@ export function AccountCard({ profile, active }: { profile: Profile; active: str
             }`}
           >
             {link.label}
-            <span className="text-accent" aria-hidden>
+            <span className="-mt-1.5 text-[44px] font-light leading-none text-accent" aria-hidden>
               ›
             </span>
           </Link>
@@ -46,7 +46,7 @@ export function AccountCard({ profile, active }: { profile: Profile; active: str
             className="flex h-11 w-full items-center justify-between rounded-[10px] px-3.5 text-sm font-medium text-accent hover:bg-background"
           >
             Log out
-            <span aria-hidden>›</span>
+            <span className="-mt-1.5 text-[44px] font-light leading-none" aria-hidden>›</span>
           </button>
         </form>
       </nav>

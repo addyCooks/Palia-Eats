@@ -14,9 +14,10 @@ export type PanelActionResult = { error?: string };
 
 const SESSION_EXPIRED = "Your session has expired. Please open the link from your email again.";
 
-// What the restaurant is allowed to set. (The database also checks that an order only
-// moves forward: placed -> cooking -> out for delivery -> delivered, or cancelled.)
-const SETTABLE_STATUSES = ["preparing", "out_for_delivery", "delivered", "cancelled"] as const;
+// What the restaurant is allowed to set. The database checks the order of steps:
+// placed -> cooking -> out for delivery -> delivered (or cancelled), plus ONE step back to
+// undo a mistaken tap ("pending" = back to New).
+const SETTABLE_STATUSES = ["pending", "preparing", "out_for_delivery", "delivered", "cancelled"] as const;
 type SettableStatus = (typeof SETTABLE_STATUSES)[number];
 
 // Everything below runs with the service-role client (the restaurant has no account),
@@ -43,6 +44,8 @@ export async function updateOrderStatus(input: {
   orderId: string;
   status: string;
   reason?: string;
+  // A step back to undo a mistaken tap: no emails (the customer already heard about it).
+  undo?: boolean;
 }): Promise<PanelActionResult> {
   const restaurant = await getPanelRestaurant();
   if (!restaurant) return { error: SESSION_EXPIRED };
@@ -71,7 +74,7 @@ export async function updateOrderStatus(input: {
   }
   if (!data?.length) return { error: "Order not found." };
 
-  after(() => handleOrderEvent({ type: "status_changed", orderId: input.orderId, status }));
+  if (!input.undo) after(() => handleOrderEvent({ type: "status_changed", orderId: input.orderId, status }));
   revalidatePath("/panel");
   return {};
 }

@@ -39,13 +39,21 @@ export function OrderTimeline({
           <li key={step.key} className="flex gap-4" aria-current={now ? "step" : undefined}>
             <div className="flex flex-col items-center">
               <span
-                className={`grid size-[26px] shrink-0 place-items-center rounded-full border-2 text-xs font-bold text-on-brand ${
+                className={`relative grid size-[26px] shrink-0 place-items-center rounded-full border-2 text-xs font-bold text-on-brand transition-colors duration-500 ${
                   next ? "border-[#D8D2C8] bg-surface dark:border-[#4A4136]" : "border-brand bg-brand"
                 } ${now ? "ring-4 ring-brand/25" : ""}`}
               >
-                {done ? "✓" : ""}
+                {/* The current step breathes; finished steps get their tick with a little pop */}
+                {now && <span className="pe-ring absolute inset-0 rounded-full bg-brand" aria-hidden />}
+                {done ? <span key="tick" className="anim-bump">✓</span> : ""}
               </span>
-              {!last && <span className={`h-[34px] w-0.5 ${done ? "bg-brand" : "bg-border"}`} />}
+              {!last && (
+                <span className="relative h-[34px] w-0.5 overflow-hidden bg-border">
+                  <span
+                    className={`absolute inset-x-0 top-0 bg-brand transition-[height] duration-700 ease-out ${done ? "h-full" : "h-0"}`}
+                  />
+                </span>
+              )}
             </div>
             <div className="flex flex-col gap-0.5 pt-0.5">
               <span className={`font-semibold ${next ? "text-stone-500" : ""}`}>{step.label(restaurantName)}</span>

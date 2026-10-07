@@ -37,7 +37,7 @@ export function AddToCartButton({ restaurant, item, canOrder, onChooseSize }: Ad
         type="button"
         onClick={onChooseSize}
         aria-label={total > 0 ? `${total} ${item.name} in cart. Add more` : `Add ${item.name}`}
-        className="h-9 w-full rounded-[9px] bg-brand text-[13px] font-bold tracking-wide text-on-brand shadow-saffron transition-colors hover:bg-brand-dark"
+        className="press h-9 w-full rounded-[9px] bg-brand text-[13px] font-bold tracking-wide text-on-brand shadow-saffron transition-colors hover:bg-brand-dark"
       >
         {total > 0 ? `${total} added +` : "ADD"}
       </button>
@@ -51,7 +51,7 @@ export function AddToCartButton({ restaurant, item, canOrder, onChooseSize }: Ad
         variant="solid"
         quantity={quantity}
         itemName={item.name}
-        className="h-9 w-full shadow-saffron"
+        className="anim-pop-in h-9 w-full shadow-saffron"
         onChange={(next) => changeQuantity(fullKey, next)}
       />
     );
@@ -73,7 +73,7 @@ export function AddToCartButton({ restaurant, item, canOrder, onChooseSize }: Ad
       type="button"
       onClick={handleAdd}
       aria-label={`Add ${item.name}`}
-      className="h-9 w-full rounded-[9px] bg-brand text-[13px] font-bold tracking-wide text-on-brand shadow-saffron transition-colors hover:bg-brand-dark"
+      className="press h-9 w-full rounded-[9px] bg-brand text-[13px] font-bold tracking-wide text-on-brand shadow-saffron transition-colors hover:bg-brand-dark"
     >
       ADD
     </button>

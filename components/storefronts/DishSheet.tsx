@@ -66,7 +66,7 @@ export function DishSheet({
       onClose={onClose}
       onClick={(event) => event.target === dialogRef.current && onClose()}
       aria-label={item.name}
-      className="m-0 mt-auto max-h-[92dvh] w-full max-w-none overflow-y-auto rounded-t-[30px] bg-background p-0 text-foreground backdrop:bg-black/50 sm:m-auto sm:max-w-[440px] sm:rounded-[30px]"
+      className="sheet m-0 mt-auto max-h-[92dvh] w-full max-w-none overflow-y-auto rounded-t-[30px] bg-background p-0 text-foreground backdrop:bg-black/50 sm:m-auto sm:max-w-[440px] sm:rounded-[30px]"
     >
       <div className="relative flex flex-col items-center gap-3 px-[22px] pb-28 pt-6 text-center">
         <button

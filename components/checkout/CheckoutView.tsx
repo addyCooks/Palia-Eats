@@ -10,6 +10,7 @@ import { formatPrice } from "@/lib/utils/format";
 import { useCart } from "@/components/cart/useCart";
 import { useCartSync } from "@/components/cart/useCartSync";
 import { Textarea } from "@/components/ui/Textarea";
+import { CookingPot } from "@/components/ui/FoodLoader";
 import type { Address } from "@/types/app";
 
 type CheckoutViewProps = {
@@ -80,6 +81,9 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
   else if (shortfall > 0) blocker = `Add ${formatPrice(shortfall)} more to reach the minimum order.`;
   else if (!selectedAddress) blocker = "Add a delivery address to continue.";
   else if (!hasPhone) blocker = "Add a mobile number to your account or to this address.";
+
+  // Open restaurant, enough in the cart, but nowhere to deliver yet.
+  const needsAddress = blocker !== null && canOrder && shortfall <= 0 && !selectedAddress;
 
   function handlePlaceOrder() {
     if (!restaurant) return;
@@ -272,20 +276,42 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
             {error}
           </p>
         )}
-        {blocker && !error && (
+        {blocker && !error && !needsAddress && (
           <p role="status" className="text-sm text-stone-600">
             {blocker}
           </p>
         )}
 
-        <button
-          type="button"
-          disabled={isPending || blocker !== null}
-          onClick={handlePlaceOrder}
-          className="flex h-[54px] items-center justify-center rounded-xl bg-brand text-base font-bold text-on-brand shadow-saffron hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
-        >
-          {isPending ? "Placing your order…" : `Place order · ${formatPrice(total)}`}
-        </button>
+        {needsAddress ? (
+          // No address yet: the main button takes them to add one, then straight back here.
+          <Link
+            href="/account/addresses?next=/checkout"
+            className="press flex h-[54px] items-center justify-center gap-2 rounded-xl bg-brand text-base font-bold text-on-brand shadow-saffron hover:bg-brand-dark"
+          >
+            <MapPin className="size-5" aria-hidden />
+            Add delivery address
+          </Link>
+        ) : (
+          <button
+            type="button"
+            disabled={isPending || blocker !== null}
+            onClick={handlePlaceOrder}
+            className={`press flex h-[54px] items-center justify-center gap-3 rounded-xl text-base font-bold transition-colors disabled:cursor-not-allowed disabled:shadow-none ${
+              isPending
+                ? "bg-[#16120D] text-white dark:bg-[#2A241C]"
+                : "bg-brand text-on-brand shadow-saffron hover:bg-brand-dark disabled:opacity-50"
+            }`}
+          >
+            {isPending ? (
+              <>
+                <CookingPot className="size-9" />
+                Placing your order…
+              </>
+            ) : (
+              `Place order · ${formatPrice(total)}`
+            )}
+          </button>
+        )}
       </aside>
     </div>
   );

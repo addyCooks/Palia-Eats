@@ -46,3 +46,12 @@ export async function requireAdmin() {
   }
   return profile;
 }
+
+// The logged-in person's access token, for the page's live-update connection
+// (components/LiveUpdates.tsx). It goes only to that same person's browser, which
+// already holds it in its login cookie.
+export const getRealtimeToken = cache(async (): Promise<string | null> => {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+});

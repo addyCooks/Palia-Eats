@@ -159,7 +159,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         <>
 
           {/* Phones: compact "matches" list (v2 8b) */}
-          <ul className="flex flex-col gap-2.5 sm:hidden">
+          <ul className="stagger flex flex-col gap-2.5 sm:hidden">
             {matchingRestaurants.map((restaurant) => (
               <li key={restaurant.id}>
                 <Link
@@ -215,7 +215,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
               ))}
             </div>
           )}
-          <ul className="hidden grid-cols-2 gap-x-[22px] gap-y-[84px] pt-16 sm:grid md:grid-cols-3 lg:grid-cols-4">
+          <ul className="stagger hidden grid-cols-2 gap-x-[22px] gap-y-[84px] pt-16 sm:grid md:grid-cols-3 lg:grid-cols-4">
             {sorted.map((dish) => (
               <li key={dish.id}>
                 <DishPlateCard dish={dish} />

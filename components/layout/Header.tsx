@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin } from "lucide-react";
+import { MapPin, UserRound } from "lucide-react";
 import { getProfile } from "@/lib/auth/session";
 import { logout } from "@/lib/actions/auth";
 import { CartButton } from "@/components/cart/CartButton";
@@ -19,9 +19,9 @@ function DeliveringTo() {
   );
 }
 
-// Top bar of the customer pages (v2 "PE Nav"): location and account on the left, Menu ·
-// logo · Restaurants in the middle, My orders and the dark cart button on the right.
-// Phones get just the location, the logo and the cart; the tab bar carries the rest.
+// Top bar of the customer pages (v2 "PE Nav"): location and the cart on the left, Menu ·
+// logo · Restaurants in the middle, My orders and the account on the right.
+// Phones get the location, the logo and the account; the cart is in the bottom tab bar.
 export async function Header({ className = "" }: { className?: string }) {
   const profile = await getProfile();
   const firstName = profile?.full_name?.trim().split(/\s+/)[0] ?? null;
@@ -32,6 +32,14 @@ export async function Header({ className = "" }: { className?: string }) {
       <div className="mx-auto hidden h-[90px] w-full max-w-[1280px] grid-cols-[1fr_auto_1fr] items-center px-12 lg:grid">
         <div className="flex items-center gap-7">
           <DeliveringTo />
+          <CartButton />
+        </div>
+
+        <NavLinks />
+
+        <div className="flex items-center justify-end gap-4">
+          <OrdersLink loggedIn={Boolean(profile)} />
+          <ThemeToggle />
           {profile ? (
             <details className="relative">
               <summary className="flex cursor-pointer list-none items-center gap-2 text-[13px] marker:content-none">
@@ -43,7 +51,7 @@ export async function Header({ className = "" }: { className?: string }) {
                   <span className="font-semibold">{firstName ?? "Your account"} ▾</span>
                 </span>
               </summary>
-              <div className="absolute left-0 top-11 z-40 flex w-48 flex-col rounded-2xl bg-surface p-1.5 text-sm shadow-float">
+              <div className="anim-pop-in absolute right-0 top-11 z-40 flex w-48 flex-col rounded-2xl bg-surface p-1.5 text-sm shadow-float">
                 <Link href="/account" className="rounded-lg px-3 py-2 hover:bg-muted">
                   My account
                 </Link>
@@ -72,14 +80,6 @@ export async function Header({ className = "" }: { className?: string }) {
             </Link>
           )}
         </div>
-
-        <NavLinks />
-
-        <div className="flex items-center justify-end gap-4">
-          <OrdersLink loggedIn={Boolean(profile)} />
-          <ThemeToggle />
-          <CartButton />
-        </div>
       </div>
 
       {/* Phones and tablets */}
@@ -88,7 +88,13 @@ export async function Header({ className = "" }: { className?: string }) {
         <Wordmark size="sm" />
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
-          <CartButton compact />
+          <Link
+            href={profile ? "/account" : "/login"}
+            aria-label={profile ? "My account" : "Log in"}
+            className="press grid size-11 place-items-center rounded-xl bg-[#16120D] font-display text-lg text-brand shadow-[0_8px_20px_rgba(0,0,0,.18)] dark:bg-[#2A241C]"
+          >
+            {firstName ? firstName.charAt(0).toUpperCase() : <UserRound className="size-[18px]" aria-hidden />}
+          </Link>
         </div>
       </div>
     </header>

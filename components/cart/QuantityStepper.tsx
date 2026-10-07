@@ -20,8 +20,8 @@ export function QuantityStepper({
 }: QuantityStepperProps) {
   const solid = variant === "solid";
   const buttonClass = solid
-    ? "flex h-full w-9 items-center justify-center text-xl font-semibold text-on-brand hover:bg-black/10"
-    : "flex h-full w-8 items-center justify-center text-lg font-semibold text-accent hover:bg-muted";
+    ? "press flex h-full w-9 items-center justify-center text-xl font-semibold text-on-brand hover:bg-black/10"
+    : "press flex h-full w-8 items-center justify-center text-lg font-semibold text-accent hover:bg-muted";
 
   return (
     <div
@@ -38,7 +38,10 @@ export function QuantityStepper({
         −
       </button>
       <span className="min-w-6 text-center text-sm font-semibold tabular-nums" aria-live="polite">
-        {quantity}
+        {/* Re-mounts on every change, so the number gives a little bump */}
+        <span key={quantity} className="anim-bump inline-block">
+          {quantity}
+        </span>
       </span>
       <button
         type="button"

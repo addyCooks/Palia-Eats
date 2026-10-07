@@ -7,7 +7,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <main className="relative flex flex-1 flex-col items-center overflow-hidden px-4 pb-10 sm:justify-center sm:py-16">
       {/* Phones: big plate at the top */}
-      <div className="pointer-events-none relative -mt-24 mb-2 size-[300px] shrink-0 overflow-hidden rounded-full shadow-[0_30px_60px_rgba(0,0,0,.25)] sm:hidden">
+      <div className="anim-fade-in pointer-events-none relative -mt-24 mb-2 size-[300px] shrink-0 overflow-hidden rounded-full shadow-[0_30px_60px_rgba(0,0,0,.25)] sm:hidden">
         <Photo src="/placeholders/butter-chicken.jpg" alt="" sizes="300px" priority />
       </div>
       {/* Laptops: plates around the card */}
@@ -18,7 +18,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
         <Photo src="/placeholders/gulab-jamun.jpg" alt="" sizes="240px" />
       </div>
 
-      <div className="relative flex w-full max-w-[440px] flex-col gap-5 sm:rounded-[24px] sm:bg-surface sm:p-10 sm:shadow-[0_30px_70px_rgba(120,70,0,.14)] dark:sm:shadow-none">
+      <div className="anim-pop-in relative flex w-full max-w-[440px] flex-col gap-5 sm:rounded-[24px] sm:bg-surface sm:p-10 sm:shadow-[0_30px_70px_rgba(120,70,0,.14)] dark:sm:shadow-none">
         <div className="self-start sm:self-center">
           <Wordmark />
         </div>

@@ -2,20 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Receipt, Search, User } from "lucide-react";
+import { Home, Receipt, Search, ShoppingBag } from "lucide-react";
+import { useCart } from "@/components/cart/useCart";
 
 const TABS = [
   { href: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
   { href: "/search", label: "Search", icon: Search, match: (p: string) => p.startsWith("/search") },
   { href: "/orders", label: "Orders", icon: Receipt, match: (p: string) => p.startsWith("/orders") },
-  { href: "/account", label: "Account", icon: User, match: (p: string) => p.startsWith("/account") },
+  { href: "/cart", label: "Cart", icon: ShoppingBag, match: (p: string) => p.startsWith("/cart") },
 ] as const;
 
 // The floating dark pill of tabs at the bottom of customer pages on phones and tablets
-// (v2 "PE Tabbar"): the active tab expands with a saffron fill and its name. The cart
-// button lives in the top bar. On laptops the header carries the same links instead.
+// (v2 "PE Tabbar"): the active tab expands with a saffron fill and its name. The cart is
+// the last tab, with its item count; the account button lives in the top bar. On
+// laptops the header carries the same links instead.
 export function BottomTabBar() {
   const pathname = usePathname();
+  const { count } = useCart();
 
   // Checkout and the cart have their own big button at the bottom, so no tabs there.
   if (pathname.startsWith("/checkout") || pathname.startsWith("/cart")) return null;
@@ -33,12 +36,20 @@ export function BottomTabBar() {
             href={href}
             aria-label={label}
             aria-current={active ? "page" : undefined}
-            className={`flex h-12 min-w-12 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-colors ${
+            className={`press relative flex h-12 min-w-12 items-center justify-center gap-2 rounded-full text-sm font-semibold transition-all duration-300 ${
               active ? "bg-brand px-[18px] text-on-brand" : "text-[#A39B90] hover:text-white"
             }`}
           >
             <Icon className="size-[19px]" strokeWidth={1.9} aria-hidden />
-            {active && label}
+            {active && <span className="anim-fade-in">{label}</span>}
+            {label === "Cart" && count > 0 && (
+              <span
+                key={count}
+                className="anim-bump absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-bold text-on-brand ring-2 ring-[#16120D] dark:ring-[#2A241C]"
+              >
+                {count}
+              </span>
+            )}
           </Link>
         );
       })}

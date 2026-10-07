@@ -86,7 +86,7 @@ export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
           No restaurants match that. Try another word or clear the filter.
         </p>
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 sm:gap-[22px] lg:grid-cols-3">
+        <ul className="stagger grid gap-4 sm:grid-cols-2 sm:gap-[22px] lg:grid-cols-3">
           {visible.map(({ restaurant, status }) => (
             <li key={restaurant.id}>
               <RestaurantCard restaurant={restaurant} status={status} />

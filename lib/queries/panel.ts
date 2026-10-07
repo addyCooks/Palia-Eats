@@ -46,7 +46,7 @@ async function statusEvents(orderIds: string[]): Promise<StatusEventRow[]> {
 // The live board: every open order, plus today's numbers for the header.
 export async function getPanelOrders(restaurantId: string) {
   const admin = createAdminClient();
-  const [active, today] = await Promise.all([
+  const [active, today, delivered] = await Promise.all([
     admin
       .from("orders")
       .select("*, order_items(*)")
@@ -58,6 +58,15 @@ export async function getPanelOrders(restaurantId: string) {
       .select("id, status, total")
       .eq("restaurant_id", restaurantId)
       .gte("placed_at", startOfTodayIST()),
+    // Delivered today (newest first), so a mistaken "Mark delivered" can be undone.
+    admin
+      .from("orders")
+      .select("*, order_items(*)")
+      .eq("restaurant_id", restaurantId)
+      .eq("status", "delivered")
+      .gte("status_updated_at", startOfTodayIST())
+      .order("status_updated_at", { ascending: false })
+      .limit(12),
   ]);
   if (active.error) throw new Error(`Could not load orders: ${active.error.message}`);
   if (today.error) throw new Error(`Could not load today's numbers: ${today.error.message}`);
@@ -68,6 +77,7 @@ export async function getPanelOrders(restaurantId: string) {
 
   return {
     active: (active.data ?? []) as PanelOrder[],
+    delivered: (delivered.data ?? []) as PanelOrder[],
     stats: {
       orders: counted.length,
       sales: counted.reduce((sum, row) => sum + Number(row.total), 0),

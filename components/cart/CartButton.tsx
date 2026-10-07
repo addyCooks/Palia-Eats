@@ -13,14 +13,17 @@ export function CartButton({ compact = false }: { compact?: boolean }) {
     <Link
       href="/cart"
       aria-label={count > 0 ? `My cart, ${count} items` : "My cart"}
-      className={`relative flex items-center justify-center gap-2 bg-[#16120D] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(0,0,0,.18)] transition-colors hover:bg-black dark:bg-[#2A241C] ${
+      className={`press relative flex items-center justify-center gap-2 bg-[#16120D] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(0,0,0,.18)] transition-colors hover:bg-black dark:bg-[#2A241C] ${
         compact ? "size-11 rounded-xl" : "h-[42px] rounded-[10px] px-[18px]"
       }`}
     >
       <ShoppingBag className="size-4 text-brand" aria-hidden />
       {!compact && "My cart"}
       {count > 0 && (
-        <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-md bg-brand px-1 text-[11px] font-bold text-on-brand">
+        <span
+          key={count}
+          className="anim-bump absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-md bg-brand px-1 text-[11px] font-bold text-on-brand"
+        >
           {count}
         </span>
       )}

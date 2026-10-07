@@ -6,7 +6,15 @@ import { rateOrder } from "@/lib/actions/ratings";
 const WORDS = ["", "Not good", "Could be better", "Okay", "Good", "Loved it"];
 
 // "How was your food?" Five big stars and an optional note, shown on a delivered order.
-export function RateOrder({ orderId, restaurantName }: { orderId: string; restaurantName: string }) {
+export function RateOrder({
+  orderId,
+  restaurantName,
+  onDone,
+}: {
+  orderId: string;
+  restaurantName: string;
+  onDone?: () => void;
+}) {
   const [stars, setStars] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
@@ -16,7 +24,7 @@ export function RateOrder({ orderId, restaurantName }: { orderId: string; restau
 
   if (done) {
     return (
-      <p role="status" className="text-sm font-medium text-stone-700">
+      <p role="status" className="anim-pop-in text-sm font-medium text-stone-700">
         Thank you! Your rating helps {restaurantName} and other customers.
       </p>
     );
@@ -37,16 +45,18 @@ export function RateOrder({ orderId, restaurantName }: { orderId: string; restau
               aria-label={`${n} ${n === 1 ? "star" : "stars"}`}
               onMouseEnter={() => setHover(n)}
               onClick={() => setStars(n)}
-              className={`text-[34px] leading-none transition-transform active:scale-90 ${n <= shown ? "text-brand" : "text-stone-300"}`}
+              className={`text-[38px] leading-none transition-[color,transform] duration-200 hover:scale-110 active:scale-90 ${n <= shown ? "text-brand" : "text-stone-300"}`}
             >
-              ★
+              <span key={n <= stars ? `on-${stars}` : "off"} className={`inline-block ${n <= stars ? "anim-bump" : ""}`} style={{ animationDelay: `${(n - 1) * 40}ms` }}>
+                ★
+              </span>
             </button>
           ))}
         </div>
         <span className="text-sm font-semibold text-stone-600">{WORDS[shown]}</span>
       </div>
       {stars > 0 && (
-        <>
+        <div className="anim-fade-up flex flex-col gap-3">
           <label className="flex flex-col gap-1.5 text-[13px] font-semibold text-stone-600">
             Anything to add? (optional)
             <textarea
@@ -66,14 +76,17 @@ export function RateOrder({ orderId, restaurantName }: { orderId: string; restau
                 setError(null);
                 const result = await rateOrder({ orderId, stars, comment });
                 if (result.error) setError(result.error);
-                else setDone(true);
+                else {
+                  setDone(true);
+                  onDone?.();
+                }
               })
             }
-            className="h-12 rounded-xl bg-brand font-bold text-on-brand hover:bg-brand-dark disabled:opacity-60"
+            className="press h-12 rounded-xl bg-brand font-bold text-on-brand hover:bg-brand-dark disabled:opacity-60"
           >
             {isPending ? "Sending…" : "Send rating"}
           </button>
-        </>
+        </div>
       )}
       {error && (
         <p role="alert" className="text-sm text-red-700">

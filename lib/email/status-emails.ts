@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createPanelToken } from "@/lib/panel/token";
 import { button, deliver, escapeHtml, siteUrl } from "@/lib/email/shared";
+import { emailButton, emailLayout, emailNote, emailParagraph, emailSmall } from "@/lib/email/layout";
 import { formatPrice } from "@/lib/utils/format";
 
 type RestaurantRow = {
@@ -28,26 +29,34 @@ async function loadOrder(orderId: string) {
 }
 
 // What the customer is told for each status.
-const CUSTOMER_COPY: Record<string, { subject: string; heading: string; line: string }> = {
+const CUSTOMER_COPY: Record<string, { subject: string; kicker: string; heading: string; line: string; button: string }> = {
   preparing: {
-    subject: "is being prepared",
-    heading: "Your food is being cooked",
-    line: "The restaurant has started preparing your order.",
+    subject: "is cooking",
+    kicker: "Cooking",
+    heading: "Your order is cooking",
+    line: "The kitchen has started on your food. We'll tell you the moment it leaves.",
+    button: "Track your order",
   },
   out_for_delivery: {
-    subject: "is on its way",
-    heading: "Your order is on its way",
-    line: "Your order is out for delivery. Keep the cash ready.",
+    subject: "is on the way",
+    kicker: "On the way",
+    heading: "Your order is on the way",
+    line: "Your food has left the kitchen and is heading to you now.",
+    button: "Track your order",
   },
   delivered: {
     subject: "was delivered",
-    heading: "Your order was delivered",
-    line: "Your order has been delivered. Enjoy your meal!",
+    kicker: "Delivered",
+    heading: "Delivered. Enjoy your meal!",
+    line: "Your order has arrived. We hope you love it.",
+    button: "Rate your order",
   },
   cancelled: {
     subject: "was cancelled",
+    kicker: "Cancelled",
     heading: "Your order was cancelled",
-    line: "Sorry, your order could not be completed.",
+    line: "Sorry, your order could not be completed. Nothing was charged.",
+    button: "View your order",
   },
 };
 
@@ -74,23 +83,25 @@ export async function sendOrderStatusEmails(orderId: string, status: string) {
         to: customerEmail,
         subject: `Your order #${order.order_number} from ${restaurantName} ${copy.subject}`,
         text:
-          `Hi ${order.customer_name},\n\n${copy.heading}.\n${copy.line}\n` +
+          `Hi ${order.customer_name},\n\n${copy.heading}${/[.!?]$/.test(copy.heading) ? "" : "."}\n${copy.line}\n` +
           (reason ? `\nReason: ${reason}\n` : "") +
-          (status === "cancelled" ? "" : `\nTotal: ${formatPrice(order.total)} (cash on delivery)\n`) +
+          (status === "cancelled" || status === "delivered" ? "" : `\nTotal: ${formatPrice(order.total)} (cash or UPI on delivery)\n`) +
           `\nOrder #${order.order_number} from ${restaurantName}.\nView it here: ${orderLink}\n\nRegards,\n${restaurantName}\n`,
-        html:
-          `<div style="font-family:Arial,sans-serif;max-width:480px">` +
-          `<h2 style="margin:0 0 8px">${escapeHtml(copy.heading)}</h2>` +
-          `<p>Hi ${escapeHtml(order.customer_name)}, ${escapeHtml(copy.line)}</p>` +
-          (reason
-            ? `<p style="background:#fef2f2;padding:8px;border-radius:8px"><strong>Reason:</strong> ${escapeHtml(reason)}</p>`
-            : "") +
-          `<p style="color:#666">Order #${order.order_number} from ${escapeHtml(restaurantName)}` +
-          (status === "cancelled" ? "" : ` · ${formatPrice(order.total)} cash on delivery`) +
-          `</p>` +
-          button(orderLink, "View your order") +
-          `<p style="color:#444">Regards,<br>${escapeHtml(restaurantName)}</p>` +
-          `</div>`,
+        html: emailLayout({
+          brand: restaurantName,
+          preheader: `${copy.heading} Order #${order.order_number}.`,
+          kicker: `Order #${order.order_number} · ${copy.kicker}`,
+          title: copy.heading,
+          content:
+            emailParagraph(`Hi ${escapeHtml(order.customer_name)}, ${escapeHtml(copy.line)}`) +
+            (reason ? emailNote("Reason:", reason) : "") +
+            (status === "cancelled" || status === "delivered"
+              ? ""
+              : emailParagraph(`Keep <b style="color:#16120D">${formatPrice(order.total)}</b> ready for the rider (cash or UPI).`)) +
+            emailButton(orderLink, copy.button) +
+            emailSmall(`Regards,<br>${escapeHtml(restaurantName)}`),
+          footer: `${restaurantName} · ordered on PaliaEats`,
+        }),
       });
     }
 

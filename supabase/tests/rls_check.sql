@@ -226,11 +226,20 @@ begin
   update public.orders set status = 'preparing' where id = order_id;
   get diagnostics n = row_count;
   if n <> 1 then raise exception 'FAIL: admin cannot update order status'; end if;
+  -- One step back is allowed (undo a mistaken tap); two steps back is not.
+  update public.orders set status = 'pending' where id = order_id;
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: admin cannot undo cooking -> new'; end if;
+  update public.orders set status = 'preparing' where id = order_id;
+  update public.orders set status = 'out_for_delivery' where id = order_id;
   begin update public.orders set status = 'pending' where id = order_id;
-    raise exception 'FAIL: order status could go backwards';
+    raise exception 'FAIL: order status could jump two steps back';
   exception when raise_exception then
     if sqlerrm like 'FAIL:%' then raise; end if;
   end;
+  update public.orders set status = 'preparing' where id = order_id;
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL: admin cannot undo on the way -> cooking'; end if;
   update public.menu_items set is_available = false where restaurant_id = rest_id;
   get diagnostics n = row_count;
   if n = 0 then raise exception 'FAIL: admin cannot edit menu'; end if;

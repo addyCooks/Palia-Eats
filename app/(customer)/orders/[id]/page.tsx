@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, Phone } from "lucide-react";
-import { requireUser } from "@/lib/auth/session";
+import { Phone } from "lucide-react";
+import { getRealtimeToken, requireUser } from "@/lib/auth/session";
 import { getMyOrder } from "@/lib/queries/orders";
 import { isUuid } from "@/lib/validation/menu";
 import { formatPrice } from "@/lib/utils/format";
@@ -10,7 +10,10 @@ import { formatClock, formatDayLabel } from "@/lib/utils/time";
 import { isOrderOverdue } from "@/lib/orders/overdue";
 import { ACTIVE_STATUSES, ORDER_STATUS_LABELS, isCancelled } from "@/lib/orders/status";
 import { LiveUpdates } from "@/components/LiveUpdates";
+import { DeliveredCelebration } from "@/components/order/DeliveredCelebration";
 import { OrderTimeline } from "@/components/order/OrderTimeline";
+import { StatusArt } from "@/components/order/StatusArt";
+import { Confetti } from "@/components/ui/Confetti";
 import { RateOrder } from "@/components/order/RateOrder";
 import { Stars } from "@/components/order/Stars";
 import { ProblemPlate } from "@/components/ui/ProblemScreen";
@@ -35,6 +38,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
   const data = await getMyOrder(id);
   if (!data) notFound();
   const { order, events, rating } = data;
+  const accessToken = await getRealtimeToken();
 
   const { placed } = await searchParams;
   const restaurant = order.restaurants;
@@ -55,9 +59,18 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
             { table: "orders", filter: `id=eq.${order.id}` },
             { table: "order_status_events", filter: `order_id=eq.${order.id}` },
           ]}
-          fallbackSeconds={30}
+          accessToken={accessToken}
+          fallbackSeconds={10}
         />
       )}
+
+      <DeliveredCelebration
+        orderId={order.id}
+        delivered={delivered}
+        deliveredAt={deliveredAt ?? null}
+        restaurantName={restaurant?.name ?? "the restaurant"}
+        rated={Boolean(rating)}
+      />
 
       <Link href="/orders" className="text-sm text-stone-500 hover:underline">
         ← My orders
@@ -67,14 +80,17 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
       {placed === "1" && !cancelled && (
         <section
           role="status"
-          className="mt-3 flex flex-col items-center gap-4 rounded-[28px] bg-[#16120D] px-7 py-10 text-center text-white dark:bg-[#1F1A14]"
+          className="anim-pop-in mt-3 flex flex-col items-center gap-4 rounded-[28px] bg-[#16120D] px-7 py-10 text-center text-white dark:bg-[#1F1A14]"
         >
+          <Confetti pieces={60} />
           <div aria-hidden className="relative mb-2 size-[180px]">
             <div className="absolute inset-0 rounded-full bg-[#2A241C]" />
+            <div className="pe-ring absolute inset-6 rounded-full bg-brand/25" />
             <div className="absolute inset-6 rounded-full border-2 border-dashed border-[#5C554B]" />
-            <div className="absolute left-1/2 top-1/2 grid size-[84px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-brand text-on-brand">
-              <Check className="size-10" strokeWidth={3} />
-            </div>
+            <svg viewBox="0 0 84 84" className="anim-bump absolute left-1/2 top-1/2 size-[84px] -translate-x-1/2 -translate-y-1/2">
+              <circle cx="42" cy="42" r="42" fill="var(--brand)" />
+              <path d="M26 43 l11 11 l22 -24" fill="none" stroke="#1A1206" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" className="pe-draw" />
+            </svg>
           </div>
           <span className="text-xs font-semibold tracking-[2px] text-brand">ORDER #{order.order_number}</span>
           <h1 className="font-display text-[38px] leading-[1.05]">Order placed</h1>
@@ -94,10 +110,16 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
       <div id="track" className="mt-4 grid scroll-mt-24 items-start gap-5 lg:grid-cols-[420px_minmax(0,1fr)] lg:gap-7">
         <div className="flex flex-col gap-[18px]">
           {/* Status */}
-          <section className={`flex flex-col gap-2 rounded-[22px] p-7 ${cancelled ? "bg-red-100 text-red-800" : "bg-[#16120D] text-white dark:bg-[#1F1A14]"}`}>
-            <span className={`text-[13px] font-semibold tracking-[1px] ${cancelled ? "" : "text-brand"}`}>
-              ORDER #{order.order_number} · {ORDER_STATUS_LABELS[order.status].toUpperCase()}
-            </span>
+          <section
+            key={order.status}
+            className={`anim-pop-in relative flex flex-col gap-2 overflow-hidden rounded-[22px] p-7 ${cancelled ? "bg-red-100 text-red-800" : "bg-[#16120D] text-white dark:bg-[#1F1A14]"}`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <span className={`pt-1 text-[13px] font-semibold tracking-[1px] ${cancelled ? "" : "text-brand"}`}>
+                ORDER #{order.order_number} · {ORDER_STATUS_LABELS[order.status].toUpperCase()}
+              </span>
+              {!cancelled && <StatusArt status={order.status} />}
+            </div>
             {cancelled ? (
               <>
                 <span className="font-display text-[44px] leading-none">Cancelled</span>
