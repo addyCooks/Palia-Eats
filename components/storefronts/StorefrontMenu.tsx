@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import type { FavouriteState } from "@/lib/queries/favourites";
 import type { MenuCategory, MenuItem, Restaurant } from "@/types/app";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { CartButton } from "@/components/cart/CartButton";
 import { CartPanel } from "@/components/cart/CartPanel";
 import { MenuItemCard } from "@/components/menu/MenuItemCard";
 import { DishSheet } from "@/components/storefronts/DishSheet";
@@ -111,6 +112,9 @@ export function StorefrontMenu({
           <span className={`absolute top-[3px] size-4 rounded-full bg-white transition-[left] ${vegOnly ? "left-[21px]" : "left-[3px]"}`} />
         </span>
       </button>
+      <span className="shrink-0 lg:hidden">
+        <CartButton compact />
+      </span>
     </div>
   );
 

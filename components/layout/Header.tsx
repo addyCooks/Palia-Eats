@@ -6,6 +6,7 @@ import { CartButton } from "@/components/cart/CartButton";
 import { NavLinks, OrdersLink } from "@/components/layout/NavLinks";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 function DeliveringTo() {
   return (
@@ -67,9 +68,9 @@ export async function Header({ className = "" }: { className?: string }) {
                   </Link>
                 )}
                 <form action={logout}>
-                  <button type="submit" className="w-full rounded-lg px-3 py-2 text-left text-accent hover:bg-muted">
+                  <SubmitButton pendingText="Logging out…" className="w-full rounded-lg px-3 py-2 text-left text-accent hover:bg-muted">
                     Log out
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             </details>

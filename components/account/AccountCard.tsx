@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Profile } from "@/types/app";
 import { logout } from "@/lib/actions/auth";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const LINKS = [
   { href: "/orders", label: "My orders" },
@@ -41,13 +42,13 @@ export function AccountCard({ profile, active }: { profile: Profile; active: str
           </Link>
         ))}
         <form action={logout}>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Logging out…"
             className="flex h-11 w-full items-center justify-between rounded-[10px] px-3.5 text-sm font-medium text-accent hover:bg-background"
           >
             Log out
             <span className="-mt-1.5 text-[44px] font-light leading-none" aria-hidden>›</span>
-          </button>
+          </SubmitButton>
         </form>
       </nav>
     </aside>

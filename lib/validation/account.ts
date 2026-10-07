@@ -12,6 +12,8 @@ export type AddressInput = {
   landmark: string | null;
   phone: string | null;
   is_default: boolean;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 function text(formData: FormData, key: string): string | null {
@@ -69,6 +71,8 @@ export function parseAddressForm(formData: FormData): Result<AddressInput> {
     if (!phone) return { ok: false, error: PHONE_ERROR };
   }
 
+  const pin = parsePin(formData);
+
   return {
     ok: true,
     data: {
@@ -77,6 +81,19 @@ export function parseAddressForm(formData: FormData): Result<AddressInput> {
       landmark,
       phone,
       is_default: formData.get("is_default") === "on",
+      latitude: pin?.latitude ?? null,
+      longitude: pin?.longitude ?? null,
     },
   };
+}
+
+// The optional "use my current location" pin. Anything odd is simply dropped (the pin
+// is a helper for the rider, never required).
+function parsePin(formData: FormData): { latitude: number; longitude: number } | null {
+  const lat = Number(text(formData, "latitude") ?? NaN);
+  const lng = Number(text(formData, "longitude") ?? NaN);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+  // About 10 cm is plenty: keep 6 decimals.
+  return { latitude: Math.round(lat * 1e6) / 1e6, longitude: Math.round(lng * 1e6) / 1e6 };
 }

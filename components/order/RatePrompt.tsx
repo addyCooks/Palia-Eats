@@ -66,9 +66,11 @@ export function RatePrompt({ order }: { order: RatePromptOrder | null }) {
         <ServedPlate className="size-28" />
         <span className="kicker">Order #{order.order_number}</span>
         <h2 id="rate-title" className="font-display text-[32px] leading-[1.08]">
-          How was your meal from {order.restaurantName}?
+          How was your little moment of yum?
         </h2>
-        <p className="text-sm text-stone-600">Your stars help {order.restaurantName} and other people in Palia.</p>
+        <p className="text-sm text-stone-600">
+          Rate your meal from {order.restaurantName}. Your stars help them and other people in Palia.
+        </p>
         <div className="mt-2 flex w-full justify-center text-left">
           <RateOrder
             orderId={order.id}

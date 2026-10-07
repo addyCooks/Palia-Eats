@@ -21,6 +21,11 @@ export function AddressCard({ address }: { address: Address }) {
             <p className="text-sm text-stone-500">Landmark: {address.landmark}</p>
           )}
           {address.phone && <p className="text-sm text-stone-500">Phone: {address.phone}</p>}
+          {address.latitude != null && address.longitude != null ? (
+            <p className="mt-1 text-sm font-medium text-accent">📍 Location pin added</p>
+          ) : (
+            <p className="mt-1 text-sm text-stone-500">No location pin yet · add one from Edit</p>
+          )}
         </div>
       </div>
 

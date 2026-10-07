@@ -40,6 +40,7 @@ export function Footer() {
             <div className="self-start">
               <Wordmark size="sm" />
             </div>
+            <p className="font-display text-lg italic leading-snug text-accent">Made fresh for moments worth savoring.</p>
             <p className="max-w-xs text-stone-600">
               Palia&apos;s own food app. Made in Palia, Uttar Pradesh. Delivered by the restaurants that cook it.
             </p>

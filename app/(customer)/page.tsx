@@ -5,6 +5,7 @@ import { getRestaurantStatus } from "@/lib/utils/hours";
 import { LiveUpdates } from "@/components/LiveUpdates";
 import { DishPlateCard } from "@/components/menu/DishPlateCard";
 import { RestaurantBrowser } from "@/components/restaurant/RestaurantBrowser";
+import { HeroHeadline } from "@/components/home/HeroHeadline";
 
 export default async function HomePage() {
   const [restaurants, { dishes }] = await Promise.all([getActiveRestaurants(), getPublicDishes({ limit: 8 })]);
@@ -22,18 +23,7 @@ export default async function HomePage() {
       <section className="mx-auto w-full max-w-[1280px] px-4 pt-4 sm:px-6 lg:px-12 lg:pt-6">
         <div className="relative overflow-hidden rounded-none lg:rounded-[28px] lg:bg-background lg:px-20 lg:pb-16 lg:pt-12">
           <div className="flex flex-col gap-5 lg:items-center lg:gap-[22px] lg:text-center">
-            <h1 className="font-display text-[38px] leading-[1.05] tracking-[-0.5px] sm:text-[52px] lg:text-[76px] lg:leading-[1.02] lg:tracking-[-1px]">
-              <span className="lg:hidden">
-                Hot &amp; fresh,
-                <br />
-                from Palia&apos;s kitchens
-              </span>
-              <span className="hidden lg:inline">
-                Palia&apos;s Best Kitchens,
-                <br />
-                Delivered Hot &amp; Fresh
-              </span>
-            </h1>
+            <HeroHeadline className="font-display text-[38px] leading-[1.05] tracking-[-0.5px] sm:text-[52px] lg:text-[76px] lg:leading-[1.02] lg:tracking-[-1px]" />
             <p className="hidden max-w-[540px] text-pretty text-[17px] leading-[1.6] text-stone-600 lg:block">
               Biryani from the chowk, thali from your mohalla, momos from station road. Order from local restaurants and
               pay cash when it arrives.

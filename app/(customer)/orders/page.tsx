@@ -49,7 +49,7 @@ export default async function OrdersPage() {
               </Link>
             }
           >
-            When you order, you can follow it here from the kitchen to your door.
+            Your happy bite is just a tap away. When you order, you can follow it here from the kitchen to your door.
           </ProblemScreen>
         ) : (
           <ul className="stagger flex flex-col gap-3 sm:gap-4">

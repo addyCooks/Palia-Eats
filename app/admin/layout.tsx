@@ -3,6 +3,7 @@ import { logout } from "@/lib/actions/auth";
 import { countPendingApplications } from "@/lib/queries/applications";
 import { Sidebar, SidebarWordmark, TopNav } from "@/components/shell/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 // Every page under /admin goes through this check. Non-admins are redirected.
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
@@ -30,9 +31,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <span className="truncate font-semibold text-white">{profile.full_name ?? "Admin"}</span>
             <div className="flex items-center justify-between gap-2">
               <form action={logout}>
-                <button type="submit" className="text-[#D8D2C8] hover:text-white hover:underline">
+                <SubmitButton pendingText="Logging out…" className="text-[#D8D2C8] hover:text-white hover:underline">
                   Log out
-                </button>
+                </SubmitButton>
               </form>
               <ThemeToggle className="text-[#D8D2C8] hover:bg-white/10" />
             </div>
@@ -47,9 +48,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <div className="flex items-center gap-1">
               <ThemeToggle className="text-white hover:bg-white/10" />
               <form action={logout}>
-                <button type="submit" className="h-9 rounded-lg px-3 text-sm text-[#D8D2C8] hover:bg-white/10">
+                <SubmitButton pendingText="Logging out…" className="h-9 rounded-lg px-3 text-sm text-[#D8D2C8] hover:bg-white/10">
                   Log out
-                </button>
+                </SubmitButton>
               </form>
             </div>
           </div>

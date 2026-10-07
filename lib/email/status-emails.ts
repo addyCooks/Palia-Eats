@@ -34,21 +34,21 @@ const CUSTOMER_COPY: Record<string, { subject: string; kicker: string; heading: 
     subject: "is cooking",
     kicker: "Cooking",
     heading: "Your order is cooking",
-    line: "The kitchen has started on your food. We'll tell you the moment it leaves.",
+    line: "Made fresh for moments worth savoring: the kitchen has started on your food. We'll tell you the moment it leaves.",
     button: "Track your order",
   },
   out_for_delivery: {
     subject: "is on the way",
     kicker: "On the way",
-    heading: "Your order is on the way",
-    line: "Your food has left the kitchen and is heading to you now.",
+    heading: "Bringing your little slice of joy to you",
+    line: "Your order is on the way: it has left the kitchen and is heading to you now.",
     button: "Track your order",
   },
   delivered: {
     subject: "was delivered",
     kicker: "Delivered",
-    heading: "Delivered. Enjoy your meal!",
-    line: "Your order has arrived. We hope you love it.",
+    heading: "Your little moment of yum, delivered",
+    line: "Your order has arrived. Enjoy your meal!",
     button: "Rate your order",
   },
   cancelled: {
@@ -89,7 +89,7 @@ export async function sendOrderStatusEmails(orderId: string, status: string) {
           `\nOrder #${order.order_number} from ${restaurantName}.\nView it here: ${orderLink}\n\nRegards,\n${restaurantName}\n`,
         html: emailLayout({
           brand: restaurantName,
-          preheader: `${copy.heading} Order #${order.order_number}.`,
+          preheader: `${copy.heading}${/[.!?]$/.test(copy.heading) ? "" : "."} Order #${order.order_number}.`,
           kicker: `Order #${order.order_number} · ${copy.kicker}`,
           title: copy.heading,
           content:

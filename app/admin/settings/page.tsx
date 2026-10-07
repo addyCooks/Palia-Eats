@@ -5,6 +5,7 @@ import { logout } from "@/lib/actions/auth";
 import { countRecentNotificationProblems } from "@/lib/queries/admin";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PageHeader, Panel } from "@/components/ui/page";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -56,9 +57,9 @@ export default async function AdminSettingsPage() {
             <ThemeToggle />
           </div>
           <form action={logout}>
-            <button type="submit" className="h-11 rounded-xl bg-deep px-5 text-sm font-semibold text-brand">
+            <SubmitButton pendingText="Logging out…" className="h-11 rounded-xl bg-deep px-5 text-sm font-semibold text-brand">
               Log out
-            </button>
+            </SubmitButton>
           </form>
           <p className="text-xs text-stone-500">
             Payment on PaliaEats is cash or UPI on delivery only. Weekly payouts are worked out from delivered orders

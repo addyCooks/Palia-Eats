@@ -17,6 +17,9 @@ export type Address = {
   landmark: string | null;
   phone: string | null;
   is_default: boolean;
+  // The customer's location pin, if they shared it (optional)
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export type RestaurantTheme = {
@@ -124,6 +127,9 @@ export type Order = {
     address_line: string;
     landmark: string | null;
     phone: string | null;
+    // Location pin shared when the address was saved (orders before Oct 2026 have none)
+    lat?: number | null;
+    lng?: number | null;
   };
   customer_notes: string | null;
   rejection_reason: string | null;

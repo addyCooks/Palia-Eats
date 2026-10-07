@@ -10,6 +10,7 @@ import type { Address } from "@/types/app";
 import { keepValues } from "@/lib/forms";
 import { Input } from "@/components/ui/Input";
 import { FormToggle } from "@/components/ui/Toggle";
+import { LocationField } from "@/components/forms/LocationField";
 
 // One form for both "add address" (no props) and "edit address" (v2 8d).
 type AddressFormProps = {
@@ -31,6 +32,8 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
   const startType = address ? (address.label === "Home" || address.label === "Work" ? address.label : "Other") : "Home";
   const [type, setType] = useState<(typeof TYPES)[number]>(startType);
   const [customLabel, setCustomLabel] = useState(startType === "Other" ? (address?.label ?? "") : "");
+  // Bumped after a successful "add" so the location pin clears with the rest of the form.
+  const [resetCount, setResetCount] = useState(0);
 
   // Clear the "add" form after a successful save.
   useEffect(() => {
@@ -39,6 +42,7 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the chips with the form
       setType("Home");
       setCustomLabel("");
+      setResetCount((count) => count + 1);
     }
   }, [isEdit, state]);
 
@@ -64,6 +68,12 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
         placeholder="Near Hanuman Mandir"
         defaultValue={address?.landmark ?? ""}
         maxLength={100}
+      />
+      <LocationField
+        key={resetCount}
+        initial={
+          address?.latitude != null && address?.longitude != null ? { lat: address.latitude, lng: address.longitude } : null
+        }
       />
       <Input
         label="Phone for the rider"

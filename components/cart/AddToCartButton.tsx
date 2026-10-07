@@ -1,8 +1,10 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { isOtherRestaurant, lineKey, toCartRestaurant } from "@/lib/cart/cart";
 import { useCart } from "@/components/cart/useCart";
 import { QuantityStepper } from "@/components/cart/QuantityStepper";
+import { flyToCart } from "@/lib/cart/fly";
 import type { MenuItem, Restaurant } from "@/types/app";
 
 type AddToCartButtonProps = {
@@ -57,7 +59,8 @@ export function AddToCartButton({ restaurant, item, canOrder, onChooseSize }: Ad
     );
   }
 
-  function handleAdd() {
+  function handleAdd(event: MouseEvent<HTMLButtonElement>) {
+    const button = event.currentTarget;
     // One restaurant per cart: ask before throwing the old cart away.
     if (isOtherRestaurant(cart, restaurant.id)) {
       const ok = window.confirm(
@@ -66,6 +69,9 @@ export function AddToCartButton({ restaurant, item, canOrder, onChooseSize }: Ad
       if (!ok) return;
     }
     addItem(toCartRestaurant(restaurant), { id: item.id, name: item.name, price: item.price, isVeg: item.is_veg });
+    // A new dish: its picture swirls into the cart.
+    const photo = document.getElementById(`dish-${item.id}`)?.querySelector("img");
+    flyToCart(button, photo?.currentSrc || photo?.src);
   }
 
   return (

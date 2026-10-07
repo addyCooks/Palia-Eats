@@ -5,6 +5,7 @@ import { logout } from "@/lib/actions/auth";
 import { AccountCard } from "@/components/account/AccountCard";
 import { ProfileForm } from "@/components/forms/ProfileForm";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export const metadata: Metadata = { title: "My account" };
 
@@ -53,14 +54,14 @@ export default async function AccountPage() {
             </Link>
           ))}
           <form action={logout}>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Logging out…"
               className="flex h-[54px] w-full items-center gap-3 px-3.5 text-left text-[15px] font-medium text-accent"
             >
               <span className="size-2 rounded-full bg-brand" aria-hidden />
               <span className="flex-1">Log out</span>
               <span className="-mt-1.5 text-[44px] font-light leading-none" aria-hidden>›</span>
-            </button>
+            </SubmitButton>
           </form>
         </nav>
 

@@ -44,10 +44,10 @@ export function CoverActions({ name, children }: { name: string; children?: Reac
           <Share2 className="size-[18px]" aria-hidden />
         </button>
         {children}
-        <Link href="/cart" className={circle} aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}>
+        <Link href="/cart" data-cart-target className={circle} aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}>
           <ShoppingBag className="size-[18px]" aria-hidden />
           {count > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-md bg-brand px-1 text-[11px] font-bold text-on-brand">
+            <span key={count} className="anim-bump absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-md bg-brand px-1 text-[11px] font-bold text-on-brand">
               {count}
             </span>
           )}

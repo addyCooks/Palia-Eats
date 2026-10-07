@@ -21,14 +21,14 @@ export function CartView() {
         <ProblemScreen
           glyph={<ShoppingBag className="size-[34px]" strokeWidth={2} />}
           tone="dark"
-          title="Your cart is empty"
+          title="Hungry? Let's fix that."
           action={
             <Link href="/" className={problemActionClass}>
               Browse restaurants
             </Link>
           }
         >
-          Pick something tasty from one of Palia&apos;s kitchens.
+          Your cart is empty. Your happy bite is just a tap away.
         </ProblemScreen>
         {notices.map((notice) => (
           <p key={notice} className="text-sm text-amber-800">

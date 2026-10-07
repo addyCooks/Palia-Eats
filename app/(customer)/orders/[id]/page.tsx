@@ -28,6 +28,15 @@ const HEADLINE: Record<string, string> = {
   delivered: "Delivered",
 };
 
+// The warm line under the big status word.
+const TAGLINE: Record<string, string> = {
+  pending: "Your kind of delicious, coming right up",
+  accepted: "Your kind of delicious, coming right up",
+  preparing: "Made fresh for moments worth savoring",
+  out_for_delivery: "Bringing your little slice of joy to you.",
+  delivered: "Your little moment of yum, delivered.",
+};
+
 // Order tracking (v2 5d / 6d): dark status card, the four steps with their times, the
 // rider, then the bill, the address and (once delivered) the rating.
 export default async function OrderPage({ params, searchParams }: PageProps<"/orders/[id]">) {
@@ -94,6 +103,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
           </div>
           <span className="text-xs font-semibold tracking-[2px] text-brand">ORDER #{order.order_number}</span>
           <h1 className="font-display text-[38px] leading-[1.05]">Order placed</h1>
+          <p className="-mt-2 font-display text-[22px] italic leading-snug text-brand">Your kind of delicious, coming right up</p>
           <p className="max-w-md text-[15px] leading-[1.55] text-[#D8D2C8]">
             {restaurant?.name ?? "The restaurant"} has your order and will start cooking in a minute. Keep{" "}
             {formatPrice(order.total)} ready for the rider (cash or UPI).
@@ -134,6 +144,11 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
                 <span className="font-display text-[52px] leading-none sm:text-[64px]">
                   {delivered && deliveredAt ? formatClock(deliveredAt) : HEADLINE[order.status]}
                 </span>
+                {TAGLINE[order.status] && (
+                  <span className="anim-fade-up font-display text-[22px] italic leading-snug text-brand" style={{ animationDelay: "250ms" }}>
+                    {TAGLINE[order.status]}
+                  </span>
+                )}
                 <span className="text-sm text-[#D8D2C8]">
                   {delivered
                     ? `${formatDayLabel(order.placed_at)} · enjoy your meal!`
@@ -251,6 +266,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
             <h2 className="mb-1 text-lg font-semibold">Delivering to</h2>
             <p className="font-medium">{address.label}</p>
             <p className="whitespace-pre-line text-stone-700">{address.address_line}</p>
+            {typeof address.lat === "number" && <p className="font-medium text-accent">📍 Location pin shared with the rider</p>}
             {address.landmark && <p className="text-stone-500">Landmark: {address.landmark}</p>}
             <p className="text-stone-500">
               {order.customer_name} · {order.customer_phone}

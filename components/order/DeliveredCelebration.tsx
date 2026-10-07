@@ -90,7 +90,7 @@ export function DeliveredCelebration({
             Enjoy your meal!
           </h2>
           <p className="max-w-xs text-pretty text-[15px] leading-relaxed text-stone-600">
-            Your food from {restaurantName} is here. Enjoy every bite.
+            Your little moment of yum, delivered. Your food from {restaurantName} is here: enjoy every bite.
           </p>
           <div className="mt-3 flex w-full flex-col gap-2.5">
             {!rated && (

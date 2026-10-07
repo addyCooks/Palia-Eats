@@ -29,7 +29,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     <>
       <div className="flex flex-col gap-1.5 sm:text-center">
         <h1 className="font-display text-[34px] leading-[1.05]">Welcome back</h1>
-        <p className="text-[15px] text-stone-600">Log in to order from Palia&apos;s kitchens.</p>
+        <p className="text-[15px] text-stone-600">Your happy bite is just a tap away. Log in to order.</p>
       </div>
       {error && ERROR_MESSAGES[error] && (
         <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">

@@ -1,6 +1,7 @@
 "use client";
 
 import { deleteMenuItem } from "@/lib/actions/menu";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export function DeleteItemButton({
   restaurantId,
@@ -28,12 +29,12 @@ export function DeleteItemButton({
       </span>
       <input type="hidden" name="restaurantId" value={restaurantId} />
       <input type="hidden" name="itemId" value={itemId} />
-      <button
-        type="submit"
+      <SubmitButton
+        pendingText="Deleting…"
         className="h-10 rounded-xl bg-red-100 px-4 text-sm font-semibold text-red-700 hover:bg-red-200"
       >
         Delete dish
-      </button>
+      </SubmitButton>
     </form>
   );
 }

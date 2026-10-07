@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Serif_Display, Outfit } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
 import { OfflineNotice } from "@/components/OfflineNotice";
+import { NavProgress } from "@/components/ui/NavProgress";
+import { PressFeedback } from "@/components/ui/PressFeedback";
 
 // Design system v2: Outfit for all interface text, DM Serif Display for headings.
 const outfit = Outfit({
@@ -22,7 +25,7 @@ export const metadata: Metadata = {
     default: "PaliaEats",
     template: "%s | PaliaEats",
   },
-  description: "Order food online from your favourite local restaurants in Palia.",
+  description: "Hungry? Let's fix that. Order from Palia's own kitchens: your happy bite is just a tap away.",
 };
 
 export const viewport: Viewport = {
@@ -47,6 +50,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
+        <Suspense fallback={null}>
+          <NavProgress />
+        </Suspense>
+        <PressFeedback />
         <OfflineNotice />
         {children}
       </body>

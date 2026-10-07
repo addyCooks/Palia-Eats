@@ -41,8 +41,8 @@ begin
   insert into auth.users (id) values (cust_id), (other_id);
   update public.profiles set full_name = 'Test Customer', phone = '9876543210' where id = cust_id;
   update public.profiles set full_name = 'Other Person', phone = '9123456780' where id = other_id;
-  insert into public.customer_addresses (user_id, label, address_line, is_default)
-    values (cust_id, 'Home', '12 Test Street', true) returning id into addr_id;
+  insert into public.customer_addresses (user_id, label, address_line, is_default, latitude, longitude)
+    values (cust_id, 'Home', '12 Test Street', true, 28.432, 80.581) returning id into addr_id;
   insert into public.customer_addresses (user_id, label, address_line, is_default)
     values (other_id, 'Home', '99 Other Street', true) returning id into other_addr_id;
 
@@ -64,8 +64,24 @@ begin
       and subtotal = 677.00 and delivery_fee = fee and total = expected
       and customer_name = 'Test Customer' and customer_phone = '9876543210'
       and customer_notes = 'Extra cheese please'
-      and delivery_address ->> 'address_line' = '12 Test Street';
-  if n <> 1 then raise exception 'FAIL: order was not created with the right values'; end if;
+      and delivery_address ->> 'address_line' = '12 Test Street'
+      and (delivery_address ->> 'lat')::float8 = 28.432
+      and (delivery_address ->> 'lng')::float8 = 80.581;
+  if n <> 1 then raise exception 'FAIL: order was not created with the right values (incl. location pin)'; end if;
+
+  -- A location pin needs both halves, inside the map.
+  begin
+    insert into public.customer_addresses (user_id, label, address_line, latitude)
+      values (cust_id, 'Half pin', '1 Test', 28.4);
+    raise exception 'FAIL: half a location pin was accepted';
+  exception when check_violation then null;
+  end;
+  begin
+    insert into public.customer_addresses (user_id, label, address_line, latitude, longitude)
+      values (cust_id, 'Bad pin', '1 Test', 128.4, 80.5);
+    raise exception 'FAIL: a location pin off the map was accepted';
+  exception when check_violation then null;
+  end;
   select count(*) into n from public.order_items
     where order_id = order1 and item_name in ('Margherita', 'Farmhouse');
   if n <> 2 then raise exception 'FAIL: order items missing'; end if;

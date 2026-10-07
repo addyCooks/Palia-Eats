@@ -20,7 +20,7 @@ export default async function SignupPage({ searchParams }: PageProps<"/signup">)
   return (
     <>
       <div className="flex flex-col gap-1.5 sm:text-center">
-        <h1 className="font-display text-[34px] leading-[1.05]">Palia&apos;s kitchens, one tap away</h1>
+        <h1 className="font-display text-[34px] leading-[1.05]">Hungry? Let&apos;s fix that.</h1>
         <p className="text-[15px] text-stone-600">Create your account to order. Pay cash or UPI on delivery.</p>
       </div>
       <GoogleButton next={next ?? undefined} />

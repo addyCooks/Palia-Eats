@@ -144,6 +144,7 @@ export function OrderActions({ orderId, status, updateStatus, compact }: OrderAc
             disabled={isPending}
             className={`press flex h-10 items-center justify-center rounded-[10px] text-sm font-semibold transition-colors disabled:opacity-60 ${next.style}`}
           >
+            {isPending && <span className="pe-spinner mr-2" aria-hidden />}
             {isPending ? "Updating…" : next.label}
           </button>
         )}
@@ -179,6 +180,7 @@ export function OrderActions({ orderId, status, updateStatus, compact }: OrderAc
             disabled={isPending}
             className={`press inline-flex h-12 min-w-44 flex-1 items-center justify-center rounded-xl px-6 text-base font-semibold transition-colors disabled:opacity-60 ${next.style}`}
           >
+            {isPending && <span className="pe-spinner mr-2" aria-hidden />}
             {isPending ? "Updating…" : next.label}
           </button>
           <Button size="lg" variant="ghost" onClick={() => setCancelling(true)} disabled={isPending}>

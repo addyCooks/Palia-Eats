@@ -5,6 +5,7 @@ import { logNotification } from "@/lib/notifications/log";
 import { deliver, escapeHtml, siteUrl } from "@/lib/email/shared";
 import { emailButton, emailDetails, emailItems, emailLayout, emailNote, emailParagraph, emailSmall } from "@/lib/email/layout";
 import { formatDateTime, formatPrice } from "@/lib/utils/format";
+import { addressPin, mapsLink } from "@/lib/utils/maps";
 import type { OrderItem } from "@/types/app";
 
 // Called right after an order is placed. Sends the restaurant its new-order email
@@ -28,7 +29,10 @@ export async function sendOrderPlacedEmails(orderId: string, customerEmail: stri
       label: string;
       address_line: string;
       landmark: string | null;
+      lat?: number | null;
+      lng?: number | null;
     };
+    const pin = addressPin(address);
     const placedAt = formatDateTime(order.placed_at);
 
     // ---- Email to the restaurant ----
@@ -44,8 +48,9 @@ export async function sendOrderPlacedEmails(orderId: string, customerEmail: stri
           items.map((i) => `${i.quantity} x ${i.item_name}  ${formatPrice(i.line_total)}`).join("\n") +
           `\n\nTotal: ${formatPrice(order.total)} (cash on delivery)${notes}\n\n` +
           `Customer: ${order.customer_name}, ${order.customer_phone}\n` +
-          `Address: ${address.address_line}${address.landmark ? `\nLandmark: ${address.landmark}` : ""}\n\n` +
-          `Open your orders panel: ${panelLink}\n`,
+          `Address: ${address.address_line}${address.landmark ? `\nLandmark: ${address.landmark}` : ""}\n` +
+          (pin ? `Location pin: ${mapsLink(pin.lat, pin.lng)}\n` : "") +
+          `\nOpen your orders panel: ${panelLink}\n`,
         html: emailLayout({
           preheader: `New order #${order.order_number}, ${formatPrice(order.total)}. Open your panel to accept it.`,
           kicker: `New order · ${placedAt}`,
@@ -58,6 +63,11 @@ export async function sendOrderPlacedEmails(orderId: string, customerEmail: stri
               ["Phone", order.customer_phone],
               ["Address", `${address.address_line}${address.landmark ? `\nLandmark: ${address.landmark}` : ""}`],
             ]) +
+            (pin
+              ? emailParagraph(
+                  `&#128205; <a href="${mapsLink(pin.lat, pin.lng)}" style="color:#C2410C;font-weight:600">Open the customer's location in Google Maps</a>`,
+                )
+              : "") +
             emailButton(panelLink, "Open your orders panel") +
             emailSmall("This button is private. Anyone with it can manage your orders."),
         }),
@@ -87,9 +97,9 @@ export async function sendOrderPlacedEmails(orderId: string, customerEmail: stri
           `\n\nTotal: ${formatPrice(order.total)} - pay in cash on delivery.\n\nTrack it here: ${orderLink}\n\nRegards,\n${restaurant?.name ?? "the restaurant"}\n`,
         html: emailLayout({
           brand: restaurant?.name ?? "Your order",
-          preheader: `${restaurant?.name ?? "The restaurant"} has your order #${order.order_number}.`,
+          preheader: `Order placed! ${restaurant?.name ?? "The restaurant"} has your order #${order.order_number}.`,
           kicker: `Order #${order.order_number} · Placed`,
-          title: "Order placed!",
+          title: "Your kind of delicious, coming right up",
           content:
             emailParagraph(
               `Hi ${escapeHtml(order.customer_name)}, ${escapeHtml(restaurant?.name ?? "the restaurant")} has your order and will start cooking in a minute.`,

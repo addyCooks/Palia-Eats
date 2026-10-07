@@ -1,4 +1,6 @@
+import { MapPin } from "lucide-react";
 import { formatPrice } from "@/lib/utils/format";
+import { addressPin, mapsLink } from "@/lib/utils/maps";
 import type { OrderItem, Order } from "@/types/app";
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
 import { OrderActions, type UpdateOrderStatus } from "@/components/order/OrderActions";
@@ -13,6 +15,7 @@ type StaffOrderCardProps = {
 // button for the next step. (The page heading already shows the number, restaurant and time.)
 export function StaffOrderCard({ order, updateStatus }: StaffOrderCardProps) {
   const address = order.delivery_address;
+  const pin = addressPin(address);
   const isNew = order.status === "pending";
 
   return (
@@ -53,6 +56,17 @@ export function StaffOrderCard({ order, updateStatus }: StaffOrderCardProps) {
         </a>
         <p className="mt-1 whitespace-pre-line text-stone-700">{address.address_line}</p>
         {address.landmark && <p className="text-stone-500">Landmark: {address.landmark}</p>}
+        {pin && (
+          <a
+            href={mapsLink(pin.lat, pin.lng)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 inline-flex items-center gap-1.5 font-semibold text-accent hover:underline"
+          >
+            <MapPin className="size-3.5" aria-hidden />
+            Open location in Maps
+          </a>
+        )}
       </div>
 
       <div className="flex items-center justify-between text-sm">

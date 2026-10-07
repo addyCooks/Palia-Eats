@@ -1,4 +1,6 @@
+import { MapPin } from "lucide-react";
 import type { PanelOrder } from "@/lib/queries/panel";
+import { addressPin, mapsLink } from "@/lib/utils/maps";
 import { wholeRupees } from "@/lib/orders/stats";
 import { minutesAgo } from "@/lib/utils/time";
 import { OrderActions, type UpdateOrderStatus } from "@/components/order/OrderActions";
@@ -11,6 +13,7 @@ export function itemsLine(items: { item_name: string; quantity: number }[]): str
 // Address and phone fold away so the board stays readable at a glance.
 export function KanbanOrderCard({ order, updateStatus }: { order: PanelOrder; updateStatus: UpdateOrderStatus }) {
   const address = order.delivery_address;
+  const pin = addressPin(address);
   const isNew = order.status === "pending" || order.status === "accepted";
 
   return (
@@ -36,7 +39,7 @@ export function KanbanOrderCard({ order, updateStatus }: { order: PanelOrder; up
       </div>
       <details className="group text-[13px]">
         <summary className="cursor-pointer list-none font-semibold text-accent marker:content-none">
-          <span className="group-open:hidden">Address &amp; phone</span>
+          <span className="group-open:hidden">Address &amp; phone{pin ? " · 📍 pin" : ""}</span>
           <span className="hidden group-open:inline">Hide address</span>
         </summary>
         <div className="mt-1.5 flex flex-col gap-0.5 text-stone-700">
@@ -45,6 +48,17 @@ export function KanbanOrderCard({ order, updateStatus }: { order: PanelOrder; up
           </a>
           <p className="whitespace-pre-line">{address.address_line}</p>
           {address.landmark && <p className="text-stone-500">Landmark: {address.landmark}</p>}
+          {pin && (
+            <a
+              href={mapsLink(pin.lat, pin.lng)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex items-center gap-1.5 font-semibold text-accent hover:underline"
+            >
+              <MapPin className="size-3.5" aria-hidden />
+              Open location in Maps
+            </a>
+          )}
         </div>
       </details>
       <OrderActions orderId={order.id} status={order.status} updateStatus={updateStatus} compact />

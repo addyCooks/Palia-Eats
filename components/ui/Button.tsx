@@ -1,4 +1,7 @@
+"use client";
+
 import type { ButtonHTMLAttributes } from "react";
+import { useFormStatus } from "react-dom";
 import { cn } from "@/lib/utils/cn";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "dark";
@@ -22,26 +25,44 @@ const sizes: Record<Size, string> = {
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
   size?: Size;
+  // Show the spinner (for buttons that do their work outside a form)
+  loading?: boolean;
 };
 
+// A submit button spins by itself while its form is being sent, and can't be pressed
+// twice. (With several submit buttons sharing a name, only the pressed one spins.)
 export function Button({
   variant = "primary",
   size = "md",
   className,
   type = "button",
+  loading = false,
+  disabled,
+  children,
   ...props
 }: ButtonProps) {
+  const form = useFormStatus();
+  const sending = type === "submit" && form.pending;
+  const pressed =
+    sending && (!props.name || form.data === null || form.data.get(props.name) === String(props.value ?? ""));
+  const busy = loading || pressed;
+
   return (
     <button
       type={type}
+      disabled={disabled || sending}
+      aria-busy={busy || undefined}
       className={cn(
         "inline-flex items-center justify-center rounded-xl transition-colors",
-        "disabled:cursor-not-allowed disabled:opacity-50",
+        "disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-wait aria-busy:opacity-80",
         variants[variant],
         sizes[size],
         className,
       )}
       {...props}
-    />
+    >
+      {busy && <span className="pe-spinner mr-2" aria-hidden />}
+      {children}
+    </button>
   );
 }

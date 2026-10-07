@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { X } from "lucide-react";
 import { isOtherRestaurant, lineKey, toCartRestaurant, type PlateSize } from "@/lib/cart/cart";
 import { formatPrice } from "@/lib/utils/format";
 import { dishPhoto } from "@/lib/utils/placeholder";
 import { useCart } from "@/components/cart/useCart";
+import { flyToCart } from "@/lib/cart/fly";
 import { FavouriteButton } from "@/components/favourites/FavouriteButton";
 import { VegMark } from "@/components/menu/VegMark";
 import { Photo } from "@/components/ui/Photo";
@@ -43,7 +44,8 @@ export function DishSheet({
   const price = size === "half" && item.half_price !== null ? item.half_price : item.price;
   const kicker = [restaurant.name, item.is_bestseller ? "Bestseller" : null].filter(Boolean).join(" · ");
 
-  function add() {
+  function add(event: MouseEvent<HTMLButtonElement>) {
+    const button = event.currentTarget;
     const switching = isOtherRestaurant(cart, restaurant.id);
     if (switching) {
       const ok = window.confirm(
@@ -57,6 +59,11 @@ export function DishSheet({
     // chosen amount on top of what was already there.
     addItem(toCartRestaurant(restaurant), { id: item.id, name: item.name, price, isVeg: item.is_veg, variant: size });
     if (quantity > 1) changeQuantity(key, already + quantity);
+    // A dish (or size) that wasn't in the cart yet: its picture swirls into the cart.
+    if (already === 0) {
+      const photo = dialogRef.current?.querySelector("img");
+      flyToCart(button, photo?.currentSrc || photo?.src);
+    }
     onClose();
   }
 
