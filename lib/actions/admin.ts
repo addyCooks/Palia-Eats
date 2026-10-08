@@ -37,6 +37,23 @@ export async function setCustomerBlocked(input: { customerId: string; blocked: b
   return {};
 }
 
+// Removes one rating (a fake or abusive one). The restaurant's average and count update by
+// themselves (a database trigger). Customers can't delete ratings, so this uses the server
+// key, after the admin check.
+export async function removeRating(input: { orderId: string }): Promise<AdminResult> {
+  await requireAdmin();
+  const orderId = String(input?.orderId);
+  if (!isUuid(orderId)) return { error: "Missing rating." };
+
+  const { data, error } = await createAdminClient().from("order_ratings").delete().eq("order_id", orderId).select("order_id");
+  if (error) return { error: "Could not remove it. Please try again." };
+  if (!data?.length) return { error: "That rating is already gone." };
+
+  revalidatePath("/admin/ratings");
+  revalidatePath("/admin/restaurants", "layout");
+  return {};
+}
+
 // ---------------------------------------------------------------- riders
 
 function parseRider(formData: FormData) {

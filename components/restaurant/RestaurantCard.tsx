@@ -3,6 +3,7 @@ import type { Restaurant } from "@/types/app";
 import { formatPrice } from "@/lib/utils/format";
 import { formatTime, getRestaurantStatus, type RestaurantStatus } from "@/lib/utils/hours";
 import { restaurantCover } from "@/lib/utils/placeholder";
+import { publicRating } from "@/lib/utils/rating";
 import { ClosedBanner } from "@/components/restaurant/ClosedBanner";
 import { Photo } from "@/components/ui/Photo";
 
@@ -17,6 +18,7 @@ export function RestaurantCard({
   status?: RestaurantStatus;
 }) {
   const unavailable = !status.canOrder;
+  const rating = publicRating(restaurant);
   const cuisines = restaurant.tagline ?? restaurant.cuisine_tags.join(" · ");
   const tag = unavailable
     ? null
@@ -57,9 +59,16 @@ export function RestaurantCard({
       <div className="flex flex-col gap-1.5 px-5 pb-5 pt-[18px]">
         <div className="flex items-center justify-between gap-3">
           <h3 className="truncate text-[19px] font-semibold">{restaurant.name}</h3>
-          {restaurant.rating_avg !== null && restaurant.rating_count > 0 && (
+          {rating ? (
             <span className="flex h-[26px] shrink-0 items-center rounded-[7px] bg-amber-100 px-2 text-[13px] font-bold text-amber-800">
-              ★ {Number(restaurant.rating_avg).toFixed(1)}
+              ★ {rating.avg}
+            </span>
+          ) : (
+            <span
+              title="Stars show once a restaurant has 5 ratings"
+              className="flex h-[26px] shrink-0 items-center rounded-[7px] bg-muted px-2 text-xs font-semibold text-stone-600"
+            >
+              New
             </span>
           )}
         </div>

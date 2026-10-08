@@ -9,6 +9,7 @@ import { FavouriteButton } from "@/components/favourites/FavouriteButton";
 import { CoverActions } from "@/components/storefronts/CoverActions";
 import { StorefrontMenu } from "@/components/storefronts/StorefrontMenu";
 import { Photo } from "@/components/ui/Photo";
+import { publicRating } from "@/lib/utils/rating";
 
 const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
 
@@ -47,10 +48,8 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
     .filter(Boolean)
     .join(" · ");
   const subtitle = restaurant.tagline ?? restaurant.cuisine_tags.join(" · ");
-  const rating =
-    restaurant.rating_avg !== null && restaurant.rating_count > 0
-      ? { avg: Number(restaurant.rating_avg).toFixed(1), count: restaurant.rating_count }
-      : null;
+  // Stars only show from 5 ratings on; before that the page says "New".
+  const rating = publicRating(restaurant);
   const facts = [
     restaurant.delivery_fee > 0 ? `Delivery ${rupees(restaurant.delivery_fee)}` : "Free delivery",
     restaurant.min_order_amount > 0 ? `Min ${rupees(restaurant.min_order_amount)}` : null,
@@ -85,9 +84,13 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
         <header className="relative mx-4 -mt-10 flex flex-col gap-2 rounded-[20px] bg-surface p-[18px] shadow-float lg:hidden">
           <div className="flex items-start justify-between gap-3">
             <h1 className="font-display text-[28px] leading-none">{restaurant.name}</h1>
-            {rating && (
+            {rating ? (
               <span className="flex h-7 shrink-0 items-center rounded-[7px] bg-brand px-2.5 text-[13px] font-bold text-on-brand">
                 ★ {rating.avg}
+              </span>
+            ) : (
+              <span className="flex h-7 shrink-0 items-center rounded-[7px] bg-muted px-2.5 text-xs font-semibold text-stone-600">
+                New
               </span>
             )}
           </div>
@@ -125,9 +128,13 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
             <h1 className="font-display text-[54px] leading-none">{restaurant.name}</h1>
             {subtitle && <p className="line-clamp-2 text-[15px] text-[#D8D2C8]">{subtitle}</p>}
             <div className="mt-1.5 flex flex-wrap gap-2.5">
-              {rating && (
+              {rating ? (
                 <span className="flex h-8 items-center rounded-lg bg-brand px-3 text-[13px] font-bold text-on-brand">
                   ★ {rating.avg} · {rating.count} {rating.count === 1 ? "rating" : "ratings"}
+                </span>
+              ) : (
+                <span className="flex h-8 items-center rounded-lg bg-[#2A241C] px-3 text-[13px] font-semibold text-[#D8D2C8]">
+                  New
                 </span>
               )}
               {facts.map((fact) => (

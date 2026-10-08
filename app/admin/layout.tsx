@@ -16,6 +16,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     { href: "/admin/restaurants", label: "Restaurants" },
     { href: "/admin/requests", label: "Requests", badge: waiting > 0 ? String(waiting) : undefined },
     { href: "/admin/customers", label: "Customers" },
+    { href: "/admin/ratings", label: "Ratings" },
     { href: "/admin/riders", label: "Riders" },
     { href: "/admin/settings", label: "Settings", also: ["/admin/notifications"] },
   ];

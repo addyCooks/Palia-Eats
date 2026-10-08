@@ -16,7 +16,7 @@ export async function getActiveRestaurants(): Promise<Restaurant[]> {
 }
 
 export type PublicDish = MenuItem & {
-  restaurants: { name: string; slug: string; rating_avg: number | null; theme: Restaurant["theme"] };
+  restaurants: { name: string; slug: string; rating_avg: number | null; rating_count: number; theme: Restaurant["theme"] };
 };
 
 // Dishes for the home page and search: available dishes of visible restaurants.
@@ -28,7 +28,7 @@ export async function getPublicDishes({ search = "", limit = 8 }: { search?: str
 
   let query = supabase
     .from("menu_items")
-    .select("*, restaurants!inner(name, slug, rating_avg, theme, is_active)")
+    .select("*, restaurants!inner(name, slug, rating_avg, rating_count, theme, is_active)")
     .eq("is_available", true)
     .eq("restaurants.is_active", true)
     .order("is_bestseller", { ascending: false })

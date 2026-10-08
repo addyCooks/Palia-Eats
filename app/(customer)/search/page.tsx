@@ -10,6 +10,7 @@ import { FiltersSheet } from "@/components/search/FiltersSheet";
 import { RecentSearches, RememberSearch } from "@/components/search/RecentSearches";
 import { Photo } from "@/components/ui/Photo";
 import { ProblemScreen, problemActionClass } from "@/components/ui/ProblemScreen";
+import { publicRating } from "@/lib/utils/rating";
 
 export const metadata: Metadata = { title: "Search" };
 
@@ -53,7 +54,8 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
   // No search and no filters: "Popular right now" shows the first dozen (bestsellers first).
   const browsing = !query && !filtering;
   const sorted = [...(browsing ? matching.slice(0, 12) : matching)].sort((a, b) => {
-    if (sort === "rating") return Number(b.restaurants.rating_avg ?? 0) - Number(a.restaurants.rating_avg ?? 0);
+    // Restaurants with fewer than 5 ratings count as "not rated yet" here too.
+    if (sort === "rating") return Number(publicRating(b.restaurants)?.avg ?? 0) - Number(publicRating(a.restaurants)?.avg ?? 0);
     if (sort === "fastest") return (a.prep_minutes ?? 999) - (b.prep_minutes ?? 999);
     if (sort === "price") return a.price - b.price;
     return 0;
@@ -173,8 +175,8 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
                     <span className="truncate text-[15px] font-semibold">{restaurant.name}</span>
                     <span className="truncate text-xs text-stone-500">Restaurant{restaurant.area ? ` · ${restaurant.area}` : ""}</span>
                   </span>
-                  {restaurant.rating_avg !== null && (
-                    <span className="text-sm font-bold">★ {Number(restaurant.rating_avg).toFixed(1)}</span>
+                  {publicRating(restaurant) && (
+                    <span className="text-sm font-bold">★ {publicRating(restaurant)!.avg}</span>
                   )}
                 </Link>
               </li>

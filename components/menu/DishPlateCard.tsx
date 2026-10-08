@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import type { PublicDish } from "@/lib/queries/public";
 import { formatPrice } from "@/lib/utils/format";
 import { dishPhoto } from "@/lib/utils/placeholder";
+import { publicRating } from "@/lib/utils/rating";
 import { Photo } from "@/components/ui/Photo";
 
 const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
@@ -22,7 +23,7 @@ export function DishPlateCard({
 }) {
   const meta = [
     dish.restaurants.name,
-    dish.restaurants.rating_avg !== null ? `★ ${Number(dish.restaurants.rating_avg).toFixed(1)}` : null,
+    publicRating(dish.restaurants) ? `★ ${publicRating(dish.restaurants)!.avg}` : null,
     dish.prep_minutes ? `${dish.prep_minutes} min` : null,
   ]
     .filter(Boolean)

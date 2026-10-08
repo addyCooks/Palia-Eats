@@ -37,7 +37,7 @@ function cleanSearch(search: string) {
   return search.replace(/[^\p{L}\p{N} .'+-]/gu, "").trim().slice(0, 40);
 }
 
-async function eventsFor(orderIds: string[]): Promise<StatusEventRow[]> {
+export async function eventsFor(orderIds: string[]): Promise<StatusEventRow[]> {
   if (orderIds.length === 0) return [];
   const supabase = await createClient();
   const rows: StatusEventRow[] = [];
@@ -420,7 +420,7 @@ export type AdminCustomer = {
 
 // Customer emails live in the auth system, which only the service-role key can read.
 // Layouts and pages render in parallel, so this checks for an admin itself.
-async function emailsById(): Promise<Map<string, string>> {
+export async function emailsById(): Promise<Map<string, string>> {
   await requireAdmin();
   const { data, error } = await createAdminClient().auth.admin.listUsers({ page: 1, perPage: 1000 });
   if (error) throw new Error(`Could not load customer emails: ${error.message}`);

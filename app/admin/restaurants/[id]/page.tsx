@@ -6,6 +6,7 @@ import { isUuid } from "@/lib/validation/menu";
 import { compactRupees, formatMinutes, wholeRupees } from "@/lib/orders/stats";
 // COMMISSION OFF: import { formatKeyRange, formatKeyShort, istDateKey } from "@/lib/utils/time";
 import { restaurantAvatar } from "@/lib/utils/placeholder";
+import { MIN_RATINGS_TO_SHOW } from "@/lib/utils/rating";
 import { MakeVisibleButton, PauseOrdersButton } from "@/components/admin/RestaurantActions";  // COMMISSION OFF: MarkPaidButton
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
 // COMMISSION OFF: import { Badge } from "@/components/ui/Badge";
@@ -108,7 +109,11 @@ export default async function AdminRestaurantPage({ params }: PageProps<"/admin/
           size="md"
           label="Rating"
           value={restaurant.rating_avg !== null ? `★ ${Number(restaurant.rating_avg).toFixed(1)}` : "—"}
-          delta={restaurant.rating_count > 0 ? `${restaurant.rating_count} ratings` : "No ratings yet"}
+          delta={
+            restaurant.rating_count > 0
+              ? `${restaurant.rating_count} ${restaurant.rating_count === 1 ? "rating" : "ratings"}${restaurant.rating_count < MIN_RATINGS_TO_SHOW ? " · hidden from customers" : ""}`
+              : "No ratings yet"
+          }
         />
         <Kpi size="md" label="Avg prep time" value={formatMinutes(detail.avgPrep)} delta="last 30 days" />
       </div>
