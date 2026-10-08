@@ -9,8 +9,17 @@ const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
 
 // The v2 dish card: a round plate overlapping the top edge, centred name, place and price
 // with a small + button. `highlight` is the one saffron card per row.
-// Phones get 100px plates (v2 4b), laptops 120–132px (4a, 8a).
-export function DishPlateCard({ dish, highlight = false }: { dish: PublicDish; highlight?: boolean }) {
+// Phones get 100px plates (v2 4b), laptops 120–132px (4a, 8a). `compact` makes the whole
+// card about 14% smaller on phones (the home page's "Popular today" row); laptops unchanged.
+export function DishPlateCard({
+  dish,
+  highlight = false,
+  compact = false,
+}: {
+  dish: PublicDish;
+  highlight?: boolean;
+  compact?: boolean;
+}) {
   const meta = [
     dish.restaurants.name,
     dish.restaurants.rating_avg !== null ? `★ ${Number(dish.restaurants.rating_avg).toFixed(1)}` : null,
@@ -22,22 +31,34 @@ export function DishPlateCard({ dish, highlight = false }: { dish: PublicDish; h
   return (
     <Link
       href={`/restaurants/${dish.restaurants.slug}#dish-${dish.id}`}
-      className={`relative flex h-full flex-col items-center gap-2 rounded-2xl px-3.5 pb-3.5 pt-16 text-center transition-transform duration-500 hover:-translate-y-1 lg:gap-2.5 lg:px-5 lg:pb-5 lg:pt-[86px] ${
+      className={`relative flex h-full flex-col items-center rounded-2xl text-center transition-transform duration-500 hover:-translate-y-1 lg:gap-2.5 lg:px-5 lg:pb-5 lg:pt-[86px] ${
+        compact ? "gap-[7px] px-3 pb-3 pt-[55px]" : "gap-2 px-3.5 pb-3.5 pt-16"
+      } ${
         highlight ? "bg-brand text-on-brand shadow-saffron" : "bg-surface shadow-card"
       }`}
     >
-      <span className="absolute -top-11 left-1/2 size-[100px] -translate-x-1/2 overflow-hidden rounded-full shadow-plate lg:-top-[62px] lg:size-[132px]">
+      <span
+        className={`absolute left-1/2 -translate-x-1/2 overflow-hidden rounded-full shadow-plate lg:-top-[62px] lg:size-[132px] ${
+          compact ? "-top-[38px] size-[86px]" : "-top-11 size-[100px]"
+        }`}
+      >
         <Photo src={dishPhoto(dish)} alt="" sizes="132px" />
       </span>
-      <span className="line-clamp-2 min-h-9 text-sm font-semibold leading-tight lg:min-h-10 lg:text-base">
+      <span
+        className={`line-clamp-2 font-semibold leading-tight lg:min-h-10 lg:text-base ${compact ? "min-h-[31px] text-[12px]" : "min-h-9 text-sm"}`}
+      >
         {dish.name}
       </span>
-      <span className={`line-clamp-1 text-xs ${highlight ? "opacity-80" : "text-stone-500"}`}>{meta}</span>
-      <span className="mt-1 flex items-center justify-between self-stretch">
-        <span className="text-base font-bold tabular-nums lg:text-lg">{rupees(dish.price)}</span>
+      <span className={`line-clamp-1 lg:text-xs ${compact ? "text-[10.5px]" : "text-xs"} ${highlight ? "opacity-80" : "text-stone-500"}`}>
+        {meta}
+      </span>
+      <span className={`flex items-center justify-between self-stretch lg:mt-1 ${compact ? "mt-0.5" : "mt-1"}`}>
+        <span className={`font-bold tabular-nums lg:text-lg ${compact ? "text-[14px]" : "text-base"}`}>{rupees(dish.price)}</span>
         <span
           aria-hidden
-          className={`grid size-[26px] place-items-center rounded-[7px] ${highlight ? "bg-[#1A1206] text-brand" : "bg-brand text-on-brand"}`}
+          className={`grid place-items-center rounded-[7px] lg:size-[26px] ${compact ? "size-[22px]" : "size-[26px]"} ${
+            highlight ? "bg-[#1A1206] text-brand" : "bg-brand text-on-brand"
+          }`}
         >
           <Plus className="size-3" strokeWidth={3.5} />
         </span>

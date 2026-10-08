@@ -74,15 +74,15 @@ export default async function HomePage() {
                 </Link>
               </div>
               {/* Phones: a sideways row. Laptops: four plates under the headline. */}
-              <ul className="stagger scrollbar-none -mx-4 mt-2 flex gap-3.5 overflow-x-auto px-4 pb-4 pt-12 lg:mx-auto lg:mt-[110px] lg:grid lg:max-w-[860px] lg:grid-cols-4 lg:gap-[22px] lg:overflow-visible lg:p-0">
+              <ul className="stagger scrollbar-none -mx-4 mt-2 flex gap-3 overflow-x-auto px-4 pb-4 pt-[41px] lg:mx-auto lg:mt-[110px] lg:grid lg:max-w-[860px] lg:grid-cols-4 lg:gap-[22px] lg:overflow-visible lg:p-0">
                 {dishes.slice(0, 4).map((dish, i) => (
-                  <li key={dish.id} className="w-[156px] shrink-0 lg:w-auto">
-                    <DishPlateCard dish={dish} highlight={i === 1} />
+                  <li key={dish.id} className="w-[134px] shrink-0 lg:w-auto">
+                    <DishPlateCard dish={dish} highlight={i === 1} compact />
                   </li>
                 ))}
                 {dishes.slice(4).map((dish) => (
-                  <li key={dish.id} className="w-[156px] shrink-0 lg:hidden">
-                    <DishPlateCard dish={dish} />
+                  <li key={dish.id} className="w-[134px] shrink-0 lg:hidden">
+                    <DishPlateCard dish={dish} compact />
                   </li>
                 ))}
               </ul>

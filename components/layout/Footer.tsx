@@ -1,15 +1,12 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { Banknote, MessageCircle, Radio, Store } from "lucide-react";
-
-function whatsappChatUrl(): string | null {
-  const number = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "").replace(/\D/g, "");
-  return number.length >= 8 ? `https://wa.me/${number}?text=${encodeURIComponent("hi")}` : null;
-}
+import { whatsAppChatUrl } from "@/lib/utils/site";
+import { Heart } from "@/components/ui/Heart";
 
 // Four promises, then the footer. The WhatsApp points only show once WhatsApp is switched on.
 export function Footer() {
-  const whatsapp = whatsappChatUrl();
+  const whatsapp = whatsAppChatUrl();
 
   const promises = [
     { icon: Banknote, title: "Cash on Delivery", sub: "Pay at your door" },
@@ -50,6 +47,9 @@ export function Footer() {
             <Link href="/#restaurants" className="text-stone-600 hover:text-foreground">
               Restaurants
             </Link>
+            <Link href="/about" className="text-stone-600 hover:text-foreground">
+              About PaliaEats
+            </Link>
             <Link href="/orders" className="text-stone-600 hover:text-foreground">
               My orders
             </Link>
@@ -71,6 +71,13 @@ export function Footer() {
               Own a restaurant? Join PaliaEats
             </Link>
           </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-between gap-1.5 border-t border-border py-5 text-[13px] text-stone-500 sm:flex-row">
+          <span>
+            Made with <Heart /> in Palia
+          </span>
+          <span>© {new Date().getFullYear()} PaliaEats</span>
         </div>
       </div>
     </footer>

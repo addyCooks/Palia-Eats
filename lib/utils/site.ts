@@ -13,3 +13,10 @@ export function restaurantWhatsAppUrl(slug: string): string | null {
   if (number.length < 8) return null;
   return `https://wa.me/${number}?text=${encodeURIComponent(`order ${slug}`)}`;
 }
+
+// A WhatsApp link that opens a chat with PaliaEats ("hi"), or null until
+// NEXT_PUBLIC_WHATSAPP_NUMBER is set.
+export function whatsAppChatUrl(): string | null {
+  const number = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "").replace(/\D/g, "");
+  return number.length >= 8 ? `https://wa.me/${number}?text=${encodeURIComponent("hi")}` : null;
+}
