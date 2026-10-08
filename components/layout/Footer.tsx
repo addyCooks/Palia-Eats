@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { Banknote, MessageCircle, Radio, Store } from "lucide-react";
 import { whatsAppChatUrl } from "@/lib/utils/site";
+import { supportLinks } from "@/lib/utils/support";
 import { Heart } from "@/components/ui/Heart";
 
 // Four promises, then the footer. The WhatsApp points only show once WhatsApp is switched on.
 export function Footer() {
   const whatsapp = whatsAppChatUrl();
+  const support = supportLinks();
 
   const promises = [
     { icon: Banknote, title: "Cash on Delivery", sub: "Pay at your door" },
@@ -59,13 +61,21 @@ export function Footer() {
           </div>
           <div className="flex flex-col gap-2.5">
             <b>Help</b>
-            {whatsapp ? (
-              <a href={whatsapp} className="text-stone-600 hover:text-foreground">
+            {support.whatsappHref && (
+              <a href={support.whatsappHref} target="_blank" rel="noopener noreferrer" className="text-stone-600 hover:text-foreground">
                 Chat with us on WhatsApp
               </a>
-            ) : (
-              <span className="text-stone-600">Pay cash or UPI on delivery</span>
             )}
+            {support.callHref && (
+              <a href={support.callHref} className="text-stone-600 hover:text-foreground">
+                Call us · {support.phoneDisplay}
+              </a>
+            )}
+            <a href={support.emailHref} className="text-stone-600 hover:text-foreground">
+              Email {support.email}
+            </a>
+            {support.hours && <span className="text-[13px] text-stone-500">We reply {support.hours}</span>}
+            <span className="text-stone-600">Pay cash or UPI on delivery</span>
             <span className="text-stone-600">Delivered by the restaurant</span>
             <Link href="/join" className="font-semibold text-accent hover:underline">
               Own a restaurant? Join PaliaEats

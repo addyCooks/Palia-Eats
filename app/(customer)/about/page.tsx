@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Banknote, Bike, ChefHat, MessageCircle, Radio, ReceiptText, Store, UtensilsCrossed } from "lucide-react";
 import { whatsAppChatUrl } from "@/lib/utils/site";
+import { supportLinks } from "@/lib/utils/support";
 import { Heart } from "@/components/ui/Heart";
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ const STEPS = [
 // Public "About PaliaEats" page. Linked only from the footer.
 export default function AboutPage() {
   const whatsapp = whatsAppChatUrl();
+  const support = supportLinks();
 
   const promises = [
     { icon: Store, title: "Local first", text: "Every restaurant on PaliaEats is right here in Palia." },
@@ -163,18 +165,21 @@ export default function AboutPage() {
           <span className="kicker">Need help?</span>
           <h2 className="font-display text-[28px] leading-tight">We&apos;re right here</h2>
           <p className="text-[15px] leading-relaxed text-stone-600">
-            Questions about an order? Open it under My orders to see every step live. If it&apos;s taking longer than
-            usual, the restaurant&apos;s phone number shows up right there.
+            Something wrong with an order? Open it under My orders and tap &ldquo;Need help with this order?&rdquo;, or
+            write to us any time. We&apos;ll sort it out with the restaurant.{support.hours ? ` We reply ${support.hours}.` : ""}
           </p>
           <div className="mt-1 flex flex-wrap gap-x-5 gap-y-2">
             <Link href="/orders" className="font-semibold text-accent hover:underline">
               My orders →
             </Link>
-            {whatsapp && (
-              <a href={whatsapp} className="font-semibold text-accent hover:underline">
+            {support.whatsappHref && (
+              <a href={support.whatsappHref} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">
                 Chat with us on WhatsApp →
               </a>
             )}
+            <a href={support.emailHref} className="font-semibold text-accent hover:underline">
+              Email {support.email} →
+            </a>
           </div>
         </div>
       </section>

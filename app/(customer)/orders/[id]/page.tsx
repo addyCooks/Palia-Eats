@@ -17,6 +17,7 @@ import { Confetti } from "@/components/ui/Confetti";
 import { RateOrder } from "@/components/order/RateOrder";
 import { Stars } from "@/components/order/Stars";
 import { ProblemPlate } from "@/components/ui/ProblemScreen";
+import { OrderHelpCard } from "@/components/support/OrderHelpCard";
 
 export const metadata: Metadata = { title: "Your order" };
 
@@ -276,14 +277,13 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
             )}
           </section>
 
-          {restaurant?.phone && (active || cancelled) && (
-            <a
-              href={`tel:${restaurant.phone}`}
-              className="flex h-[50px] items-center justify-center rounded-xl border-[1.5px] border-brand font-semibold text-accent hover:bg-amber-50"
-            >
-              Need help with this order? Call {restaurant.name}
-            </a>
-          )}
+          <OrderHelpCard
+            orderNumber={order.order_number}
+            restaurantName={restaurant?.name ?? null}
+            restaurantPhone={restaurant?.phone ?? null}
+            active={active}
+            cancelled={cancelled}
+          />
         </div>
       </div>
     </main>
