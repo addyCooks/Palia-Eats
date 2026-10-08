@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { adminSetAccepting } from "@/lib/actions/restaurants";
 import { adminMakeVisible } from "@/lib/actions/applications";
-import { markPayoutPaid } from "@/lib/actions/admin";
+// COMMISSION OFF: import { markPayoutPaid } from "@/lib/actions/admin";
 
 // "Pause orders" / "Resume orders" in the restaurant hero.
 export function PauseOrdersButton({ restaurantId, accepting }: { restaurantId: string; accepting: boolean }) {
@@ -57,6 +57,7 @@ export function MakeVisibleButton({ restaurantId, name }: { restaurantId: string
   );
 }
 
+/* COMMISSION OFF: the 'Mark this week paid' button.
 export function MarkPaidButton({ restaurantId, weekStart, label }: { restaurantId: string; weekStart: string; label: string }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -85,3 +86,4 @@ export function MarkPaidButton({ restaurantId, weekStart, label }: { restaurantI
     </div>
   );
 }
+*/

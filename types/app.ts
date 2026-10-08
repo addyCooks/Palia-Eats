@@ -61,7 +61,7 @@ export type RestaurantPrivate = {
   notification_phone: string | null;
   panel_key_created_at: string | null;
   owner_name: string | null;
-  commission_percent: number;
+  // COMMISSION OFF: commission_percent: number;
 };
 
 export type MenuCategory = {
@@ -170,6 +170,7 @@ export type OrderRating = {
   created_at: string;
 };
 
+/* COMMISSION OFF: the payout record type.
 export type RestaurantPayout = {
   id: string;
   restaurant_id: string;
@@ -181,3 +182,4 @@ export type RestaurantPayout = {
   net: number;
   paid_at: string;
 };
+*/

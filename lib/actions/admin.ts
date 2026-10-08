@@ -5,14 +5,14 @@ import { requireAdmin } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid } from "@/lib/validation/menu";
-import { addDaysToKey, istDayStart, mondayOfKey, todayKeyIST } from "@/lib/utils/time";
-import { settleWeek } from "@/lib/queries/admin";
+// COMMISSION OFF: import { addDaysToKey, istDayStart, mondayOfKey, todayKeyIST } from "@/lib/utils/time";
+// COMMISSION OFF: import { settleWeek } from "@/lib/queries/admin";
 
 export type AdminResult = { error?: string };
 export type RiderFormState = { error?: string; saved?: boolean } | undefined;
 
 const PHONE_PATTERN = /^[6-9][0-9]{9}$/;
-const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+// COMMISSION OFF: const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 // ---------------------------------------------------------------- customers
 
@@ -112,6 +112,7 @@ export async function assignRider(input: { orderId: string; riderId: string | nu
   return {};
 }
 
+/* COMMISSION OFF: weekly payouts (sales minus commission). Un-comment together with the other COMMISSION OFF pieces.
 // ---------------------------------------------------------------- payouts
 
 // Records a finished Monday–Sunday week as settled. The amounts are worked out here from
@@ -160,3 +161,4 @@ export async function markPayoutPaid(input: { restaurantId: string; weekStart: s
   revalidatePath(`/admin/restaurants/${restaurantId}`);
   return {};
 }
+*/

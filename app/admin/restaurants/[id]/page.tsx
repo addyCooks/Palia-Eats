@@ -4,11 +4,11 @@ import { notFound } from "next/navigation";
 import { getAdminRestaurantDetail } from "@/lib/queries/admin";
 import { isUuid } from "@/lib/validation/menu";
 import { compactRupees, formatMinutes, wholeRupees } from "@/lib/orders/stats";
-import { formatKeyRange, formatKeyShort, istDateKey } from "@/lib/utils/time";
+// COMMISSION OFF: import { formatKeyRange, formatKeyShort, istDateKey } from "@/lib/utils/time";
 import { restaurantAvatar } from "@/lib/utils/placeholder";
-import { MakeVisibleButton, MarkPaidButton, PauseOrdersButton } from "@/components/admin/RestaurantActions";
+import { MakeVisibleButton, PauseOrdersButton } from "@/components/admin/RestaurantActions";  // COMMISSION OFF: MarkPaidButton
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
-import { Badge } from "@/components/ui/Badge";
+// COMMISSION OFF: import { Badge } from "@/components/ui/Badge";
 import { Photo } from "@/components/ui/Photo";
 import { Kpi, Panel } from "@/components/ui/page";
 
@@ -20,7 +20,7 @@ export default async function AdminRestaurantPage({ params }: PageProps<"/admin/
 
   const detail = await getAdminRestaurantDetail(id);
   if (!detail) notFound();
-  const { restaurant, ownerName, notificationEmail, settingUp, commissionPercent, week, current, due } = detail;
+  const { restaurant, ownerName, notificationEmail, settingUp, week } = detail; // COMMISSION OFF: commissionPercent, current, due
 
   const state = !restaurant.is_active
     ? settingUp
@@ -113,7 +113,7 @@ export default async function AdminRestaurantPage({ params }: PageProps<"/admin/
         <Kpi size="md" label="Avg prep time" value={formatMinutes(detail.avgPrep)} delta="last 30 days" />
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="grid items-start gap-4">{/* COMMISSION OFF: was a two-column grid (recent orders | payouts) */}
         <Panel title="Recent orders">
           {detail.recent.length === 0 ? (
             <p className="text-sm text-stone-500">No orders yet.</p>
@@ -141,6 +141,7 @@ export default async function AdminRestaurantPage({ params }: PageProps<"/admin/
           </Link>
         </Panel>
 
+{/* COMMISSION OFF: the weekly Payouts panel.
         <Panel title="Payouts">
           <ul className="flex flex-col gap-3.5">
             <li className="flex items-center justify-between gap-3 text-sm">
@@ -184,6 +185,7 @@ export default async function AdminRestaurantPage({ params }: PageProps<"/admin/
             <p className="text-xs text-stone-500">Nothing due. Weeks run Monday to Sunday.</p>
           )}
         </Panel>
+*/}
       </div>
     </>
   );

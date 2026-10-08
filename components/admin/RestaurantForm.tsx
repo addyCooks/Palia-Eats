@@ -170,6 +170,7 @@ export function RestaurantForm({ restaurant }: { restaurant?: AdminRestaurant })
           type="tel"
           defaultValue={priv?.notification_phone ?? ""}
         />
+        {/* COMMISSION OFF
         <Input
           label="PaliaEats commission (%)"
           name="commission_percent"
@@ -179,6 +180,7 @@ export function RestaurantForm({ restaurant }: { restaurant?: AdminRestaurant })
           step="0.01"
           defaultValue={priv?.commission_percent ?? 8}
         />
+        */}
       </Card>
 
       <Card className="flex flex-col gap-3">

@@ -41,7 +41,7 @@ export function ApplicationDecision({
           </p>
         </div>
         <Input label="Web address (paliaeats…/restaurants/…)" name="slug" defaultValue={suggestedSlug} required maxLength={60} />
-        <Input label="Commission %" name="commission_percent" type="number" min={0} max={100} step="0.5" defaultValue={8} required />
+        {/* COMMISSION OFF: <Input label="Commission %" name="commission_percent" type="number" min={0} max={100} step="0.5" defaultValue={8} required /> */}
         {approved?.error && (
           <p role="alert" className="text-sm text-red-700">
             {approved.error}

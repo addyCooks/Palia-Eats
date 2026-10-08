@@ -43,7 +43,7 @@ function privateColumns(input: RestaurantInput) {
     notification_email: input.notification_email,
     notification_phone: input.notification_phone,
     owner_name: input.owner_name,
-    commission_percent: input.commission_percent,
+    // COMMISSION OFF: commission_percent: input.commission_percent,
     // Made visible: no longer "setting up" (see 0015_restaurant_applications.sql)
     ...(input.is_active ? { setting_up: false } : {}),
   };

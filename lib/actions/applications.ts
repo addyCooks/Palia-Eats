@@ -84,10 +84,11 @@ export async function approveApplication(_prev: DecideState, formData: FormData)
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug) || slug.length > 60) {
     return { error: "Pick a web address with letters, numbers and dashes (for example shahi-rasoi)." };
   }
-  const commission = Number(formData.get("commission_percent") ?? 8);
-  if (!Number.isFinite(commission) || commission < 0 || commission > 100) {
-    return { error: "Commission must be between 0 and 100%." };
-  }
+  // COMMISSION OFF
+  // const commission = Number(formData.get("commission_percent") ?? 8);
+  // if (!Number.isFinite(commission) || commission < 0 || commission > 100) {
+  //   return { error: "Commission must be between 0 and 100%." };
+  // }
 
   // Claim the request first, so a double click can't create the restaurant twice.
   const now = new Date();
@@ -132,7 +133,7 @@ export async function approveApplication(_prev: DecideState, formData: FormData)
       owner_name: app.owner_name,
       notification_email: app.email,
       notification_phone: app.phone,
-      commission_percent: Math.round(commission * 100) / 100,
+      // COMMISSION OFF: commission_percent: Math.round(commission * 100) / 100,
       setting_up: true,
       panel_key_created_at: now.toISOString(),
       realtime_topic: randomBytes(16).toString("hex"),

@@ -62,8 +62,8 @@ export default async function AdminSettingsPage() {
             </SubmitButton>
           </form>
           <p className="text-xs text-stone-500">
-            Payment on PaliaEats is cash or UPI on delivery only. Weekly payouts are worked out from delivered orders
-            after each restaurant&apos;s commission.
+            Payment on PaliaEats is cash or UPI on delivery only, paid straight to the restaurant.
+            {/* COMMISSION OFF: Weekly payouts are worked out from delivered orders after each restaurant's commission. */}
           </p>
         </Panel>
       </div>

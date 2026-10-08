@@ -21,7 +21,7 @@ import type {
   OrderStatus,
   OrderStatusEvent,
   Restaurant,
-  RestaurantPayout,
+  // COMMISSION OFF: RestaurantPayout,
   Rider,
 } from "@/types/app";
 
@@ -287,6 +287,7 @@ export async function getAdminRestaurantsTable({ filter, search }: { filter: Res
   };
 }
 
+/* COMMISSION OFF: the weekly payout maths (sales minus commission).
 // The Monday-to-Sunday week a payout covers, with what is owed for it.
 export type PayoutWeek = {
   weekStart: string; // "2026-09-28"
@@ -308,17 +309,18 @@ export function settleWeek(gross: number, commissionPercent: number, weekStart: 
     net: Math.round((gross - commission) * 100) / 100,
   };
 }
+*/
 
 export async function getAdminRestaurantDetail(id: string) {
   const supabase = await createClient();
   const todayKey = todayKeyIST();
   const thisMonday = mondayOfKey(todayKey);
-  const lastMonday = addDaysToKey(thisMonday, -7);
+  // COMMISSION OFF: const lastMonday = addDaysToKey(thisMonday, -7);
 
-  const [restaurant, orders, recent, payouts] = await Promise.all([
+  const [restaurant, orders, recent] = await Promise.all([  // COMMISSION OFF: was [restaurant, orders, recent, payouts]
     supabase
       .from("restaurants")
-      .select("*, restaurant_private(owner_name, commission_percent, notification_email, setting_up)")
+      .select("*, restaurant_private(owner_name, notification_email, setting_up)")  // COMMISSION OFF: commission_percent removed
       .eq("id", id)
       .maybeSingle(),
     supabase
@@ -334,12 +336,13 @@ export async function getAdminRestaurantDetail(id: string) {
       .eq("restaurant_id", id)
       .order("placed_at", { ascending: false })
       .limit(6),
-    supabase
-      .from("restaurant_payouts")
-      .select("*")
-      .eq("restaurant_id", id)
-      .order("week_start", { ascending: false })
-      .limit(6),
+    // COMMISSION OFF: payouts query
+    // supabase
+    //   .from("restaurant_payouts")
+    //   .select("*")
+    //   .eq("restaurant_id", id)
+    //   .order("week_start", { ascending: false })
+    //   .limit(6),
   ]);
   if (restaurant.error) throw new Error(`Could not load the restaurant: ${restaurant.error.message}`);
   if (!restaurant.data) return null;
@@ -347,7 +350,7 @@ export async function getAdminRestaurantDetail(id: string) {
   const priv = Array.isArray(restaurant.data.restaurant_private)
     ? restaurant.data.restaurant_private[0]
     : restaurant.data.restaurant_private;
-  const commissionPercent = Number(priv?.commission_percent ?? 8);
+  // COMMISSION OFF: const commissionPercent = Number(priv?.commission_percent ?? 8);
 
   type Row = { id: string; status: OrderStatus; total: number; placed_at: string };
   const rows = (orders.data ?? []) as Row[];
@@ -360,9 +363,9 @@ export async function getAdminRestaurantDetail(id: string) {
     list.filter((row) => row.status === "delivered").reduce((sum, row) => sum + Number(row.total), 0);
 
   const thisWeek = inWeek(thisMonday);
-  const lastWeek = inWeek(lastMonday);
-  const paid = (payouts.data ?? []) as RestaurantPayout[];
-  const lastWeekPaid = paid.some((payout) => payout.week_start === lastMonday);
+  // COMMISSION OFF: const lastWeek = inWeek(lastMonday);
+  // COMMISSION OFF: const paid = (payouts.data ?? []) as RestaurantPayout[];
+  // COMMISSION OFF: const lastWeekPaid = paid.some((payout) => payout.week_start === lastMonday);
 
   // Average prep time over the last 30 days (cooking -> handed to rider).
   const events = await eventsFor(
@@ -374,7 +377,7 @@ export async function getAdminRestaurantDetail(id: string) {
     ownerName: (priv?.owner_name as string | null) ?? null,
     notificationEmail: (priv?.notification_email as string | null) ?? null,
     settingUp: Boolean(priv?.setting_up),
-    commissionPercent,
+    // COMMISSION OFF: commissionPercent,
     week: {
       orders: thisWeek.filter((row) => !isCancelled(row.status)).length,
       revenue: deliveredTotal(thisWeek),
@@ -388,9 +391,9 @@ export async function getAdminRestaurantDetail(id: string) {
       status: OrderStatus;
       placed_at: string;
     }[],
-    payouts: paid,
-    current: settleWeek(deliveredTotal(thisWeek), commissionPercent, thisMonday),
-    due: lastWeekPaid ? null : settleWeek(deliveredTotal(lastWeek), commissionPercent, lastMonday),
+    // COMMISSION OFF: payouts: paid,
+    // COMMISSION OFF: current: settleWeek(deliveredTotal(thisWeek), commissionPercent, thisMonday),
+    // COMMISSION OFF: due: lastWeekPaid ? null : settleWeek(deliveredTotal(lastWeek), commissionPercent, lastMonday),
   };
 }
 
