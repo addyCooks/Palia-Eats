@@ -4,6 +4,7 @@ import "./globals.css";
 import { Suspense } from "react";
 import { OfflineNotice } from "@/components/OfflineNotice";
 import { NavProgress } from "@/components/ui/NavProgress";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { PressFeedback } from "@/components/ui/PressFeedback";
 
 // Design system v2: Outfit for all interface text, DM Serif Display for headings.
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <Suspense fallback={null}>
           <NavProgress />
+          <ScrollToTop />
         </Suspense>
         <PressFeedback />
         <OfflineNotice />

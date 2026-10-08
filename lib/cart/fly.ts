@@ -1,5 +1,5 @@
 // "Add" for a new dish: a little picture of it swirls up from the button into the cart,
-// and the cart wiggles for two seconds. Runs in the browser only; anything missing
+// and the cart gives one small wiggle. Runs in the browser only; anything missing
 // (no cart on screen, reduced motion) just skips the flight.
 
 const SIZE = 56;
@@ -24,7 +24,7 @@ export function shakeCart(target: HTMLElement) {
   target.classList.remove("pe-cart-shake");
   void target.offsetWidth; // restart the animation if it is already running
   target.classList.add("pe-cart-shake");
-  window.setTimeout(() => target.classList.remove("pe-cart-shake"), 2100);
+  window.setTimeout(() => target.classList.remove("pe-cart-shake"), 700);
 }
 
 function easeInOut(t: number) {
