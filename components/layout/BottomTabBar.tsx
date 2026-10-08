@@ -12,6 +12,11 @@ const TABS = [
   { href: "/cart", label: "Cart", icon: ShoppingBag, match: (p: string) => p.startsWith("/cart") },
 ] as const;
 
+// Checkout and the cart have their own big button at the bottom, so no tabs there.
+export function hidesTabBar(pathname: string): boolean {
+  return pathname.startsWith("/checkout") || pathname.startsWith("/cart");
+}
+
 // The floating dark pill of tabs at the bottom of customer pages on phones and tablets
 // (v2 "PE Tabbar"): the active tab expands with a saffron fill and its name. The cart is
 // the last tab, with its item count; the account button lives in the top bar. On
@@ -20,8 +25,7 @@ export function BottomTabBar() {
   const pathname = usePathname();
   const { count } = useCart();
 
-  // Checkout and the cart have their own big button at the bottom, so no tabs there.
-  if (pathname.startsWith("/checkout") || pathname.startsWith("/cart")) return null;
+  if (hidesTabBar(pathname)) return null;
 
   return (
     <nav

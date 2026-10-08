@@ -1,27 +1,25 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import type { Restaurant } from "@/types/app";
 import type { RestaurantStatus } from "@/lib/utils/hours";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
+import { useCuisineFilter } from "@/components/home/CuisineFilter";
+import { cuisinesByCount } from "@/lib/utils/cuisines";
 
 export type BrowsableRestaurant = { restaurant: Restaurant; status: RestaurantStatus };
 
-// "Restaurants in Palia" (v2 5a): title, a search box, cuisine chips, then the cards.
-// Restaurants not taking orders stay visible (black and white) after the open ones.
+// "Restaurants in Palia" (v2 5a): title, then the cards. Restaurants not taking orders stay
+// visible (black and white) after the open ones.
+// Laptops: a search box and cuisine chips sit above the list. Phones: the home page's chips
+// at the top do the filtering (one set of filters per screen), and a "Showing: Pizza" note
+// here says what is filtered, with a way to clear it.
 export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
   const [query, setQuery] = useState("");
-  const [cuisine, setCuisine] = useState<string | null>(null);
+  const { cuisine, setCuisine } = useCuisineFilter();
 
-  // Cuisines, most common first
-  const cuisines = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const { restaurant } of items) {
-      for (const tag of restaurant.cuisine_tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
-    }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([tag]) => tag);
-  }, [items]);
+  const cuisines = useMemo(() => cuisinesByCount(items.map(({ restaurant }) => restaurant.cuisine_tags)), [items]);
 
   const needle = query.trim().toLowerCase();
   const visible = items
@@ -46,7 +44,7 @@ export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
               : "No kitchen is taking orders right now. Have a look at their menus."}
           </p>
         </div>
-        <label className="flex h-12 w-full items-center gap-2.5 rounded-xl bg-surface pl-4 pr-1.5 shadow-[0_4px_14px_rgba(120,70,0,.06)] focus-within:ring-2 focus-within:ring-brand/30 lg:w-[360px]">
+        <label className="hidden h-12 w-full items-center gap-2.5 rounded-xl bg-surface pl-4 pr-1.5 shadow-[0_4px_14px_rgba(120,70,0,.06)] focus-within:ring-2 focus-within:ring-brand/30 lg:flex lg:w-[360px]">
           <Search className="size-4 shrink-0 text-stone-500" aria-hidden />
           <span className="sr-only">Search restaurants</span>
           <input
@@ -61,7 +59,7 @@ export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
       </div>
 
       {cuisines.length > 0 && (
-        <div role="group" aria-label="Filter by cuisine" className="scrollbar-none -mx-4 flex gap-2.5 overflow-x-auto px-4 sm:flex-wrap">
+        <div role="group" aria-label="Filter by cuisine" className="hidden flex-wrap gap-2.5 lg:flex">
           {[null, ...cuisines].map((tag) => {
             const active = tag === cuisine;
             return (
@@ -78,6 +76,22 @@ export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
               </button>
             );
           })}
+        </div>
+      )}
+
+      {cuisine && (
+        <div role="status" className="anim-pop-in flex items-center gap-2 self-start rounded-full bg-surface py-1.5 pl-4 pr-1.5 text-sm shadow-card lg:hidden">
+          <span>
+            Showing <b>{cuisine}</b>
+          </span>
+          <button
+            type="button"
+            onClick={() => setCuisine(null)}
+            className="flex h-8 items-center gap-1 rounded-full bg-deep px-3 text-[13px] font-semibold text-brand"
+          >
+            <X className="size-3.5" aria-hidden />
+            Clear
+          </button>
         </div>
       )}
 

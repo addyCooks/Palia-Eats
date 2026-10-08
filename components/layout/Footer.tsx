@@ -74,9 +74,9 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col items-center justify-between gap-1.5 border-t border-border py-5 text-[13px] text-stone-500 sm:flex-row">
-          <span>
-            Made with <Heart /> in Palia
-          </span>
+          <Link href="/about" className="hover:text-foreground hover:underline">
+            Made with <Heart /> in Palia · About us
+          </Link>
           <span>© {new Date().getFullYear()} PaliaEats</span>
         </div>
       </div>
