@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ClipboardList, Home, Search, ShoppingBag } from "lucide-react";
@@ -18,8 +18,8 @@ export function hidesTabBar(pathname: string): boolean {
   return pathname.startsWith("/checkout") || pathname.startsWith("/cart");
 }
 
-// One slow, soft curve for the whole tab change.
-const MORPH = "duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]";
+// One soft curve for the whole tab change (0.4 s).
+const MORPH = "duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]";
 
 // The floating dark pill of tabs at the bottom of customer pages on phones and tablets
 // (v2 "PE Tabbar"): the active tab expands with a saffron fill and its name. The old tab
@@ -30,8 +30,35 @@ const MORPH = "duration-700 ease-[cubic-bezier(0.4,0,0.2,1)]";
 export function BottomTabBar() {
   const pathname = usePathname();
   const { count } = useCart();
-  // The tab just tapped, while its page is still on the way (ignored once the page changes).
+  // The tab just tapped, while its page is still on the way. Forgotten as soon as the page
+  // changes, you tap anywhere else, press Back, or 10 seconds pass: a tap must never leave
+  // the wrong tab lit once you are back on the old page.
   const [tapped, setTapped] = useState<{ href: string; from: string } | null>(null);
+
+  useEffect(() => {
+    function forget(event: Event) {
+      if (event.type === "click") {
+        const link = (event.target as Element | null)?.closest("a[href]");
+        if (!link || link.closest("[data-tabbar]")) return; // a tab tap is handled by the tab itself
+      }
+      setTapped(null);
+    }
+    document.addEventListener("click", forget, { capture: true });
+    window.addEventListener("popstate", forget);
+    return () => {
+      document.removeEventListener("click", forget, { capture: true });
+      window.removeEventListener("popstate", forget);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!tapped) return;
+    const timer = window.setTimeout(() => setTapped(null), 10_000);
+    return () => window.clearTimeout(timer);
+  }, [tapped]);
+
+  // The page changed (the tapped tab's page arrived, or you went somewhere else).
+  if (tapped && tapped.from !== pathname) setTapped(null);
 
   if (hidesTabBar(pathname)) return null;
 
@@ -40,6 +67,7 @@ export function BottomTabBar() {
   return (
     <nav
       aria-label="Main"
+      data-tabbar
       className="fixed bottom-6 left-1/2 z-30 flex h-16 -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#16120D] px-2 shadow-[0_10px_30px_rgba(0,0,0,.22)] lg:hidden dark:bg-[#2A241C]"
     >
       {TABS.map(({ href, label, icon: Icon, match }) => {
