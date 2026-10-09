@@ -9,6 +9,7 @@ import { HoursForm } from "@/components/panel/HoursForm";
 import { OpenClosedSwitch } from "@/components/panel/OpenClosedSwitch";
 import { ShareCard } from "@/components/restaurant/ShareCard";
 import { PageHeader, Panel } from "@/components/ui/page";
+import { PanelHelpCard } from "@/components/support/PanelHelp";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -60,7 +61,10 @@ export default async function PanelSettingsPage() {
             </dl>
           </Panel>
         </div>
-        <ShareCard name={restaurant.name} slug={restaurant.slug} />
+        <div className="flex flex-col gap-5">
+          <ShareCard name={restaurant.name} slug={restaurant.slug} />
+          <PanelHelpCard restaurantName={restaurant.name} />
+        </div>
       </div>
     </>
   );

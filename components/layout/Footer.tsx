@@ -66,15 +66,10 @@ export function Footer() {
                 Chat with us on WhatsApp
               </a>
             )}
-            {support.callHref && (
-              <a href={support.callHref} className="text-stone-600 hover:text-foreground">
-                Call us · {support.phoneDisplay}
-              </a>
-            )}
             <a href={support.emailHref} className="text-stone-600 hover:text-foreground">
               Email {support.email}
             </a>
-            {support.hours && <span className="text-[13px] text-stone-500">We reply {support.hours}</span>}
+            <span className="text-[13px] text-stone-500">We reply {support.hours}</span>
             <span className="text-stone-600">Pay cash or UPI on delivery</span>
             <span className="text-stone-600">Delivered by the restaurant</span>
             <Link href="/join" className="font-semibold text-accent hover:underline">

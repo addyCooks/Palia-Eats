@@ -7,6 +7,7 @@ import { SetupBanner } from "@/components/panel/SetupBanner";
 import { SidebarAcceptingCard } from "@/components/panel/SidebarAcceptingCard";
 import { Sidebar } from "@/components/shell/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SidebarHelp } from "@/components/support/PanelHelp";
 
 // Every page in the panel passes through here: no valid link/cookie, no entry.
 export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
@@ -36,6 +37,7 @@ export default async function PanelLayout({ children }: LayoutProps<"/panel">) {
             {!restaurant.setting_up && (
               <SidebarAcceptingCard name={restaurant.name} accepting={restaurant.is_accepting_orders} />
             )}
+            <SidebarHelp restaurantName={restaurant.name} />
             <ThemeToggle className="self-start text-[#D8D2C8] hover:bg-white/10" />
           </>
         }

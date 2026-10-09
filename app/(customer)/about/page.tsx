@@ -166,7 +166,7 @@ export default function AboutPage() {
           <h2 className="font-display text-[28px] leading-tight">We&apos;re right here</h2>
           <p className="text-[15px] leading-relaxed text-stone-600">
             Something wrong with an order? Open it under My orders and tap &ldquo;Need help with this order?&rdquo;, or
-            write to us any time. We&apos;ll sort it out with the restaurant.{support.hours ? ` We reply ${support.hours}.` : ""}
+            write to us any time. We&apos;ll sort it out with the restaurant. We reply {support.hours}.
           </p>
           <div className="mt-1 flex flex-wrap gap-x-5 gap-y-2">
             <Link href="/orders" className="font-semibold text-accent hover:underline">
