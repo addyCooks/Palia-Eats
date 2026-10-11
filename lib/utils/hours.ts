@@ -1,10 +1,16 @@
 import type { Restaurant } from "@/types/app";
+import type { MessageKey, T } from "@/lib/i18n/messages";
+import { say } from "@/lib/i18n/say";
 
 // Restaurants run on local (Indian) time. Servers (Vercel) run on UTC, so we
 // always work out "now" in this time zone.
 const TIME_ZONE = "Asia/Kolkata";
 
 export const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+export function dayName(day: number, t?: T): string {
+  return t ? t(`day.${day}` as MessageKey) : DAY_NAMES[day];
+}
 
 const WEEKDAY_INDEX: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
@@ -67,43 +73,55 @@ export type RestaurantStatus = {
 export function getRestaurantStatus(
   restaurant: HoursFields & Pick<Restaurant, "is_accepting_orders">,
   now: Date = new Date(),
+  t?: T,
 ): RestaurantStatus {
   if (!restaurant.is_accepting_orders) {
-    return { state: "paused", label: "Not taking orders right now", canOrder: false };
+    return { state: "paused", label: say(t, "hours.not_taking", "Not taking orders right now"), canOrder: false };
   }
   if (!isWithinHours(restaurant, now)) {
     const closedToday = (restaurant.closed_days ?? []).includes(localNow(now).day);
-    if (closedToday) return { state: "closed", label: "Closed today", canOrder: false };
-    const opens = restaurant.opening_time ? ` · Opens ${formatTime(restaurant.opening_time)}` : "";
-    return { state: "closed", label: `Closed${opens}`, canOrder: false };
+    if (closedToday) return { state: "closed", label: say(t, "hours.closed_today", "Closed today"), canOrder: false };
+    const label = restaurant.opening_time
+      ? say(t, "hours.closed_opens", "Closed · Opens {time}", { time: formatTime(restaurant.opening_time) })
+      : say(t, "hours.closed", "Closed");
+    return { state: "closed", label, canOrder: false };
   }
-  return { state: "open", label: "Open now", canOrder: true };
+  return { state: "open", label: say(t, "hours.open_now", "Open now"), canOrder: true };
 }
 
 // When a closed restaurant opens next: "today at 6:00 PM", "tomorrow at 11:00 AM",
 // "on Monday at 11:00 AM" (or "tomorrow" when it has no set hours). Null when it never
 // opens (closed every day). Only looks at hours and days off, not the pause switch.
-export function nextOpening(restaurant: HoursFields, now: Date = new Date()): string | null {
+export function nextOpening(restaurant: HoursFields, now: Date = new Date(), t?: T): string | null {
   const { minutes, day } = localNow(now);
   const closedDays = restaurant.closed_days ?? [];
   const start = restaurant.opening_time ? toMinutes(restaurant.opening_time) : null;
   const end = restaurant.closing_time ? toMinutes(restaurant.closing_time) : null;
   const hasWindow = start !== null && end !== null && start !== end;
-  const at = hasWindow && restaurant.opening_time ? ` at ${formatTime(restaurant.opening_time)}` : "";
+  const time = hasWindow && restaurant.opening_time ? formatTime(restaurant.opening_time) : null;
 
   for (let ahead = 0; ahead <= 7; ahead++) {
     const weekday = (day + ahead) % 7;
     if (closedDays.includes(weekday)) continue;
     if (ahead === 0 && (!hasWindow || minutes >= start)) continue; // already past today's opening
-    if (ahead === 0) return `today${at}`;
-    if (ahead === 1) return `tomorrow${at}`;
-    return `on ${DAY_NAMES[weekday]}${at}`;
+    if (ahead === 0) {
+      return time ? say(t, "hours.next.today_at", "today at {time}", { time }) : say(t, "hours.next.today", "today");
+    }
+    if (ahead === 1) {
+      return time
+        ? say(t, "hours.next.tomorrow_at", "tomorrow at {time}", { time })
+        : say(t, "hours.next.tomorrow", "tomorrow");
+    }
+    const name = dayName(weekday, t);
+    return time
+      ? say(t, "hours.next.day_at", "on {day} at {time}", { day: name, time })
+      : say(t, "hours.next.day", "on {day}", { day: name });
   }
   return null;
 }
 
 // "Closed on Monday, Tuesday" (or null when open every day)
-export function describeClosedDays(closedDays: number[] | null | undefined): string | null {
+export function describeClosedDays(closedDays: number[] | null | undefined, t?: T): string | null {
   if (!closedDays?.length) return null;
-  return `Closed on ${closedDays.map((day) => DAY_NAMES[day]).join(", ")}`;
+  return say(t, "hours.closed_on", "Closed on {days}", { days: closedDays.map((day) => dayName(day, t)).join(", ") });
 }

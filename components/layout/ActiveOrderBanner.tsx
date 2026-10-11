@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ORDER_STATUS_LABELS } from "@/lib/orders/status";
+import { statusLabel } from "@/lib/orders/status";
+import { useT } from "@/lib/i18n/client";
 import type { ActiveOrderSummary } from "@/lib/queries/orders";
 import { LiveUpdates } from "@/components/LiveUpdates";
 import { hidesTabBar } from "@/components/layout/BottomTabBar";
@@ -20,6 +21,7 @@ export function ActiveOrderBanner({
   customerId: string;
   accessToken: string | null;
 }) {
+  const t = useT();
   const pathname = usePathname();
   // Already looking at orders, or busy paying: no need to point at it.
   const hidden = pathname.startsWith("/orders") || pathname.startsWith("/checkout");
@@ -43,10 +45,10 @@ export function ActiveOrderBanner({
               <span className="pe-ring absolute inset-0 rounded-full bg-brand" />
             </span>
             <span className="min-w-0 flex-1 truncate text-sm">
-              <b>Order #{order.order_number} · {ORDER_STATUS_LABELS[order.status]}</b>{" "}
+              <b>{t("banner.order", { n: order.order_number, status: statusLabel(t, order.status) })}</b>{" "}
               <span className="text-[#D8D2C8]">· {order.restaurantName}</span>
             </span>
-            <span className="shrink-0 text-sm font-bold text-brand">Track →</span>
+            <span className="shrink-0 text-sm font-bold text-brand">{t("banner.track")}</span>
           </Link>
         </div>
       )}

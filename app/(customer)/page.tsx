@@ -8,14 +8,16 @@ import { RestaurantBrowser } from "@/components/restaurant/RestaurantBrowser";
 import { HeroHeadline } from "@/components/home/HeroHeadline";
 import { CuisineFilterProvider, TopCuisineChips } from "@/components/home/CuisineFilter";
 import { cuisinesByCount } from "@/lib/utils/cuisines";
+import { getT } from "@/lib/i18n/server";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { siteJsonLd } from "@/lib/seo/jsonld";
 
 export default async function HomePage() {
+  const t = await getT();
   const [restaurants, { dishes }] = await Promise.all([getActiveRestaurants(), getPublicDishes({ limit: 8 })]);
 
   // Work out "open or closed" once, here on the server, so the list can't flicker.
-  const items = restaurants.map((restaurant) => ({ restaurant, status: getRestaurantStatus(restaurant) }));
+  const items = restaurants.map((restaurant) => ({ restaurant, status: getRestaurantStatus(restaurant, new Date(), t) }));
   const cuisines = cuisinesByCount(restaurants.map((restaurant) => restaurant.cuisine_tags));
 
   return (
@@ -31,22 +33,21 @@ export default async function HomePage() {
             <div className="flex flex-col gap-5 lg:items-center lg:gap-[22px] lg:text-center">
               <HeroHeadline className="font-display text-[38px] leading-[1.05] tracking-[-0.5px] sm:text-[52px] lg:text-[76px] lg:leading-[1.02] lg:tracking-[-1px]" />
               <p className="hidden max-w-[540px] text-pretty text-[17px] leading-[1.6] text-stone-600 lg:block">
-                Biryani from the chowk, thali from your mohalla, momos from station road. Order from local restaurants and
-                pay cash when it arrives.
+                {t("home.sub")}
               </p>
 
               {/* Phones: search box and cuisine chips */}
               <form action="/search" className="lg:hidden">
                 <label className="flex h-[50px] items-center gap-2.5 rounded-[14px] bg-surface pl-4 pr-1.5 shadow-card">
                   <Search className="size-[18px] shrink-0 text-stone-500" aria-hidden />
-                  <span className="sr-only">Search dishes or restaurants</span>
+                  <span className="sr-only">{t("home.search_sr")}</span>
                   <input
                     name="q"
                     type="search"
-                    placeholder="Search biryani, momos…"
+                    placeholder={t("home.search_placeholder")}
                     className="min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-stone-500"
                   />
-                  <button type="submit" aria-label="Search" className="grid size-[38px] place-items-center rounded-[10px] bg-brand text-on-brand">
+                  <button type="submit" aria-label={t("nav.search")} className="grid size-[38px] place-items-center rounded-[10px] bg-brand text-on-brand">
                     <SlidersHorizontal className="size-4" aria-hidden />
                   </button>
                 </label>
@@ -58,10 +59,10 @@ export default async function HomePage() {
               <section id="popular" aria-labelledby="popular-title" className="scroll-mt-28">
                 <div className="mt-6 flex items-baseline justify-between lg:hidden">
                   <h2 id="popular-title" className="text-lg font-semibold">
-                    Popular today
+                    {t("home.popular")}
                   </h2>
                   <Link href="/search" className="text-[13px] font-semibold text-accent">
-                    See all
+                    {t("home.see_all")}
                   </Link>
                 </div>
                 {/* Phones: a sideways row. Laptops: four plates under the headline. */}
@@ -85,7 +86,7 @@ export default async function HomePage() {
         <section id="restaurants" className="mx-auto w-full max-w-[1280px] scroll-mt-24 px-4 pb-12 pt-8 sm:px-6 lg:px-12 lg:pt-14">
           {restaurants.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-10 text-center text-stone-500">
-              Restaurants are joining soon. Check back shortly!
+              {t("home.soon")}
             </p>
           ) : (
             <RestaurantBrowser items={items} />

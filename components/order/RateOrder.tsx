@@ -2,8 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { rateOrder } from "@/lib/actions/ratings";
+import { useT } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/messages";
 
-const WORDS = ["", "Not good", "Could be better", "Okay", "Good", "Loved it"];
+const WORDS: (MessageKey | "")[] = ["", "rate.w1", "rate.w2", "rate.w3", "rate.w4", "rate.w5"];
 
 // "How was your food?" Five big stars and an optional note, shown on a delivered order.
 export function RateOrder({
@@ -15,6 +17,7 @@ export function RateOrder({
   restaurantName: string;
   onDone?: () => void;
 }) {
+  const t = useT();
   const [stars, setStars] = useState(0);
   const [hover, setHover] = useState(0);
   const [comment, setComment] = useState("");
@@ -25,7 +28,7 @@ export function RateOrder({
   if (done) {
     return (
       <p role="status" className="anim-pop-in text-sm font-medium text-stone-700">
-        Thank you! Your rating helps {restaurantName} and other customers.
+        {t("rate.thanks", { name: restaurantName })}
       </p>
     );
   }
@@ -35,14 +38,14 @@ export function RateOrder({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
-        <div role="radiogroup" aria-label="Your rating" className="flex gap-1" onMouseLeave={() => setHover(0)}>
+        <div role="radiogroup" aria-label={t("rate.your_rating")} className="flex gap-1" onMouseLeave={() => setHover(0)}>
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               key={n}
               type="button"
               role="radio"
               aria-checked={stars === n}
-              aria-label={`${n} ${n === 1 ? "star" : "stars"}`}
+              aria-label={n === 1 ? t("rate.star_one") : t("rate.stars", { n })}
               onMouseEnter={() => setHover(n)}
               onClick={() => setStars(n)}
               className={`text-[38px] leading-none transition-[color,transform] duration-200 hover:scale-110 active:scale-90 ${n <= shown ? "text-brand" : "text-stone-300"}`}
@@ -53,18 +56,18 @@ export function RateOrder({
             </button>
           ))}
         </div>
-        <span className="text-sm font-semibold text-stone-600">{WORDS[shown]}</span>
+        <span className="text-sm font-semibold text-stone-600">{WORDS[shown] ? t(WORDS[shown] as MessageKey) : ""}</span>
       </div>
       {stars > 0 && (
         <div className="anim-fade-up flex flex-col gap-3">
           <label className="flex flex-col gap-1.5 text-[13px] font-semibold text-stone-600">
-            Anything to add? (optional)
+            {t("rate.add")}
             <textarea
               value={comment}
               onChange={(event) => setComment(event.target.value)}
               maxLength={300}
               rows={2}
-              placeholder="Hot and tasty, a bit late, too spicy…"
+              placeholder={t("rate.placeholder")}
               className="rounded-xl border-[1.5px] border-border bg-surface px-3.5 py-3 text-[15px] font-normal text-foreground outline-none focus:border-brand"
             />
           </label>
@@ -84,7 +87,7 @@ export function RateOrder({
             }
             className="press h-12 rounded-xl bg-brand font-bold text-on-brand hover:bg-brand-dark disabled:opacity-60"
           >
-            {isPending ? "Sending…" : "Send rating"}
+            {isPending ? t("rate.sending") : t("rate.send")}
           </button>
         </div>
       )}

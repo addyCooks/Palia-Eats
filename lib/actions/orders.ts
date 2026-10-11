@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { handleOrderEvent } from "@/lib/orders/events";
 import { isUuid } from "@/lib/validation/menu";
 import { REFRESH_CART_CODES, orderErrorMessage } from "@/lib/orders/errors";
+import { getT } from "@/lib/i18n/server";
 
 export type PlaceOrderInput = {
   restaurantId: string;
@@ -22,8 +23,9 @@ export type PlaceOrderResult =
 // Hands the order to the database function place_order(), which re-checks prices,
 // availability, hours and totals. This file only validates the shape of the request.
 export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResult> {
+  const t = await getT();
   const profile = await getProfile();
-  if (!profile) return { error: orderErrorMessage("not_authenticated") };
+  if (!profile) return { error: orderErrorMessage("not_authenticated", null, t) };
 
   const validItems =
     Array.isArray(input?.items) &&
@@ -45,7 +47,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
     typeof input.expectedTotal !== "number" ||
     !Number.isFinite(input.expectedTotal)
   ) {
-    return { error: orderErrorMessage("invalid_items") };
+    return { error: orderErrorMessage("invalid_items", null, t) };
   }
 
   const supabase = await createClient();
@@ -59,7 +61,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlaceOrderResu
 
   if (error || !data) {
     return {
-      error: orderErrorMessage(error?.message ?? "", error?.details),
+      error: orderErrorMessage(error?.message ?? "", error?.details, t),
       refreshCart: REFRESH_CART_CODES.includes(error?.message ?? ""),
     };
   }

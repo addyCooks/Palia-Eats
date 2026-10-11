@@ -5,13 +5,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ClipboardList, Home, Search, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart/useCart";
+import { useT } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/messages";
 
 const TABS = [
-  { href: "/", label: "Home", icon: Home, match: (p: string) => p === "/" },
-  { href: "/search", label: "Search", icon: Search, match: (p: string) => p.startsWith("/search") },
-  { href: "/orders", label: "Orders", icon: ClipboardList, match: (p: string) => p.startsWith("/orders") },
-  { href: "/cart", label: "Cart", icon: ShoppingBag, match: (p: string) => p.startsWith("/cart") },
-] as const;
+  { href: "/", key: "home", label: "nav.home", icon: Home, match: (p: string) => p === "/" },
+  { href: "/search", key: "search", label: "nav.search", icon: Search, match: (p: string) => p.startsWith("/search") },
+  { href: "/orders", key: "orders", label: "nav.orders", icon: ClipboardList, match: (p: string) => p.startsWith("/orders") },
+  { href: "/cart", key: "cart", label: "nav.cart", icon: ShoppingBag, match: (p: string) => p.startsWith("/cart") },
+] as const satisfies readonly { href: string; key: string; label: MessageKey; icon: unknown; match: (p: string) => boolean }[];
 
 // Checkout and the cart have their own big button at the bottom, so no tabs there.
 export function hidesTabBar(pathname: string): boolean {
@@ -28,6 +30,7 @@ const MORPH = "duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]";
 // last tab, with its item count; the account button lives in the top bar. On laptops the
 // header carries the same links instead.
 export function BottomTabBar() {
+  const t = useT();
   const pathname = usePathname();
   const { count } = useCart();
   // The tab just tapped, while its page is still on the way. Forgotten as soon as the page
@@ -66,19 +69,20 @@ export function BottomTabBar() {
 
   return (
     <nav
-      aria-label="Main"
+      aria-label={t("nav.main")}
       data-tabbar
       className="fixed bottom-6 left-1/2 z-30 flex h-16 -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#16120D] px-2 shadow-[0_10px_30px_rgba(0,0,0,.22)] lg:hidden dark:bg-[#2A241C]"
     >
-      {TABS.map(({ href, label, icon: Icon, match }) => {
+      {TABS.map(({ href, key, label: labelKey, icon: Icon, match }) => {
+        const label = t(labelKey);
         const active = pendingHref ? href === pendingHref : match(pathname);
         return (
           <Link
-            key={label}
+            key={key}
             href={href}
             aria-label={label}
             aria-current={active ? "page" : undefined}
-            data-cart-target={label === "Cart" ? "" : undefined}
+            data-cart-target={key === "cart" ? "" : undefined}
             onClick={() => setTapped({ href, from: pathname })}
             // (no `press` class here: it would override this transition with a faster one)
             className={`relative flex h-12 items-center justify-center rounded-full text-sm font-semibold transition-[background-color,color,padding] ${MORPH} ${
@@ -96,7 +100,7 @@ export function BottomTabBar() {
             >
               {label}
             </span>
-            {label === "Cart" && count > 0 && (
+            {key === "cart" && count > 0 && (
               <span
                 key={count}
                 className="anim-bump absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-bold text-on-brand ring-2 ring-[#16120D] dark:ring-[#2A241C]"

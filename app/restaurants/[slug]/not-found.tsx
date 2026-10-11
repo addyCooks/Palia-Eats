@@ -1,20 +1,22 @@
 import Link from "next/link";
+import { getT } from "@/lib/i18n/server";
 import { ProblemScreen, problemActionClass } from "@/components/ui/ProblemScreen";
 
-export default function RestaurantNotFound() {
+export default async function RestaurantNotFound() {
+  const t = await getT();
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
       <ProblemScreen
         glyph="z"
         tone="warm"
-        title="We couldn't find that restaurant"
+        title={t("nf.restaurant_title")}
         action={
           <Link href="/#restaurants" className={problemActionClass}>
-            See open restaurants
+            {t("closed.see_open")}
           </Link>
         }
       >
-        It may have moved or isn&apos;t available right now.
+        {t("nf.restaurant_body")}
       </ProblemScreen>
     </main>
   );

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setOpenReminder } from "@/lib/actions/reminders";
 import type { ReminderState } from "@/lib/queries/reminders";
+import { useT } from "@/lib/i18n/client";
 
 // "Remind me at 11 AM" on the closed screen (v2 8f). Logged-in customers get one email
 // when the restaurant opens; logged-out visitors are sent to log in first.
@@ -18,6 +19,7 @@ export function RemindMeButton({
   label: string;
   state: ReminderState;
 }) {
+  const t = useT();
   const router = useRouter();
   const [on, setOn] = useState(state.on);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function RemindMeButton({
       const result = await setOpenReminder({ restaurantId, on: next }).catch(() => ({ error: "failed" as const }));
       if (!result.error) return setOn(next);
       if (result.error === "login") return router.push("/login");
-      setError("Couldn’t save that. Please try again.");
+      setError(t("remind.error"));
     });
   }
 
@@ -45,16 +47,16 @@ export function RemindMeButton({
     return (
       <div className="flex flex-col items-center gap-1" role="status">
         <span className="text-sm font-semibold text-foreground">
-          ✓ We&apos;ll email you when {restaurantName} opens
+          {t("remind.on", { name: restaurantName })}
         </span>
-        {state.email && <span className="text-xs font-normal text-stone-500">to {state.email}</span>}
+        {state.email && <span className="text-xs font-normal text-stone-500">{t("remind.to", { email: state.email })}</span>}
         <button
           type="button"
           onClick={() => change(false)}
           disabled={pending}
           className="mt-1 text-xs font-semibold text-accent hover:underline disabled:opacity-60"
         >
-          Cancel reminder
+          {t("remind.cancel")}
         </button>
       </div>
     );
@@ -63,7 +65,7 @@ export function RemindMeButton({
   return (
     <div className="flex flex-col items-center gap-1">
       <button type="button" onClick={() => change(true)} disabled={pending} className="hover:underline disabled:opacity-60">
-        {pending ? "Saving…" : label}
+        {pending ? t("remind.saving") : label}
       </button>
       {error && (
         <span role="alert" className="text-xs font-normal text-red-700">

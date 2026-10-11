@@ -9,6 +9,7 @@ import { CartButton } from "@/components/cart/CartButton";
 import { CartPanel } from "@/components/cart/CartPanel";
 import { MenuItemCard } from "@/components/menu/MenuItemCard";
 import { DishSheet } from "@/components/storefronts/DishSheet";
+import { useT } from "@/lib/i18n/client";
 
 type Section = { category: MenuCategory; items: MenuItem[] };
 
@@ -26,6 +27,7 @@ export function StorefrontMenu({
   canOrder: boolean;
   favourites: FavouriteState;
 }) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const [vegOnly, setVegOnly] = useState(false);
   const [active, setActive] = useState<string | null>(sections[0]?.category.id ?? null);
@@ -87,12 +89,12 @@ export function StorefrontMenu({
     <div className="flex items-center gap-2">
       <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-xl bg-surface px-3.5 shadow-card focus-within:ring-2 focus-within:ring-brand/30">
         <Search className="size-4 shrink-0 text-stone-500" aria-hidden />
-        <span className="sr-only">Search this menu</span>
+        <span className="sr-only">{t("menu.search")}</span>
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search this menu"
+          placeholder={t("menu.search")}
           autoComplete="off"
           className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-stone-500"
         />
@@ -104,7 +106,7 @@ export function StorefrontMenu({
         onClick={() => setVegOnly((value) => !value)}
         className="flex h-11 shrink-0 items-center gap-2 rounded-xl bg-surface px-3 text-[13px] font-semibold shadow-card"
       >
-        Veg only
+        {t("menu.veg_only")}
         <span
           className={`relative h-[22px] w-10 rounded-full transition-colors ${vegOnly ? "bg-[#15803D]" : "bg-[#D8D2C8] dark:bg-[#4A4136]"}`}
           aria-hidden
@@ -124,7 +126,7 @@ export function StorefrontMenu({
     <div className="lg:grid lg:grid-cols-[200px_minmax(0,1fr)_320px] lg:items-start lg:gap-8">
       {/* Laptop: category list on the left */}
       {sections.length > 1 && (
-        <nav aria-label="Menu categories" className="sticky top-24 hidden flex-col gap-1 lg:flex">
+        <nav aria-label={t("menu.categories")} className="sticky top-24 hidden flex-col gap-1 lg:flex">
           {visible.map(({ category }) => {
             const on = category.id === active;
             return (
@@ -150,7 +152,7 @@ export function StorefrontMenu({
         <div className="sticky top-0 z-20 -mx-4 flex flex-col gap-3 bg-background/95 px-4 pb-3 pt-4 backdrop-blur lg:static lg:mx-0 lg:bg-transparent lg:px-0 lg:pt-0 lg:backdrop-blur-none">
           {searchAndVeg}
           {sections.length > 1 && (
-            <nav aria-label="Menu categories" className="lg:hidden">
+            <nav aria-label={t("menu.categories")} className="lg:hidden">
               <div ref={tabsRef} className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4">
                 {visible.map(({ category }) => {
                   const on = category.id === active;
@@ -175,11 +177,11 @@ export function StorefrontMenu({
 
         {sections.length === 0 ? (
           <p className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center text-stone-500">
-            The menu is coming soon.
+            {t("menu.coming")}
           </p>
         ) : visible.length === 0 ? (
           <p className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center text-stone-500">
-            Nothing matches that. Try a different word{vegOnly ? " or turn off Veg only" : ""}.
+            {vegOnly ? t("menu.no_match_veg") : t("menu.no_match")}
           </p>
         ) : (
           visible.map(({ category, items }) => (
@@ -187,7 +189,7 @@ export function StorefrontMenu({
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="font-display text-2xl lg:text-[30px]">{category.name}</h2>
                 <span className="text-[13px] text-stone-500">
-                  {items.length} {items.length === 1 ? "dish" : "dishes"}
+                  {items.length === 1 ? t("menu.dish_one") : t("menu.dish_many", { n: items.length })}
                 </span>
               </div>
               <ul className="stagger flex flex-col gap-3 lg:gap-[18px]">

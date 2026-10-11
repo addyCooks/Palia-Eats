@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { Restaurant } from "@/types/app";
 import { formatPrice } from "@/lib/utils/format";
@@ -5,6 +7,7 @@ import { formatTime, getRestaurantStatus, type RestaurantStatus } from "@/lib/ut
 import { restaurantCover } from "@/lib/utils/placeholder";
 import { publicRating } from "@/lib/utils/rating";
 import { ClosedBanner } from "@/components/restaurant/ClosedBanner";
+import { useT } from "@/lib/i18n/client";
 import { Photo } from "@/components/ui/Photo";
 
 // A restaurant tile (v2 5a): photo with a small dark tag, name with the rating pill,
@@ -17,20 +20,21 @@ export function RestaurantCard({
   restaurant: Restaurant;
   status?: RestaurantStatus;
 }) {
+  const t = useT();
   const unavailable = !status.canOrder;
   const rating = publicRating(restaurant);
   const cuisines = restaurant.tagline ?? restaurant.cuisine_tags.join(" · ");
   const tag = unavailable
     ? null
     : restaurant.delivery_fee === 0
-      ? "FREE DELIVERY"
+      ? t("card.free_delivery")
       : restaurant.closing_time
-        ? `OPEN TILL ${formatTime(restaurant.closing_time).toUpperCase()}`
-        : "OPEN NOW";
+        ? t("card.open_till", { time: formatTime(restaurant.closing_time).toUpperCase() })
+        : t("card.open_now");
   const meta = [
-    restaurant.min_order_amount > 0 ? `Min ${formatPrice(restaurant.min_order_amount).replace(/\.00$/, "")}` : null,
+    restaurant.min_order_amount > 0 ? t("card.min", { amount: formatPrice(restaurant.min_order_amount).replace(/\.00$/, "") }) : null,
     restaurant.area,
-    "Cash on delivery",
+    t("common.cod"),
   ].filter(Boolean) as string[];
 
   return (
@@ -65,10 +69,10 @@ export function RestaurantCard({
             </span>
           ) : (
             <span
-              title="Stars show once a restaurant has 5 ratings"
+              title={t("card.new_title")}
               className="flex h-[26px] shrink-0 items-center rounded-[7px] bg-muted px-2 text-xs font-semibold text-stone-600"
             >
-              New
+              {t("card.new")}
             </span>
           )}
         </div>

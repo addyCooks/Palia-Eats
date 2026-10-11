@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Heart } from "lucide-react";
 import { setFavourite } from "@/lib/actions/favourites";
+import { useT } from "@/lib/i18n/client";
 
 const LOOKS = {
   // Round white button on a cover photo (restaurant page, phones and laptops)
@@ -33,6 +34,7 @@ export function FavouriteButton({
   onChange?: (on: boolean) => void;
   className?: string;
 }) {
+  const t = useT();
   const router = useRouter();
   const [on, setOn] = useState(initial);
   const [note, setNote] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export function FavouriteButton({
       setOn(!next);
       onChange?.(!next);
       if (result.error === "login") return toLogin();
-      setNote("Couldn’t save. Try again.");
+      setNote(t("fav.error"));
       window.setTimeout(() => setNote(null), 2500);
     });
   }
@@ -66,8 +68,8 @@ export function FavouriteButton({
         type="button"
         onClick={toggle}
         aria-pressed={on}
-        aria-label={on ? `Remove ${name} from favourites` : `Add ${name} to favourites`}
-        title={on ? "In your favourites" : "Add to favourites"}
+        aria-label={on ? t("fav.remove", { name }) : t("fav.add", { name })}
+        title={on ? t("fav.in") : t("fav.add_title")}
         className={`grid shrink-0 place-items-center transition-transform active:scale-90 ${LOOKS[look]}`}
       >
         <Heart

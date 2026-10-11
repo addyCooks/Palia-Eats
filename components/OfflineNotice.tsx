@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { useT } from "@/lib/i18n/client";
 
 function subscribe(onChange: () => void) {
   window.addEventListener("online", onChange);
@@ -14,6 +15,7 @@ function subscribe(onChange: () => void) {
 // A calm banner when the phone loses its connection (common on patchy 4G). Pages keep
 // working with what they already loaded; everything reconnects by itself.
 export function OfflineNotice() {
+  const t = useT();
   const online = useSyncExternalStore(
     subscribe,
     () => navigator.onLine,
@@ -30,8 +32,8 @@ export function OfflineNotice() {
         !
       </span>
       <p className="text-sm">
-        <strong className="font-semibold">You&apos;re offline.</strong>{" "}
-        <span className="text-[#D8D2C8]">We&apos;ll reconnect on our own. Your cart is saved.</span>
+        <strong className="font-semibold">{t("offline.title")}</strong>{" "}
+        <span className="text-[#D8D2C8]">{t("offline.body")}</span>
       </p>
     </div>
   );

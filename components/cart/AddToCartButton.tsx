@@ -4,6 +4,7 @@ import type { MouseEvent } from "react";
 import { isOtherRestaurant, lineKey, toCartRestaurant } from "@/lib/cart/cart";
 import { useCart } from "@/components/cart/useCart";
 import { QuantityStepper } from "@/components/cart/QuantityStepper";
+import { useT } from "@/lib/i18n/client";
 import { flyToCart } from "@/lib/cart/fly";
 import type { MenuItem, Restaurant } from "@/types/app";
 
@@ -19,6 +20,7 @@ type AddToCartButtonProps = {
 // Shows "ADD"; once the item is in the cart it turns into a quantity stepper.
 // Both fill the width of the plate they sit on.
 export function AddToCartButton({ restaurant, item, canOrder, onChooseSize }: AddToCartButtonProps) {
+  const t = useT();
   const { cart, addItem, changeQuantity } = useCart();
   const fullKey = lineKey({ menuItemId: item.id, variant: "full" });
   const inCart = cart.items.filter((line) => line.menuItemId === item.id);
@@ -27,7 +29,7 @@ export function AddToCartButton({ restaurant, item, canOrder, onChooseSize }: Ad
   if (!canOrder) {
     return (
       <span className="flex h-9 w-full items-center justify-center rounded-[9px] bg-surface/90 text-xs font-bold text-stone-600 shadow-sm">
-        Ordering closed
+        {t("add.closed")}
       </span>
     );
   }
@@ -38,10 +40,10 @@ export function AddToCartButton({ restaurant, item, canOrder, onChooseSize }: Ad
       <button
         type="button"
         onClick={onChooseSize}
-        aria-label={total > 0 ? `${total} ${item.name} in cart. Add more` : `Add ${item.name}`}
+        aria-label={total > 0 ? t("add.in_cart_more", { n: total, name: item.name }) : t("add.add_aria", { name: item.name })}
         className="press h-9 w-full rounded-[9px] bg-brand text-[13px] font-bold tracking-wide text-on-brand shadow-saffron transition-colors hover:bg-brand-dark"
       >
-        {total > 0 ? `${total} added +` : "ADD"}
+        {total > 0 ? t("add.added", { n: total }) : t("add.add")}
       </button>
     );
   }
@@ -63,9 +65,7 @@ export function AddToCartButton({ restaurant, item, canOrder, onChooseSize }: Ad
     const button = event.currentTarget;
     // One restaurant per cart: ask before throwing the old cart away.
     if (isOtherRestaurant(cart, restaurant.id)) {
-      const ok = window.confirm(
-        `Your cart has items from ${cart.restaurant?.name}. Start a new cart with ${restaurant.name}?`,
-      );
+      const ok = window.confirm(t("dish.confirm_new_cart", { old: cart.restaurant?.name ?? "", new: restaurant.name }));
       if (!ok) return;
     }
     addItem(toCartRestaurant(restaurant), { id: item.id, name: item.name, price: item.price, isVeg: item.is_veg });
@@ -78,10 +78,10 @@ export function AddToCartButton({ restaurant, item, canOrder, onChooseSize }: Ad
     <button
       type="button"
       onClick={handleAdd}
-      aria-label={`Add ${item.name}`}
+      aria-label={t("add.add_aria", { name: item.name })}
       className="press h-9 w-full rounded-[9px] bg-brand text-[13px] font-bold tracking-wide text-on-brand shadow-saffron transition-colors hover:bg-brand-dark"
     >
-      ADD
+      {t("add.add")}
     </button>
   );
 }

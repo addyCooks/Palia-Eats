@@ -22,9 +22,9 @@ export function formatClock(iso: string): string {
   }).format(new Date(iso));
 }
 
-// "Sun, 5 Oct"
-export function formatDayLabel(iso: string): string {
-  return new Intl.DateTimeFormat("en-IN", {
+// "Sun, 5 Oct" (or the Hindi spelling for Hindi readers)
+export function formatDayLabel(iso: string, lang: "en" | "hi" = "en"): string {
+  return new Intl.DateTimeFormat(lang === "hi" ? "hi-IN" : "en-IN", {
     timeZone: "Asia/Kolkata",
     weekday: "short",
     day: "numeric",

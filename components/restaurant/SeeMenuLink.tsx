@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useT } from "@/lib/i18n/client";
 
 // "Look at the menu" on the closed screen: opens the restaurant page anyway (?menu=1),
 // keeping a #dish-… link so the dish someone tapped in search still opens.
 export function SeeMenuLink() {
+  const t = useT();
   const pathname = usePathname();
   const router = useRouter();
   const href = `${pathname}?menu=1`;
@@ -19,7 +21,7 @@ export function SeeMenuLink() {
         router.push(href + hash);
       }}
     >
-      Look at the menu
+      {t("closed.look_menu")}
     </Link>
   );
 }

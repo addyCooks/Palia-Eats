@@ -3,6 +3,8 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/session";
 import { getMyOrders } from "@/lib/queries/orders";
 import { ACTIVE_STATUSES } from "@/lib/orders/status";
+import { getLang, getT } from "@/lib/i18n/server";
+import type { Lang, T } from "@/lib/i18n/messages";
 import { wholeRupees } from "@/lib/orders/stats";
 import { addDaysToKey, formatClock, formatDayLabel, istDateKey, todayKeyIST } from "@/lib/utils/time";
 import { dishPhoto } from "@/lib/utils/placeholder";
@@ -15,17 +17,22 @@ import { itemsLine } from "@/components/panel/KanbanOrderCard";
 import { Photo } from "@/components/ui/Photo";
 import { ProblemScreen, problemActionClass } from "@/components/ui/ProblemScreen";
 
-export const metadata: Metadata = { title: "My orders" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("account.nav.orders") };
+}
 
 // "Today, 8:12 PM" / "Yesterday, 1:40 PM" / "Sun, 28 Sep"
-function when(iso: string) {
+function when(iso: string, t: T, lang: Lang) {
   const key = istDateKey(iso);
-  if (key === todayKeyIST()) return `Today, ${formatClock(iso)}`;
-  if (key === addDaysToKey(todayKeyIST(), -1)) return `Yesterday, ${formatClock(iso)}`;
-  return formatDayLabel(iso);
+  if (key === todayKeyIST()) return t("orders.today", { time: formatClock(iso) });
+  if (key === addDaysToKey(todayKeyIST(), -1)) return t("orders.yesterday", { time: formatClock(iso) });
+  return formatDayLabel(iso, lang);
 }
 
 export default async function OrdersPage() {
+  const t = await getT();
+  const lang = await getLang();
   const profile = await requireUser("/orders");
   const orders = await getMyOrders();
 
@@ -37,19 +44,19 @@ export default async function OrdersPage() {
       </div>
 
       <section className="flex flex-col gap-4">
-        <h1 className="font-display text-[34px] leading-none sm:text-[44px]">My orders</h1>
+        <h1 className="font-display text-[34px] leading-none sm:text-[44px]">{t("account.nav.orders")}</h1>
 
         {orders.length === 0 ? (
           <ProblemScreen
             glyph="+"
-            title="No orders yet"
+            title={t("orders.none_title")}
             action={
               <Link href="/" className={problemActionClass}>
-                Browse restaurants
+                {t("cart.browse")}
               </Link>
             }
           >
-            Your happy bite is just a tap away. When you order, you can follow it here from the kitchen to your door.
+            {t("orders.none_body")}
           </ProblemScreen>
         ) : (
           <ul className="stagger flex flex-col gap-3 sm:gap-4">
@@ -72,13 +79,13 @@ export default async function OrdersPage() {
                     <span className="flex min-w-0 flex-1 flex-col gap-1">
                       <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
                         <span className="truncate text-base font-semibold sm:text-[17px]">
-                          {order.restaurants?.name ?? "Restaurant"}
+                          {order.restaurants?.name ?? t("orders.restaurant")}
                         </span>
-                        <OrderStatusBadge status={order.status} />
+                        <OrderStatusBadge status={order.status} translate={t} />
                       </span>
                       <span className="line-clamp-1 text-sm text-stone-600">{itemsLine(order.order_items)}</span>
                       <span className="text-[13px] text-stone-500">
-                        {when(order.placed_at)} · {wholeRupees(order.total)} · Cash
+                        {when(order.placed_at, t, lang)} · {wholeRupees(order.total)} · {t("orders.cash")}
                       </span>
                     </span>
                   </Link>
@@ -87,14 +94,14 @@ export default async function OrdersPage() {
                       href={`/orders/${order.id}`}
                       className="flex h-10 shrink-0 items-center justify-center rounded-[10px] bg-brand px-[18px] text-sm font-semibold text-on-brand hover:bg-brand-dark"
                     >
-                      Track order
+                      {t("orders.track")}
                     </Link>
                   ) : order.status === "delivered" && !order.rated ? (
                     <Link
                       href={`/orders/${order.id}#rate`}
                       className="flex h-10 shrink-0 items-center justify-center rounded-[10px] bg-amber-50 px-[18px] text-sm font-semibold text-amber-800 hover:bg-amber-100"
                     >
-                      Rate order
+                      {t("orders.rate")}
                     </Link>
                   ) : (
                     <ReorderButton

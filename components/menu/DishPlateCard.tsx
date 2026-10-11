@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import type { PublicDish } from "@/lib/queries/public";
@@ -5,6 +7,7 @@ import { formatPrice } from "@/lib/utils/format";
 import { dishPhoto } from "@/lib/utils/placeholder";
 import { publicRating } from "@/lib/utils/rating";
 import { Photo } from "@/components/ui/Photo";
+import { useT } from "@/lib/i18n/client";
 
 const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
 
@@ -21,10 +24,11 @@ export function DishPlateCard({
   highlight?: boolean;
   compact?: boolean;
 }) {
+  const t = useT();
   const meta = [
     dish.restaurants.name,
     publicRating(dish.restaurants) ? `★ ${publicRating(dish.restaurants)!.avg}` : null,
-    dish.prep_minutes ? `${dish.prep_minutes} min` : null,
+    dish.prep_minutes ? t("dish.minutes", { n: dish.prep_minutes }) : null,
   ]
     .filter(Boolean)
     .join(" · ");

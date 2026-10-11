@@ -6,6 +6,7 @@ import type { Restaurant } from "@/types/app";
 import type { RestaurantStatus } from "@/lib/utils/hours";
 import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { useCuisineFilter } from "@/components/home/CuisineFilter";
+import { useT } from "@/lib/i18n/client";
 import { cuisinesByCount } from "@/lib/utils/cuisines";
 
 export type BrowsableRestaurant = { restaurant: Restaurant; status: RestaurantStatus };
@@ -16,6 +17,7 @@ export type BrowsableRestaurant = { restaurant: Restaurant; status: RestaurantSt
 // at the top do the filtering (one set of filters per screen), and a "Showing: Pizza" note
 // here says what is filtered, with a way to clear it.
 export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
+  const t = useT();
   const [query, setQuery] = useState("");
   const { cuisine, setCuisine } = useCuisineFilter();
 
@@ -37,21 +39,23 @@ export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
         <div className="flex flex-col gap-2">
-          <h2 className="font-display text-[34px] leading-none sm:text-[44px] lg:text-[52px]">Restaurants in Palia</h2>
+          <h2 className="font-display text-[34px] leading-none sm:text-[44px] lg:text-[52px]">{t("home.restaurants_title")}</h2>
           <p className="text-[15px] text-stone-600 sm:text-base">
             {openCount > 0
-              ? `${openCount} ${openCount === 1 ? "kitchen" : "kitchens"} delivering to Palia Kalan right now`
-              : "No kitchen is taking orders right now. Have a look at their menus."}
+              ? openCount === 1
+                ? t("home.kitchens_one")
+                : t("home.kitchens_many", { n: openCount })
+              : t("home.none_open")}
           </p>
         </div>
         <label className="hidden h-12 w-full items-center gap-2.5 rounded-xl bg-surface pl-4 pr-1.5 shadow-[0_4px_14px_rgba(120,70,0,.06)] focus-within:ring-2 focus-within:ring-brand/30 lg:flex lg:w-[360px]">
           <Search className="size-4 shrink-0 text-stone-500" aria-hidden />
-          <span className="sr-only">Search restaurants</span>
+          <span className="sr-only">{t("home.search_restaurants")}</span>
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search restaurants"
+            placeholder={t("home.search_restaurants")}
             autoComplete="off"
             className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-stone-500"
           />
@@ -59,7 +63,7 @@ export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
       </div>
 
       {cuisines.length > 0 && (
-        <div role="group" aria-label="Filter by cuisine" className="hidden flex-wrap gap-2.5 lg:flex">
+        <div role="group" aria-label={t("home.filter_cuisine")} className="hidden flex-wrap gap-2.5 lg:flex">
           {[null, ...cuisines].map((tag) => {
             const active = tag === cuisine;
             return (
@@ -72,7 +76,7 @@ export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
                   active ? "bg-deep text-brand" : "bg-surface text-stone-700 hover:bg-muted"
                 }`}
               >
-                {tag ?? "All"}
+                {tag ?? t("home.all")}
               </button>
             );
           })}
@@ -82,7 +86,7 @@ export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
       {cuisine && (
         <div role="status" className="anim-pop-in flex items-center gap-2 self-start rounded-full bg-surface py-1.5 pl-4 pr-1.5 text-sm shadow-card lg:hidden">
           <span>
-            Showing <b>{cuisine}</b>
+            {t("home.showing")} <b>{cuisine}</b>
           </span>
           <button
             type="button"
@@ -90,14 +94,14 @@ export function RestaurantBrowser({ items }: { items: BrowsableRestaurant[] }) {
             className="flex h-8 items-center gap-1 rounded-full bg-deep px-3 text-[13px] font-semibold text-brand"
           >
             <X className="size-3.5" aria-hidden />
-            Clear
+            {t("home.clear")}
           </button>
         </div>
       )}
 
       {visible.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-border p-10 text-center text-stone-500">
-          No restaurants match that. Try another word or clear the filter.
+          {t("home.no_match")}
         </p>
       ) : (
         <ul className="stagger grid gap-4 sm:grid-cols-2 sm:gap-[22px] lg:grid-cols-3">

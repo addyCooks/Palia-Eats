@@ -4,10 +4,12 @@ import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { formatPrice } from "@/lib/utils/format";
 import { useCart } from "@/components/cart/useCart";
+import { useT } from "@/lib/i18n/client";
 
 // Floating cart bar at the bottom of a restaurant page on phones (v2 6a): dark bar with the
 // count and total, saffron "View cart →". Laptops show the cart beside the menu instead.
 export function CartBar({ restaurantId }: { restaurantId: string }) {
+  const t = useT();
   const { cart, count, subtotal } = useCart();
 
   // Only show it on the page of the restaurant the cart belongs to.
@@ -25,12 +27,12 @@ export function CartBar({ restaurantId }: { restaurantId: string }) {
           </span>
           <span className="flex flex-col">
             <span className="text-xs text-[#D8D2C8]">
-              {count} {count === 1 ? "item" : "items"}
+              {count === 1 ? t("cart.bar_one") : t("cart.bar_many", { n: count })}
             </span>
             <span className="font-bold tabular-nums">{formatPrice(subtotal)}</span>
           </span>
         </span>
-        <span className="flex h-11 items-center rounded-[11px] bg-brand px-[18px] font-bold text-on-brand">View cart →</span>
+        <span className="flex h-11 items-center rounded-[11px] bg-brand px-[18px] font-bold text-on-brand">{t("cart.view")}</span>
       </Link>
     </div>
   );

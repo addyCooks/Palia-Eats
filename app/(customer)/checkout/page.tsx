@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/session";
+import { getT } from "@/lib/i18n/server";
 import { getMyAddresses } from "@/lib/queries/account";
 import { CheckoutView } from "@/components/checkout/CheckoutView";
 import { FunnelBeacon } from "@/components/analytics/FunnelBeacon";
 
-export const metadata: Metadata = { title: "Checkout" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("co.title") };
+}
 
 export default async function CheckoutPage({ searchParams }: PageProps<"/checkout">) {
   const profile = await requireUser("/checkout");

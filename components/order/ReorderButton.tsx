@@ -6,12 +6,14 @@ import { createClient } from "@/lib/supabase/client";
 import { EMPTY_CART, toCartRestaurant, type Cart, type CartItem } from "@/lib/cart/cart";
 import { getCartSnapshot, saveCart } from "@/lib/cart/store";
 import type { Restaurant } from "@/types/app";
+import { useT } from "@/lib/i18n/client";
 
 type PastLine = { menu_item_id: string | null; quantity: number; variant: "full" | "half" };
 
 // "Reorder": puts the same dishes back in the cart at TODAY's prices (dishes that are sold
 // out or gone are skipped), then opens the cart.
 export function ReorderButton({ restaurantId, lines }: { restaurantId: string; lines: PastLine[] }) {
+  const t = useT();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export function ReorderButton({ restaurantId, lines }: { restaurantId: string; l
       supabase.from("menu_items").select("id, name, price, half_price, is_veg, is_available").in("id", ids),
     ]);
     if (!restaurant) {
-      setNote("This restaurant isn't available right now.");
+      setNote(t("err.restaurant_unavailable"));
       setBusy(false);
       return;
     }
@@ -49,12 +51,12 @@ export function ReorderButton({ restaurantId, lines }: { restaurantId: string; l
     }
 
     if (cartItems.length === 0) {
-      setNote("None of these dishes are available right now.");
+      setNote(t("re.none"));
       setBusy(false);
       return;
     }
     const current = getCartSnapshot();
-    if (current.items.length > 0 && !window.confirm("Replace what's in your cart with this order?")) {
+    if (current.items.length > 0 && !window.confirm(t("re.replace"))) {
       setBusy(false);
       return;
     }
@@ -71,7 +73,7 @@ export function ReorderButton({ restaurantId, lines }: { restaurantId: string; l
         disabled={busy}
         className="flex h-10 shrink-0 items-center rounded-[10px] bg-[#16120D] px-[18px] text-sm font-semibold text-white hover:bg-black disabled:opacity-60 dark:bg-[#2A241C]"
       >
-        {busy ? "Adding…" : "Reorder"}
+        {busy ? t("re.adding") : t("re.reorder")}
       </button>
       {note && <span className="text-xs text-red-700">{note}</span>}
     </span>

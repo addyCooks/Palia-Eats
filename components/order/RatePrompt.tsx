@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { RatePromptOrder } from "@/lib/queries/orders";
 import { RateOrder } from "@/components/order/RateOrder";
 import { ServedPlate } from "@/components/ui/FoodLoader";
+import { useT } from "@/lib/i18n/client";
 
 const read = (store: Storage, key: string) => {
   try {
@@ -24,6 +25,7 @@ const write = (key: string) => {
 // "How was your meal?" A sheet that slides up to half the screen on the customer's next
 // visit after a delivery they haven't rated. "Not now" hides it for that order for good.
 export function RatePrompt({ order }: { order: RatePromptOrder | null }) {
+  const t = useT();
   const pathname = usePathname();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [show, setShow] = useState(false);
@@ -64,12 +66,12 @@ export function RatePrompt({ order }: { order: RatePromptOrder | null }) {
       <div className="flex flex-col items-center gap-3 px-6 pb-8 pt-3 text-center">
         <span className="h-[5px] w-11 rounded-full bg-stone-300 sm:hidden" aria-hidden />
         <ServedPlate className="size-28" />
-        <span className="kicker">Order #{order.order_number}</span>
+        <span className="kicker">{t("rp.kicker", { n: order.order_number })}</span>
         <h2 id="rate-title" className="font-display text-[32px] leading-[1.08]">
-          How was your little moment of yum?
+          {t("rp.title")}
         </h2>
         <p className="text-sm text-stone-600">
-          Rate your meal from {order.restaurantName}. Your stars help them and other people in Palia.
+          {t("rp.body", { name: order.restaurantName })}
         </p>
         <div className="mt-2 flex w-full justify-center text-left">
           <RateOrder
@@ -84,7 +86,7 @@ export function RatePrompt({ order }: { order: RatePromptOrder | null }) {
         </div>
         {!thanked && (
           <button type="button" onClick={close} className="press mt-1 h-11 rounded-xl px-5 text-sm font-semibold text-stone-500 hover:bg-muted">
-            Not now
+            {t("rp.not_now")}
           </button>
         )}
       </div>

@@ -3,23 +3,25 @@
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/cart/useCart";
+import { useT } from "@/lib/i18n/client";
 
 // The dark "My cart" button with a saffron count (v2 nav). `compact` is the 44px square
 // version for phones.
 export function CartButton({ compact = false }: { compact?: boolean }) {
+  const t = useT();
   const { count } = useCart();
 
   return (
     <Link
       href="/cart"
       data-cart-target
-      aria-label={count > 0 ? `My cart, ${count} items` : "My cart"}
+      aria-label={count > 0 ? t("cart.button_items", { n: count }) : t("cart.button")}
       className={`press relative flex items-center justify-center gap-2 bg-[#16120D] text-[13px] font-semibold text-white shadow-[0_8px_20px_rgba(0,0,0,.18)] transition-colors hover:bg-black dark:bg-[#2A241C] ${
         compact ? "size-11 rounded-xl" : "h-[42px] rounded-[10px] px-[18px]"
       }`}
     >
       <ShoppingBag className="size-4 text-brand" aria-hidden />
-      {!compact && "My cart"}
+      {!compact && t("cart.button")}
       {count > 0 && (
         <span
           key={count}

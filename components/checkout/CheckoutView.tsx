@@ -10,6 +10,7 @@ import { formatPrice } from "@/lib/utils/format";
 import { useCart } from "@/components/cart/useCart";
 import { useCartSync } from "@/components/cart/useCartSync";
 import { Textarea } from "@/components/ui/Textarea";
+import { useT } from "@/lib/i18n/client";
 import { CookingPot } from "@/components/ui/FoodLoader";
 import type { Address } from "@/types/app";
 
@@ -19,14 +20,14 @@ type CheckoutViewProps = {
   initialAddressId?: string;
 };
 
-const PAYMENTS = [
-  { key: "cash", name: "Cash on delivery", note: "Pay the rider when your food arrives" },
-  { key: "upi", name: "UPI on delivery", note: "Scan the rider’s QR with any UPI app" },
-] as const;
-
 const UPI_NOTE = "Paying by UPI on delivery.";
 
 export function CheckoutView({ addresses, profilePhone, initialAddressId }: CheckoutViewProps) {
+  const t = useT();
+  const PAYMENTS = [
+    { key: "cash", name: t("common.cod"), note: t("co.pay_cash_note") },
+    { key: "upi", name: t("co.pay_upi"), note: t("co.pay_upi_note") },
+  ] as const;
   const router = useRouter();
   const { cart, count, subtotal, total, clearCart } = useCart();
   const [isPending, startTransition] = useTransition();
@@ -50,24 +51,24 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
   const hasPhone = Boolean(selectedAddress?.phone ?? profilePhone);
 
   if (placed) {
-    return <p className="py-16 text-center text-lg font-medium">Order placed! Taking you to your order…</p>;
+    return <p className="py-16 text-center text-lg font-medium">{t("co.placed")}</p>;
   }
 
   if (checking) {
-    return <p className="py-16 text-center text-stone-600">Checking your cart…</p>;
+    return <p className="py-16 text-center text-stone-600">{t("co.checking")}</p>;
   }
 
   if (!restaurant || count === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <h1 className="font-display text-[38px]">Your cart is empty</h1>
+        <h1 className="font-display text-[38px]">{t("co.empty")}</h1>
         {notices.map((notice) => (
           <p key={notice} className="text-sm text-amber-800">
             {notice}
           </p>
         ))}
         <Link href="/" className="inline-flex h-[52px] items-center rounded-xl bg-brand px-6 font-bold text-on-brand hover:bg-brand-dark">
-          Browse restaurants
+          {t("cart.browse")}
         </Link>
       </div>
     );
@@ -77,10 +78,10 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
   const canOrder = status ? status.canOrder : true;
 
   let blocker: string | null = null;
-  if (!canOrder) blocker = status?.label ?? "This restaurant can't take orders right now.";
-  else if (shortfall > 0) blocker = `Add ${formatPrice(shortfall)} more to reach the minimum order.`;
-  else if (!selectedAddress) blocker = "Add a delivery address to continue.";
-  else if (!hasPhone) blocker = "Add a mobile number to your account or to this address.";
+  if (!canOrder) blocker = status?.label ?? t("co.blocker_closed");
+  else if (shortfall > 0) blocker = t("co.blocker_min", { amount: formatPrice(shortfall) });
+  else if (!selectedAddress) blocker = t("co.blocker_address");
+  else if (!hasPhone) blocker = t("co.blocker_phone");
 
   // Open restaurant, enough in the cart, but nowhere to deliver yet.
   const needsAddress = blocker !== null && canOrder && shortfall <= 0 && !selectedAddress;
@@ -115,11 +116,11 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
       <div className="flex flex-col gap-5">
-        <h1 className="font-display text-[38px] leading-none sm:text-[48px]">Checkout</h1>
+        <h1 className="font-display text-[38px] leading-none sm:text-[48px]">{t("co.title")}</h1>
 
         {notices.length > 0 && (
           <div role="status" className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-            <p className="font-medium">We updated your cart:</p>
+            <p className="font-medium">{t("cart.updated")}</p>
             <ul className="mt-1 list-disc pl-5">
               {notices.map((notice) => (
                 <li key={notice}>{notice}</li>
@@ -130,28 +131,28 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
 
         {status && !status.canOrder && (
           <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-            {status.label}. You can come back when it opens.
+            {t("co.closed_note", { label: status.label })}
           </p>
         )}
 
         {/* Delivery address */}
         <section className="flex flex-col gap-4 rounded-[20px] bg-surface p-5 shadow-card sm:p-6">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Delivery address</h2>
+            <h2 className="text-lg font-semibold">{t("co.address_title")}</h2>
             <Link href="/account/addresses?next=/checkout" className="text-sm font-semibold text-accent hover:underline">
-              {addresses.length === 0 ? "Add" : "Add or change"}
+              {addresses.length === 0 ? t("co.add") : t("co.add_or_change")}
             </Link>
           </div>
           {addresses.length === 0 ? (
             <p className="text-sm text-stone-600">
-              You haven&apos;t saved an address yet.{" "}
+              {t("co.no_address")}{" "}
               <Link href="/account/addresses?next=/checkout" className="font-semibold text-accent hover:underline">
-                Add an address
+                {t("co.add_address")}
               </Link>
             </p>
           ) : (
             <fieldset className="flex flex-col gap-2.5">
-              <legend className="sr-only">Choose a delivery address</legend>
+              <legend className="sr-only">{t("co.choose_address")}</legend>
               {addresses.map((address, index) => {
                 const on = address.id === addressId;
                 const Icon = index === 0 ? Home : MapPin;
@@ -179,7 +180,7 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
                       <span className="font-semibold">{address.label}</span>
                       <span className="text-stone-600">
                         {address.address_line}
-                        {address.landmark ? `, near ${address.landmark}` : ""}
+                        {address.landmark ? `, ${t("co.near", { landmark: address.landmark })}` : ""}
                         {(address.phone ?? profilePhone) ? ` · ${address.phone ?? profilePhone}` : ""}
                       </span>
                     </span>
@@ -192,9 +193,9 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
 
         {/* Payment: always on delivery */}
         <section className="flex flex-col gap-3.5 rounded-[20px] bg-surface p-5 shadow-card sm:p-6">
-          <h2 className="text-lg font-semibold">Payment</h2>
+          <h2 className="text-lg font-semibold">{t("co.payment")}</h2>
           <fieldset className="flex flex-col gap-2.5">
-            <legend className="sr-only">How will you pay?</legend>
+            <legend className="sr-only">{t("co.how_pay")}</legend>
             {PAYMENTS.map((option) => {
               const on = payment === option.key;
               return (
@@ -229,9 +230,9 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
         </section>
 
         <Textarea
-          label="Note for the restaurant (optional)"
+          label={t("co.note_label")}
           name="notes"
-          placeholder="Less spicy, ring the bell, etc."
+          placeholder={t("co.note_placeholder")}
           maxLength={payment === "upi" ? 300 - UPI_NOTE.length - 1 : 300}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
@@ -243,7 +244,7 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
         <div className="flex flex-col">
           <span className="font-semibold">{restaurant.name}</span>
           <Link href={`/restaurants/${restaurant.slug}`} className="text-[13px] text-stone-500 hover:underline">
-            Add more items
+            {t("co.add_more")}
           </Link>
         </div>
         <div className="h-px bg-border" />
@@ -259,15 +260,15 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
         </ul>
         <div className="h-px bg-border" />
         <div className="flex justify-between text-sm text-stone-600">
-          <span>Item total</span>
+          <span>{t("cart.item_total")}</span>
           <span className="tabular-nums">{formatPrice(subtotal)}</span>
         </div>
         <div className="flex justify-between text-sm text-stone-600">
-          <span>Delivery fee</span>
-          <span className="tabular-nums">{restaurant.deliveryFee > 0 ? formatPrice(restaurant.deliveryFee) : "Free"}</span>
+          <span>{t("co.delivery_fee")}</span>
+          <span className="tabular-nums">{restaurant.deliveryFee > 0 ? formatPrice(restaurant.deliveryFee) : t("cart.free")}</span>
         </div>
         <div className="flex justify-between text-xl font-bold">
-          <span>To pay</span>
+          <span>{t("co.to_pay")}</span>
           <span className="tabular-nums">{formatPrice(total)}</span>
         </div>
 
@@ -289,7 +290,7 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
             className="press flex h-[54px] items-center justify-center gap-2 rounded-xl bg-brand text-base font-bold text-on-brand shadow-saffron hover:bg-brand-dark"
           >
             <MapPin className="size-5" aria-hidden />
-            Add delivery address
+            {t("co.add_delivery_btn")}
           </Link>
         ) : (
           <button
@@ -305,10 +306,10 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
             {isPending ? (
               <>
                 <CookingPot className="size-9" />
-                Placing your order…
+                {t("co.placing")}
               </>
             ) : (
-              `Place order · ${formatPrice(total)}`
+              t("co.place", { amount: formatPrice(total) })
             )}
           </button>
         )}

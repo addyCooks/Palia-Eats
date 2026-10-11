@@ -10,13 +10,16 @@ import { CoverActions } from "@/components/storefronts/CoverActions";
 import { StorefrontMenu } from "@/components/storefronts/StorefrontMenu";
 import { Photo } from "@/components/ui/Photo";
 import { publicRating } from "@/lib/utils/rating";
+import { readableOnDeep } from "@/lib/utils/color";
+import { getT } from "@/lib/i18n/server";
 
 const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
 
 // The standard restaurant website (v2 5b on laptops, 6a on phones). Accent colors come
 // from the restaurant's own theme.
-export function DefaultStorefront({ restaurant, categories, items, favourites }: StorefrontProps) {
-  const status = getRestaurantStatus(restaurant);
+export async function DefaultStorefront({ restaurant, categories, items, favourites }: StorefrontProps) {
+  const t = await getT();
+  const status = getRestaurantStatus(restaurant, new Date(), t);
   const brand = restaurant.theme.brand ?? "#f5a524";
   const brandDark = restaurant.theme.brandDark ?? brand;
 
@@ -28,6 +31,8 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
     "--brand": brand,
     "--brand-dark": brandDark,
     "--on-brand": isSaffron ? "#1a1206" : "#ffffff",
+    // text on the dark selected-chip look: the brand colour when it is readable there, else white
+    "--on-deep": readableOnDeep(brand),
     "--accent-text": isSaffron ? undefined : brandDark,
   } as CSSProperties;
 
@@ -40,10 +45,10 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
 
   // Not taking orders (switched off, or outside opening hours): the page goes black and white.
   const unavailable = !status.canOrder;
-  const closedDays = describeClosedDays(restaurant.closed_days);
+  const closedDays = describeClosedDays(restaurant.closed_days, t);
   const kicker = [
     restaurant.area,
-    restaurant.closing_time && status.canOrder ? `Open till ${formatTime(restaurant.closing_time)}` : status.label,
+    restaurant.closing_time && status.canOrder ? t("store.open_till", { time: formatTime(restaurant.closing_time) }) : status.label,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -51,8 +56,8 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
   // Stars only show from 5 ratings on; before that the page says "New".
   const rating = publicRating(restaurant);
   const facts = [
-    restaurant.delivery_fee > 0 ? `Delivery ${rupees(restaurant.delivery_fee)}` : "Free delivery",
-    restaurant.min_order_amount > 0 ? `Min ${rupees(restaurant.min_order_amount)}` : null,
+    restaurant.delivery_fee > 0 ? t("store.delivery", { amount: rupees(restaurant.delivery_fee) }) : t("store.free_delivery"),
+    restaurant.min_order_amount > 0 ? t("card.min", { amount: rupees(restaurant.min_order_amount) }) : null,
     restaurant.opening_time && restaurant.closing_time
       ? `${formatTime(restaurant.opening_time)} – ${formatTime(restaurant.closing_time)}`
       : null,
@@ -63,7 +68,7 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
     <div style={themeStyle} className="storefront flex flex-1 flex-col bg-background">
       {/* Everything except the floating cart bar. The grayscale filter lives on this
           wrapper only, because a filter would break the cart bar's fixed position. */}
-      <div className={`flex flex-1 flex-col ${unavailable ? "grayscale" : ""}`}>
+      <main className={`flex flex-1 flex-col ${unavailable ? "grayscale" : ""}`}>
         {unavailable && <ClosedBanner status={status} variant="page" />}
 
         {/* Phones: cover photo with round buttons, and an info card floating over it */}
@@ -90,7 +95,7 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
               </span>
             ) : (
               <span className="flex h-7 shrink-0 items-center rounded-[7px] bg-muted px-2.5 text-xs font-semibold text-stone-600">
-                New
+                {t("card.new")}
               </span>
             )}
           </div>
@@ -98,7 +103,7 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
             <p className="text-[13px] text-stone-600">{[subtitle, restaurant.area].filter(Boolean).join(" · ")}</p>
           )}
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-stone-500">
-            {[...facts, "Cash on delivery"].map((fact, i) => (
+            {[...facts, t("common.cod")].map((fact, i) => (
               <span key={fact} className="flex items-center gap-2">
                 {i > 0 && <span className="size-1 rounded-full bg-brand" aria-hidden />}
                 {fact}
@@ -130,11 +135,11 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
             <div className="mt-1.5 flex flex-wrap gap-2.5">
               {rating ? (
                 <span className="flex h-8 items-center rounded-lg bg-brand px-3 text-[13px] font-bold text-on-brand">
-                  ★ {rating.avg} · {rating.count} {rating.count === 1 ? "rating" : "ratings"}
+                  ★ {rating.avg} · {rating.count === 1 ? t("store.ratings_one") : t("store.ratings_many", { n: rating.count })}
                 </span>
               ) : (
                 <span className="flex h-8 items-center rounded-lg bg-[#2A241C] px-3 text-[13px] font-semibold text-[#D8D2C8]">
-                  New
+                  {t("card.new")}
                 </span>
               )}
               {facts.map((fact) => (
@@ -150,9 +155,9 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
           <StorefrontMenu restaurant={restaurant} sections={sections} canOrder={status.canOrder} favourites={favourites} />
 
           {/* About and contact */}
-          {(restaurant.description || restaurant.about || restaurant.address_text || restaurant.phone || closedDays) && (
+          {(restaurant.description || restaurant.about || restaurant.address_text || restaurant.phone || closedDays || restaurant.fssai_number) && (
             <section className="mt-10 flex max-w-3xl flex-col gap-2 border-t border-border pt-6">
-              <h2 className="font-display text-2xl">About {restaurant.name}</h2>
+              <h2 className="font-display text-2xl">{t("store.about", { name: restaurant.name })}</h2>
               {(restaurant.about ?? restaurant.description) && (
                 <p className="text-[15px] leading-relaxed text-stone-600">{restaurant.about ?? restaurant.description}</p>
               )}
@@ -168,16 +173,19 @@ export function DefaultStorefront({ restaurant, categories, items, favourites }:
                 </p>
               )}
               {closedDays && <p className="text-sm text-stone-500">{closedDays}</p>}
+              {restaurant.fssai_number && <p className="text-sm text-stone-500">{t("store.fssai", { number: restaurant.fssai_number })}</p>}
             </section>
           )}
 
           <p className="pt-6 text-[11px] font-semibold text-stone-500">
-            Powered by <span className="font-display text-sm text-foreground">PaliaEats</span>
+            {t("store.powered")} <span className="font-display text-sm text-foreground">PaliaEats</span>
           </p>
         </div>
-      </div>
+      </main>
 
-      <CartBar restaurantId={restaurant.id} />
+      <aside aria-label={t("cart.title")}>
+        <CartBar restaurantId={restaurant.id} />
+      </aside>
     </div>
   );
 }

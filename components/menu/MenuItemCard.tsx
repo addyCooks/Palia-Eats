@@ -1,9 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
 import type { MenuItem } from "@/types/app";
 import { formatPrice } from "@/lib/utils/format";
 import { dishPhoto } from "@/lib/utils/placeholder";
 import { VegMark } from "@/components/menu/VegMark";
 import { Photo } from "@/components/ui/Photo";
+import { useT } from "@/lib/i18n/client";
 
 type MenuItemCardProps = {
   item: MenuItem;
@@ -18,6 +21,7 @@ const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
 // One dish on a restaurant's menu (v2 "menu row"): text on the left, a round plate photo on
 // the right with the ADD button overlapping its bottom edge.
 export function MenuItemCard({ item, action, onOpen }: MenuItemCardProps) {
+  const t = useT();
   const soldOut = !item.is_available;
 
   return (
@@ -25,7 +29,7 @@ export function MenuItemCard({ item, action, onOpen }: MenuItemCardProps) {
       <div className={`flex min-w-0 flex-1 flex-col gap-1.5 ${soldOut ? "opacity-60" : ""}`}>
         <div className="flex items-center gap-2">
           <VegMark isVeg={item.is_veg} egg={item.contains_egg} />
-          {item.is_bestseller && <span className="text-[11px] font-bold tracking-[.6px] text-accent">BESTSELLER</span>}
+          {item.is_bestseller && <span className="text-[11px] font-bold tracking-[.6px] text-accent">{t("menu.bestseller")}</span>}
         </div>
         <h3 className="text-base font-semibold leading-snug sm:text-lg">
           {onOpen ? (
@@ -41,9 +45,9 @@ export function MenuItemCard({ item, action, onOpen }: MenuItemCardProps) {
         )}
         <p className="mt-1 flex flex-wrap items-baseline gap-x-2 tabular-nums">
           <span className="text-[17px] font-bold">{rupees(item.price)}</span>
-          {item.half_price !== null && <span className="text-[13px] text-stone-500">Half {rupees(item.half_price)}</span>}
+          {item.half_price !== null && <span className="text-[13px] text-stone-500">{t("menu.half_price", { price: rupees(item.half_price) })}</span>}
         </p>
-        {soldOut && <p className="text-xs font-bold text-red-700 sm:text-[13px]">Sold out today</p>}
+        {soldOut && <p className="text-xs font-bold text-red-700 sm:text-[13px]">{t("menu.sold_out")}</p>}
       </div>
 
       <div className="relative h-[112px] w-[100px] shrink-0 sm:h-[132px] sm:w-[120px]">

@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
+
 type QuantityStepperProps = {
   quantity: number;
   onChange: (quantity: number) => void;
@@ -18,6 +20,7 @@ export function QuantityStepper({
   variant = "outline",
   className = "",
 }: QuantityStepperProps) {
+  const t = useT();
   const solid = variant === "solid";
   const buttonClass = solid
     ? "press flex h-full w-9 items-center justify-center text-xl font-semibold text-on-brand hover:bg-black/10"
@@ -33,7 +36,7 @@ export function QuantityStepper({
         type="button"
         className={buttonClass}
         onClick={() => onChange(quantity - 1)}
-        aria-label={`Remove one ${itemName}`}
+        aria-label={t("qty.remove", { name: itemName })}
       >
         −
       </button>
@@ -47,7 +50,7 @@ export function QuantityStepper({
         type="button"
         className={buttonClass}
         onClick={() => onChange(quantity + 1)}
-        aria-label={`Add one more ${itemName}`}
+        aria-label={t("qty.add", { name: itemName })}
       >
         +
       </button>

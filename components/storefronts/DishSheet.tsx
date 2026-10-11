@@ -10,6 +10,7 @@ import { flyToCart } from "@/lib/cart/fly";
 import { FavouriteButton } from "@/components/favourites/FavouriteButton";
 import { VegMark } from "@/components/menu/VegMark";
 import { Photo } from "@/components/ui/Photo";
+import { useT } from "@/lib/i18n/client";
 import type { MenuItem, Restaurant } from "@/types/app";
 
 const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
@@ -29,6 +30,7 @@ export function DishSheet({
   onClose: () => void;
   favourite?: { on: boolean; signedIn: boolean; onChange: (on: boolean) => void };
 }) {
+  const t = useT();
   const { cart, addItem, changeQuantity } = useCart();
   const [size, setSize] = useState<PlateSize>("full");
   const [quantity, setQuantity] = useState(1);
@@ -42,15 +44,13 @@ export function DishSheet({
   }, []);
 
   const price = size === "half" && item.half_price !== null ? item.half_price : item.price;
-  const kicker = [restaurant.name, item.is_bestseller ? "Bestseller" : null].filter(Boolean).join(" · ");
+  const kicker = [restaurant.name, item.is_bestseller ? t("dish.bestseller") : null].filter(Boolean).join(" · ");
 
   function add(event: MouseEvent<HTMLButtonElement>) {
     const button = event.currentTarget;
     const switching = isOtherRestaurant(cart, restaurant.id);
     if (switching) {
-      const ok = window.confirm(
-        `Your cart has items from ${cart.restaurant?.name}. Start a new cart with ${restaurant.name}?`,
-      );
+      const ok = window.confirm(t("dish.confirm_new_cart", { old: cart.restaurant?.name ?? "", new: restaurant.name }));
       if (!ok) return;
     }
     const key = lineKey({ menuItemId: item.id, variant: size });
@@ -79,7 +79,7 @@ export function DishSheet({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={t("dish.close")}
           className="absolute right-5 top-5 grid size-[42px] place-items-center rounded-xl bg-surface shadow-card"
         >
           <X className="size-[18px]" aria-hidden />
@@ -104,22 +104,22 @@ export function DishSheet({
         </h2>
         <div className="flex items-center gap-2 text-[13px] text-stone-500">
           <VegMark isVeg={item.is_veg} egg={item.contains_egg} />
-          {item.is_veg ? "Veg" : item.contains_egg ? "Contains egg" : "Non-veg"}
+          {item.is_veg ? t("menu.veg") : item.contains_egg ? t("menu.contains_egg") : t("menu.non_veg")}
           {item.prep_minutes && (
             <>
               <span className="size-1 rounded-full bg-brand" aria-hidden />
-              Ready in about {item.prep_minutes} min
+              {t("dish.ready_in", { n: item.prep_minutes })}
             </>
           )}
         </div>
         {item.description && <p className="text-pretty text-sm leading-[1.55] text-stone-600">{item.description}</p>}
 
         {item.half_price !== null && (
-          <div role="radiogroup" aria-label="Plate size" className="mt-1 flex w-full gap-2.5">
+          <div role="radiogroup" aria-label={t("dish.plate_size")} className="mt-1 flex w-full gap-2.5">
             {(
               [
-                { key: "half", name: "Half", price: item.half_price },
-                { key: "full", name: "Full", price: item.price },
+                { key: "half", name: t("dish.half"), price: item.half_price },
+                { key: "full", name: t("dish.full"), price: item.price },
               ] as const
             ).map((option) => {
               const on = size === option.key;
@@ -150,7 +150,7 @@ export function DishSheet({
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                aria-label="One less"
+                aria-label={t("dish.one_less")}
                 className="h-full w-11 text-accent"
               >
                 −
@@ -161,7 +161,7 @@ export function DishSheet({
               <button
                 type="button"
                 onClick={() => setQuantity((q) => Math.min(20, q + 1))}
-                aria-label="One more"
+                aria-label={t("dish.one_more")}
                 className="h-full w-11 text-accent"
               >
                 +
@@ -172,12 +172,12 @@ export function DishSheet({
               onClick={add}
               className="flex h-[58px] flex-1 items-center justify-center rounded-[14px] bg-brand text-base font-bold text-on-brand shadow-saffron hover:bg-brand-dark"
             >
-              Add to cart · {rupees(price * quantity)}
+              {t("dish.add_to_cart", { price: rupees(price * quantity) })}
             </button>
           </>
         ) : (
           <p className="flex h-[58px] flex-1 items-center justify-center rounded-[14px] bg-muted text-sm font-semibold text-stone-600">
-            {item.is_available ? "Not taking orders right now" : "Sold out today"}
+            {item.is_available ? t("hours.not_taking") : t("menu.sold_out")}
           </p>
         )}
       </div>

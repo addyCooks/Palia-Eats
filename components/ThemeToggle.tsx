@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 const KEY = "pe-theme";
 
@@ -26,6 +27,7 @@ function subscribe(onChange: () => void) {
 // Light / dark switch. The choice is remembered on this device; until someone taps it,
 // PaliaEats simply follows the phone's own light/dark setting.
 export function ThemeToggle({ className = "" }: { className?: string }) {
+  const t = useT();
   const theme = useSyncExternalStore(subscribe, currentTheme, () => "light" as const);
 
   function toggle() {
@@ -38,7 +40,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
     }
   }
 
-  const label = theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
+  const label = theme === "dark" ? t("theme.to_light") : t("theme.to_dark");
   return (
     <button
       type="button"

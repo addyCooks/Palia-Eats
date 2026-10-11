@@ -8,7 +8,8 @@ import { isUuid } from "@/lib/validation/menu";
 import { formatPrice } from "@/lib/utils/format";
 import { formatClock, formatDayLabel } from "@/lib/utils/time";
 import { isOrderOverdue } from "@/lib/orders/overdue";
-import { ACTIVE_STATUSES, ORDER_STATUS_LABELS, isCancelled } from "@/lib/orders/status";
+import { ACTIVE_STATUSES, isCancelled, statusLabel } from "@/lib/orders/status";
+import { getLang, getT } from "@/lib/i18n/server";
 import { LiveUpdates } from "@/components/LiveUpdates";
 import { DeliveredCelebration } from "@/components/order/DeliveredCelebration";
 import { OrderTimeline } from "@/components/order/OrderTimeline";
@@ -19,29 +20,27 @@ import { Stars } from "@/components/order/Stars";
 import { ProblemPlate } from "@/components/ui/ProblemScreen";
 import { OrderHelpCard } from "@/components/support/OrderHelpCard";
 import { OrderPushCard } from "@/components/notifications/OrderPushCard";
+import type { MessageKey } from "@/lib/i18n/messages";
 
-export const metadata: Metadata = { title: "Your order" };
-
-const HEADLINE: Record<string, string> = {
-  pending: "Order placed",
-  accepted: "Order placed",
-  preparing: "Cooking",
-  out_for_delivery: "On the way",
-  delivered: "Delivered",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("ord.meta_title") };
+}
 
 // The warm line under the big status word.
-const TAGLINE: Record<string, string> = {
-  pending: "Your kind of delicious, coming right up",
-  accepted: "Your kind of delicious, coming right up",
-  preparing: "Made fresh for moments worth savoring",
-  out_for_delivery: "Bringing your little slice of joy to you.",
-  delivered: "Your little moment of yum, delivered.",
+const TAGLINE: Record<string, MessageKey> = {
+  pending: "ord.tagline.pending",
+  accepted: "ord.tagline.pending",
+  preparing: "ord.tagline.preparing",
+  out_for_delivery: "ord.tagline.out_for_delivery",
+  delivered: "ord.tagline.delivered",
 };
 
 // Order tracking (v2 5d / 6d): dark status card, the four steps with their times, the
 // rider, then the bill, the address and (once delivered) the rating.
 export default async function OrderPage({ params, searchParams }: PageProps<"/orders/[id]">) {
+  const t = await getT();
+  const lang = await getLang();
   const { id } = await params;
   await requireUser(`/orders/${id}`);
   if (!isUuid(id)) notFound();
@@ -79,12 +78,12 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
         orderId={order.id}
         delivered={delivered}
         deliveredAt={deliveredAt ?? null}
-        restaurantName={restaurant?.name ?? "the restaurant"}
+        restaurantName={restaurant?.name ?? t("order_help.the_restaurant")}
         rated={Boolean(rating)}
       />
 
       <Link href="/orders" className="text-sm text-stone-500 hover:underline">
-        ← My orders
+        {t("ord.back")}
       </Link>
 
       {/* Just placed (v2 11b): the dark "Order placed" moment, then the tracking below */}
@@ -103,18 +102,17 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
               <path d="M26 43 l11 11 l22 -24" fill="none" stroke="#1A1206" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" className="pe-draw" />
             </svg>
           </div>
-          <span className="text-xs font-semibold tracking-[2px] text-brand">ORDER #{order.order_number}</span>
-          <h1 className="font-display text-[38px] leading-[1.05]">Order placed</h1>
-          <p className="-mt-2 font-display text-[22px] italic leading-snug text-brand">Your kind of delicious, coming right up</p>
+          <span className="text-xs font-semibold tracking-[2px] text-brand">{t("ord.placed_kicker", { n: order.order_number })}</span>
+          <h1 className="font-display text-[38px] leading-[1.05]">{t("ord.placed_title")}</h1>
+          <p className="-mt-2 font-display text-[22px] italic leading-snug text-brand">{t("ord.tagline.pending")}</p>
           <p className="max-w-md text-[15px] leading-[1.55] text-[#D8D2C8]">
-            {restaurant?.name ?? "The restaurant"} has your order and will start cooking in a minute. Keep{" "}
-            {formatPrice(order.total)} ready for the rider (cash or UPI).
+            {t("ord.placed_body", { name: restaurant?.name ?? t("ord.restaurant_fallback"), total: formatPrice(order.total) })}
           </p>
           <a
             href="#track"
             className="mt-2 flex h-14 w-full max-w-sm items-center justify-center rounded-[14px] bg-brand text-base font-bold text-on-brand hover:bg-brand-dark"
           >
-            Track order
+            {t("orders.track")}
           </a>
         </section>
       )}
@@ -128,33 +126,33 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
           >
             <div className="flex items-start justify-between gap-3">
               <span className={`pt-1 text-[13px] font-semibold tracking-[1px] ${cancelled ? "" : "text-brand"}`}>
-                ORDER #{order.order_number} · {ORDER_STATUS_LABELS[order.status].toUpperCase()}
+                {t("ord.status_line", { n: order.order_number, status: statusLabel(t, order.status) }).toUpperCase()}
               </span>
               {!cancelled && <StatusArt status={order.status} />}
             </div>
             {cancelled ? (
               <>
-                <span className="font-display text-[44px] leading-none">Cancelled</span>
+                <span className="font-display text-[44px] leading-none">{t("status.cancelled")}</span>
                 <span className="text-sm">
-                  {order.rejection_reason ? `Reason: ${order.rejection_reason}` : "The restaurant couldn't complete it."} Nothing
-                  was charged.
+                  {order.rejection_reason ? t("ord.cancel_reason", { reason: order.rejection_reason }) : t("ord.cancel_default")}{" "}
+                  {t("ord.nothing_charged")}
                 </span>
               </>
             ) : (
               <>
-                <span className="text-sm text-[#D8D2C8]">{delivered ? "Delivered at" : "Status"}</span>
+                <span className="text-sm text-[#D8D2C8]">{delivered ? t("ord.delivered_at") : t("ord.status")}</span>
                 <span className="font-display text-[52px] leading-none sm:text-[64px]">
-                  {delivered && deliveredAt ? formatClock(deliveredAt) : HEADLINE[order.status]}
+                  {delivered && deliveredAt ? formatClock(deliveredAt) : order.status === "pending" || order.status === "accepted" ? t("ord.placed_title") : statusLabel(t, order.status)}
                 </span>
                 {TAGLINE[order.status] && (
                   <span className="anim-fade-up font-display text-[22px] italic leading-snug text-brand" style={{ animationDelay: "250ms" }}>
-                    {TAGLINE[order.status]}
+                    {t(TAGLINE[order.status])}
                   </span>
                 )}
                 <span className="text-sm text-[#D8D2C8]">
                   {delivered
-                    ? `${formatDayLabel(order.placed_at)} · enjoy your meal!`
-                    : `Placed at ${formatClock(order.placed_at)} · ${restaurant?.name ?? ""}`}
+                    ? t("ord.delivered_line", { day: formatDayLabel(order.placed_at, lang) })
+                    : t("ord.placed_line", { time: formatClock(order.placed_at), name: restaurant?.name ?? "" })}
                 </span>
               </>
             )}
@@ -164,17 +162,17 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
             <div role="status" className="flex items-center gap-4 rounded-[22px] bg-amber-50 p-4 text-amber-900">
               <ProblemPlate glyph="!" tone="warm" small />
               <p className="text-sm">
-                <strong className="block text-base">This is taking longer than usual.</strong>
+                <strong className="block text-base">{t("ord.overdue_title")}</strong>
                 {restaurant?.phone ? (
                   <>
-                    You can call {restaurant.name} on{" "}
+                    {t("ord.overdue_call", { name: restaurant.name })}{" "}
                     <a href={`tel:${restaurant.phone}`} className="font-semibold underline">
                       {restaurant.phone}
                     </a>
                     .
                   </>
                 ) : (
-                  "Please give it a few more minutes."
+                  t("ord.overdue_wait")
                 )}
               </p>
             </div>
@@ -182,9 +180,9 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
 
           {!cancelled && (
             <section className="rounded-[22px] bg-surface p-6 shadow-card">
-              <OrderTimeline status={order.status} events={events} restaurantName={restaurant?.name} />
+              <OrderTimeline status={order.status} events={events} restaurantName={restaurant?.name} t={t} />
               {active && (
-                <p className="mt-3 text-xs text-stone-500">Updates by itself. No need to refresh.</p>
+                <p className="mt-3 text-xs text-stone-500">{t("ord.auto_update")}</p>
               )}
             </section>
           )}
@@ -196,12 +194,12 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate font-semibold">{order.riders.name}</span>
-                <span className="text-[13px] text-stone-500">Your delivery partner</span>
+                <span className="text-[13px] text-stone-500">{t("ord.partner")}</span>
               </span>
               {active && (
                 <a
                   href={`tel:${order.riders.phone}`}
-                  aria-label={`Call ${order.riders.name}`}
+                  aria-label={t("ord.call", { name: order.riders.name })}
                   className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand text-on-brand"
                 >
                   <Phone className="size-[18px]" aria-hidden />
@@ -214,24 +212,24 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
         <div className="flex flex-col gap-[18px]">
           {delivered && (
             <section id="rate" className="flex scroll-mt-24 flex-col gap-3 rounded-[22px] bg-surface p-6 shadow-card">
-              <h2 className="font-display text-[26px] leading-none">{rating ? "Your rating" : "How was your food?"}</h2>
+              <h2 className="font-display text-[26px] leading-none">{rating ? t("rate.your_rating") : t("ord.how_food")}</h2>
               {rating ? (
                 <>
                   <Stars value={rating.stars} />
                   {rating.comment && <p className="text-sm text-stone-700">&ldquo;{rating.comment}&rdquo;</p>}
                 </>
               ) : (
-                <RateOrder orderId={order.id} restaurantName={restaurant?.name ?? "the restaurant"} />
+                <RateOrder orderId={order.id} restaurantName={restaurant?.name ?? t("order_help.the_restaurant")} />
               )}
             </section>
           )}
 
           <section className="flex flex-col gap-3 rounded-[22px] bg-surface p-6 shadow-card">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold">{restaurant?.name ?? "Your order"}</h2>
+              <h2 className="text-lg font-semibold">{restaurant?.name ?? t("ord.your_order")}</h2>
               {restaurant && (
                 <Link href={`/restaurants/${restaurant.slug}`} className="text-sm font-semibold text-accent hover:underline">
-                  View menu
+                  {t("ord.view_menu")}
                 </Link>
               )}
             </div>
@@ -247,34 +245,34 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
             </ul>
             <div className="flex flex-col gap-2 border-t border-border pt-3 text-sm">
               <div className="flex justify-between text-stone-600">
-                <span>Item total</span>
+                <span>{t("cart.item_total")}</span>
                 <span className="tabular-nums">{formatPrice(order.subtotal)}</span>
               </div>
               <div className="flex justify-between text-stone-600">
-                <span>Delivery fee</span>
-                <span className="tabular-nums">{order.delivery_fee > 0 ? formatPrice(order.delivery_fee) : "Free"}</span>
+                <span>{t("co.delivery_fee")}</span>
+                <span className="tabular-nums">{order.delivery_fee > 0 ? formatPrice(order.delivery_fee) : t("cart.free")}</span>
               </div>
               <div className="flex justify-between text-lg font-bold">
-                <span>{delivered ? "Paid" : "To pay"}</span>
+                <span>{delivered ? t("ord.paid") : t("ord.to_pay")}</span>
                 <span className="tabular-nums">{formatPrice(order.total)}</span>
               </div>
               <p className="text-stone-600">
-                {upi ? "UPI on delivery: scan the rider's QR with any UPI app." : "Cash on delivery (or UPI to the rider)."}
+                {upi ? t("ord.upi_note") : t("ord.cash_note")}
               </p>
             </div>
           </section>
 
           <section className="flex flex-col gap-1 rounded-[22px] bg-surface p-6 text-sm shadow-card">
-            <h2 className="mb-1 text-lg font-semibold">Delivering to</h2>
+            <h2 className="mb-1 text-lg font-semibold">{t("ord.delivering_to")}</h2>
             <p className="font-medium">{address.label}</p>
             <p className="whitespace-pre-line text-stone-700">{address.address_line}</p>
-            {typeof address.lat === "number" && <p className="font-medium text-accent">📍 Location pin shared with the rider</p>}
-            {address.landmark && <p className="text-stone-500">Landmark: {address.landmark}</p>}
+            {typeof address.lat === "number" && <p className="font-medium text-accent">{t("ord.pin_shared")}</p>}
+            {address.landmark && <p className="text-stone-500">{t("ord.landmark", { landmark: address.landmark })}</p>}
             <p className="text-stone-500">
               {order.customer_name} · {order.customer_phone}
             </p>
             {order.customer_notes && (
-              <p className="mt-2 rounded-lg bg-muted p-2.5 text-stone-700">Note: {order.customer_notes}</p>
+              <p className="mt-2 rounded-lg bg-muted p-2.5 text-stone-700">{t("ord.note", { note: order.customer_notes })}</p>
             )}
           </section>
 

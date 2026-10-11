@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { useT } from "@/lib/i18n/client";
 
 type CuisineFilter = { cuisine: string | null; setCuisine: (cuisine: string | null) => void };
 
@@ -22,6 +23,7 @@ export function useCuisineFilter(): CuisineFilter {
 // Phones: the chips under the search box at the top of the home page. Picking one filters
 // "Restaurants in Palia" and glides down to it.
 export function TopCuisineChips({ cuisines }: { cuisines: string[] }) {
+  const t = useT();
   const { cuisine, setCuisine } = useCuisineFilter();
 
   function choose(tag: string | null) {
@@ -31,7 +33,7 @@ export function TopCuisineChips({ cuisines }: { cuisines: string[] }) {
   }
 
   return (
-    <div role="group" aria-label="Filter restaurants by cuisine" className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 lg:hidden">
+    <div role="group" aria-label={t("home.filter_cuisine")} className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 lg:hidden">
       {[null, ...cuisines].map((tag) => {
         const active = tag === cuisine;
         return (
@@ -44,7 +46,7 @@ export function TopCuisineChips({ cuisines }: { cuisines: string[] }) {
               active ? "bg-deep text-brand" : "bg-surface text-stone-700"
             }`}
           >
-            {tag ?? "All"}
+            {tag ?? t("home.all")}
           </button>
         );
       })}
