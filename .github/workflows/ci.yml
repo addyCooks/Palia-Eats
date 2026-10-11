@@ -1,0 +1,59 @@
+# Runs on every push and pull request: checks types, style, the automatic tests and that the site builds.
+# A red cross on a commit in GitHub means "don't trust this one yet". (Vercel still deploys on its own;
+# to make a red check block deploys, turn on branch protection for main, see docs/runbook.md.)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Route types
+        run: npx next typegen
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Placeholders: the build never talks to the database, it only needs these to exist.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
+          NEXT_PUBLIC_SITE_URL: https://www.paliaeats.online
+          PANEL_TOKEN_SECRET: placeholder-secret-placeholder-secret-placeholder
+
+      # Known weaknesses in the packages the live site uses (development tools are not counted).
+      # Reported but never blocks, because a fix is not always available the same day.
+      - name: Package security audit
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true

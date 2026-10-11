@@ -12,6 +12,16 @@ function isConfigured(): boolean {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
+// For the admin's Settings page: where emails go out from (never the password).
+export function emailSetup() {
+  return {
+    configured: isConfigured(),
+    host: process.env.SMTP_HOST ?? null,
+    from: process.env.EMAIL_FROM ?? process.env.SMTP_USER ?? null,
+    replyTo: process.env.EMAIL_REPLY_TO?.trim() || null,
+  };
+}
+
 // Sends one email through your SMTP account (Gmail app password, Brevo, ...).
 // It NEVER throws: a failed email must not break placing an order. Problems are logged.
 export type SendResult = { ok: true } | { ok: false; error: string };
@@ -45,6 +55,10 @@ export async function sendEmail(email: Email): Promise<SendResult> {
 
     await transporter.sendMail({
       from: process.env.EMAIL_FROM ?? process.env.SMTP_USER,
+      // Replies go to this address when it differs from the sender (for example a no-reply sender).
+      ...(process.env.EMAIL_REPLY_TO?.trim() ? { replyTo: process.env.EMAIL_REPLY_TO.trim() } : {}),
+      // Tells other mail systems this is automatic, so out-of-office replies are not sent back.
+      headers: { "Auto-Submitted": "auto-generated", "X-Auto-Response-Suppress": "OOF, AutoReply" },
       to: email.to,
       subject: email.subject,
       html: email.html,

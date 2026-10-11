@@ -1,4 +1,4 @@
-import { MapPin } from "lucide-react";
+import { MapPin, Printer } from "lucide-react";
 import type { PanelOrder } from "@/lib/queries/panel";
 import { addressPin, mapsLink } from "@/lib/utils/maps";
 import { wholeRupees } from "@/lib/orders/stats";
@@ -22,9 +22,19 @@ export function KanbanOrderCard({ order, updateStatus }: { order: PanelOrder; up
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-bold tabular-nums">#{order.order_number}</span>
-        <span className="text-xs text-stone-500">
+        <span className="flex items-center gap-2 text-xs text-stone-500">
           {order.channel === "whatsapp" && "WhatsApp · "}
           {minutesAgo(order.placed_at)}
+          <a
+            href={`/panel/print/${order.id}?auto=1`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Print order ${order.order_number}`}
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-semibold text-accent hover:bg-muted"
+          >
+            <Printer className="size-3.5" aria-hidden />
+            Print
+          </a>
         </span>
       </div>
       <p className="text-sm leading-[1.45] text-stone-700">{itemsLine(order.order_items)}</p>

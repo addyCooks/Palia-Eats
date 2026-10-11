@@ -3,6 +3,8 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/session";
 import { logout } from "@/lib/actions/auth";
 import { countRecentNotificationProblems } from "@/lib/queries/admin";
+import { emailSetup } from "@/lib/email/mailer";
+import { TestEmailCard } from "@/components/admin/TestEmailCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { PageHeader, Panel } from "@/components/ui/page";
 import { SubmitButton } from "@/components/ui/SubmitButton";
@@ -11,6 +13,7 @@ export const metadata: Metadata = { title: "Settings" };
 
 export default async function AdminSettingsPage() {
   const [profile, problems] = await Promise.all([requireAdmin(), countRecentNotificationProblems()]);
+  const setup = emailSetup();
 
   const links = [
     {
@@ -51,6 +54,10 @@ export default async function AdminSettingsPage() {
               </li>
             ))}
           </ul>
+        </Panel>
+
+        <Panel title="Email sending">
+          <TestEmailCard configured={setup.configured} host={setup.host} from={setup.from} />
         </Panel>
 
         <Panel title="This device">

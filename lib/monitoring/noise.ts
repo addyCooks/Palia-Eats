@@ -22,8 +22,7 @@ const NOISE = [
 ];
 
 export function isNoise(message: string, stack?: string | null): boolean {
-  const text = `${message}\n${stack ?? ""}`;
-  return NOISE.some((pattern) => pattern.test(text));
+  return NOISE.some((pattern) => pattern.test(message) || (stack ? pattern.test(stack) : false));
 }
 
 // Error text can contain what a person typed (an email, a phone number). Keep that out of the log.

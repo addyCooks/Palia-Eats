@@ -31,6 +31,7 @@
   --on-brand: #1a1206; /* text and icons on saffron */
   --accent-text: #c2410c; /* burnt orange: links, kicker labels */
   --deep: #16120d; /* raised: dark buttons, selected chips */
+  --on-deep: var(--brand); /* text on those chips (a restaurant theme may override it) */
   --gold: #f5a524;
   --chrome: #16120d; /* sidebar, panel bars, tab bar */
   --shadow-card: 0 10px 30px rgba(120, 70, 0, 0.08);
@@ -175,6 +176,7 @@
   --color-on-brand: var(--on-brand);
   --color-accent: var(--accent-text);
   --color-deep: var(--deep);
+  --color-on-deep: var(--on-deep);
   --color-gold: var(--gold);
   --color-chrome: var(--chrome);
   --shadow-card: var(--shadow-card);

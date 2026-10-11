@@ -1,0 +1,23 @@
+# GitHub checks every week for newer versions of the packages PaliaEats uses (and of the CI tools) and
+# opens a pull request for each batch. Small updates are grouped into one request so there is little
+# to review. Nothing changes the live site until a request is merged.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    labels: [dependencies]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels: [dependencies]
