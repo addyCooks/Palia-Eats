@@ -1,5 +1,6 @@
 import { supportLinks } from "@/lib/utils/support";
 import { SupportActions } from "@/components/support/SupportActions";
+import { PanelHelpForm } from "@/components/support/PanelHelpForm";
 import { Panel } from "@/components/ui/page";
 
 // Help for restaurants: a card on the panel's Settings page (phones and laptops) ...
@@ -11,6 +12,14 @@ export function PanelHelpCard({ restaurantName }: { restaurantName: string }) {
         Questions about your orders screen, menu or timings? Write to us and we&apos;ll help. We reply {hours}.
       </p>
       <SupportActions context={{ panel: true, restaurantName }} />
+      <details className="group rounded-xl border border-border p-3.5 open:bg-muted/40">
+        <summary className="cursor-pointer list-none text-sm font-semibold marker:content-none">
+          Or send us a message here
+        </summary>
+        <div className="mt-3">
+          <PanelHelpForm />
+        </div>
+      </details>
     </Panel>
   );
 }

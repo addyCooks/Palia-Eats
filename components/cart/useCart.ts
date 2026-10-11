@@ -17,6 +17,7 @@ import {
   saveCart,
   subscribeToCart,
 } from "@/lib/cart/store";
+import { trackFunnel } from "@/lib/analytics/funnel";
 
 type ItemToAdd = { id: string; name: string; price: number; isVeg: boolean; variant?: PlateSize };
 
@@ -26,6 +27,7 @@ export function useCart() {
 
   const addItem = useCallback((restaurant: CartRestaurant, item: ItemToAdd) => {
     saveCart(addToCart(getCartSnapshot(), restaurant, item));
+    trackFunnel("add_to_cart");
   }, []);
 
   // `key` is the line's lineKey() (dish + plate size).

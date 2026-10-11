@@ -8,6 +8,8 @@ import { RestaurantBrowser } from "@/components/restaurant/RestaurantBrowser";
 import { HeroHeadline } from "@/components/home/HeroHeadline";
 import { CuisineFilterProvider, TopCuisineChips } from "@/components/home/CuisineFilter";
 import { cuisinesByCount } from "@/lib/utils/cuisines";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { siteJsonLd } from "@/lib/seo/jsonld";
 
 export default async function HomePage() {
   const [restaurants, { dishes }] = await Promise.all([getActiveRestaurants(), getPublicDishes({ limit: 8 })]);
@@ -18,6 +20,7 @@ export default async function HomePage() {
 
   return (
     <main className="flex-1 pb-28 lg:pb-0">
+      <JsonLd data={siteJsonLd((process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, ""))} />
       <CuisineFilterProvider>
         {/* A restaurant opening or closing updates its tile instantly */}
         <LiveUpdates tables={[{ table: "restaurants" }]} />

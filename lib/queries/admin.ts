@@ -443,10 +443,13 @@ export async function getAdminCustomers({
   filter,
   search,
   page,
+  everyone = false,
 }: {
   filter: CustomerFilter;
   search: string;
   page: number;
+  // Every matching customer instead of one page (for the CSV download)
+  everyone?: boolean;
 }) {
   const supabase = await createClient();
   const [profiles, orders, addresses, emails] = await Promise.all([
@@ -460,6 +463,7 @@ export async function getAdminCustomers({
 
   const stats = new Map<string, { count: number; spent: number; last: string | null }>();
   for (const order of orders.data ?? []) {
+    if (!order.customer_id) continue; // the customer deleted their account
     const entry = stats.get(order.customer_id) ?? { count: 0, spent: 0, last: null };
     entry.count++;
     if (!isCancelled(order.status)) entry.spent += Number(order.total);
@@ -513,7 +517,7 @@ export async function getAdminCustomers({
     .sort((a, b) => (b.lastOrderAt ?? b.created_at ?? "").localeCompare(a.lastOrderAt ?? a.created_at ?? ""));
 
   return {
-    customers: filtered.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE),
+    customers: everyone ? filtered : filtered.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE),
     matching: filtered.length,
     registered: all.filter((customer) => customer.role === "customer").length,
     newThisWeek: all.filter((customer) => customer.role === "customer" && customer.state === "New").length,

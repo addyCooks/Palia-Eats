@@ -66,9 +66,13 @@ export default async function AdminOrderPage({ params }: PageProps<"/admin/order
               {rating.comment && <p className="text-sm text-stone-700">&ldquo;{rating.comment}&rdquo;</p>}
             </Panel>
           )}
-          <Link href={`/admin/customers/${order.customer_id}`} className="text-sm font-semibold text-accent hover:underline">
-            See this customer →
-          </Link>
+          {order.customer_id ? (
+            <Link href={`/admin/customers/${order.customer_id}`} className="text-sm font-semibold text-accent hover:underline">
+              See this customer →
+            </Link>
+          ) : (
+            <p className="text-sm text-stone-500">This customer deleted their account.</p>
+          )}
         </div>
       </div>
     </>

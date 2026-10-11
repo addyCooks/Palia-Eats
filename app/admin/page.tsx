@@ -5,6 +5,8 @@ import { compactRupees, formatMinutes, percentChange, signed } from "@/lib/order
 import { formatClock, formatLongToday } from "@/lib/utils/time";
 import { LiveUpdates } from "@/components/LiveUpdates";
 import { getRealtimeToken } from "@/lib/auth/session";
+import { FunnelPanel } from "@/components/admin/FunnelPanel";
+import { TwoFactorNotice } from "@/components/admin/TwoFactorNotice";
 import { Bars, Kpi, PageHeader, Panel, param } from "@/components/ui/page";
 
 export const metadata: Metadata = { title: "Admin" };
@@ -50,6 +52,8 @@ export default async function AdminHomePage({ searchParams }: PageProps<"/admin"
           ))}
         </nav>
       </PageHeader>
+
+      <TwoFactorNotice />
 
       {(stats.activeOrders > 0 || problems > 0) && (
         <div className="flex flex-wrap gap-2.5">
@@ -131,6 +135,8 @@ export default async function AdminHomePage({ searchParams }: PageProps<"/admin"
           )}
         </Panel>
       </div>
+      <FunnelPanel />
+
       <p className="text-xs text-stone-500">
         Orders and revenue leave out cancelled orders. Avg delivery is from placing the order to delivery.
       </p>

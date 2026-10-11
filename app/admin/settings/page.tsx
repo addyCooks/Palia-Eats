@@ -21,6 +21,8 @@ export default async function AdminSettingsPage() {
           ? `${problems} email / WhatsApp ${problems === 1 ? "problem" : "problems"} in the last 24 hours`
           : "Every email and WhatsApp message about orders. No problems in the last 24 hours.",
     },
+    { href: "/admin/activity", title: "Activity", text: "Who did what in the admin area. Can't be edited or deleted." },
+    { href: "/admin/security", title: "Security", text: "Turn on 2-step login for the admin, so a stolen password isn't enough." },
     { href: "/admin/restaurants/new", title: "Add a restaurant", text: "Create a new partner and send them their panel link." },
     { href: "/admin/riders", title: "Riders", text: "Add riders, mark them on or off duty." },
   ];

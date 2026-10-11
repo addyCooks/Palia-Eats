@@ -6,6 +6,9 @@ import { OfflineNotice } from "@/components/OfflineNotice";
 import { NavProgress } from "@/components/ui/NavProgress";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { PressFeedback } from "@/components/ui/PressFeedback";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { FunnelBeacon } from "@/components/analytics/FunnelBeacon";
 import { I18nProvider } from "@/lib/i18n/client";
 import { getLang } from "@/lib/i18n/server";
 
@@ -41,12 +44,26 @@ const devaSerif = Noto_Serif_Devanagari({
   preload: false,
 });
 
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+const DESCRIPTION = "Hungry? Let's fix that. Order from Palia's own kitchens: your happy bite is just a tap away.";
+
 export const metadata: Metadata = {
+  // Makes the link-preview picture addresses absolute (WhatsApp and Facebook need that).
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "PaliaEats",
     template: "%s | PaliaEats",
   },
-  description: "Hungry? Let's fix that. Order from Palia's own kitchens: your happy bite is just a tap away.",
+  description: DESCRIPTION,
+  applicationName: "PaliaEats",
+  openGraph: {
+    type: "website",
+    siteName: "PaliaEats",
+    locale: "en_IN",
+    title: "PaliaEats",
+    description: DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image", title: "PaliaEats", description: DESCRIPTION },
 };
 
 export const viewport: Viewport = {
@@ -80,7 +97,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <PressFeedback />
           <OfflineNotice />
           {children}
+          <FunnelBeacon event="visit" />
         </I18nProvider>
+        {/* Page views and speed, without cookies or tracking (Vercel) */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

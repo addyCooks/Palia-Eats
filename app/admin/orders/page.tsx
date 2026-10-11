@@ -4,6 +4,7 @@ import { wholeRupees } from "@/lib/orders/stats";
 import { LiveUpdates } from "@/components/LiveUpdates";
 import { getRealtimeToken } from "@/lib/auth/session";
 import { OrderStatusBadge } from "@/components/order/OrderStatusBadge";
+import { ExportOrdersForm } from "@/components/admin/ExportOrdersForm";
 import {
   Cell,
   DataRow,
@@ -48,6 +49,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
         sub={`${today} today across ${restaurantsToday} ${restaurantsToday === 1 ? "restaurant" : "restaurants"}`}
       >
         <LiveUpdates tables={[{ table: "orders" }]} accessToken={await getRealtimeToken()} showStatus />
+        <ExportOrdersForm />
         <SearchBox
           action="/admin/orders"
           value={search}

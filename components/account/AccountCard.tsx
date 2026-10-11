@@ -1,19 +1,21 @@
 import Link from "next/link";
 import type { Profile } from "@/types/app";
 import { logout } from "@/lib/actions/auth";
+import { getT } from "@/lib/i18n/server";
 import { SubmitButton } from "@/components/ui/SubmitButton";
-
-const LINKS = [
-  { href: "/orders", label: "My orders" },
-  { href: "/account", label: "My details" },
-  { href: "/account/addresses", label: "Saved addresses" },
-  { href: "/account/favourites", label: "Favourites" },
-] as const;
 
 // The account card beside My orders / account pages on laptops (v2 5e) and on top of the
 // account page on phones (6f).
-export function AccountCard({ profile, active }: { profile: Profile; active: string }) {
-  const name = profile.full_name?.trim() || "Your account";
+export async function AccountCard({ profile, active }: { profile: Profile; active: string }) {
+  const t = await getT();
+  const links = [
+    { href: "/orders", label: t("account.nav.orders") },
+    { href: "/account", label: t("account.nav.details") },
+    { href: "/account/addresses", label: t("account.nav.addresses") },
+    { href: "/account/favourites", label: t("account.nav.favourites") },
+    { href: "/help", label: t("account.nav.help") },
+  ];
+  const name = profile.full_name?.trim() || t("account.default_name");
   return (
     <aside className="flex flex-col gap-[18px] rounded-[20px] bg-surface p-6 shadow-card">
       <div className="flex items-center gap-3.5">
@@ -22,11 +24,11 @@ export function AccountCard({ profile, active }: { profile: Profile; active: str
         </span>
         <div className="flex min-w-0 flex-col">
           <span className="truncate text-lg font-semibold">{name}</span>
-          <span className="text-[13px] text-stone-500">{profile.phone ? `+91 ${profile.phone}` : "Add your phone number"}</span>
+          <span className="text-[13px] text-stone-500">{profile.phone ? `+91 ${profile.phone}` : t("account.add_phone")}</span>
         </div>
       </div>
-      <nav aria-label="Account" className="flex flex-col gap-1">
-        {LINKS.map((link) => (
+      <nav aria-label={t("account.nav.label")} className="flex flex-col gap-1">
+        {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
@@ -43,10 +45,10 @@ export function AccountCard({ profile, active }: { profile: Profile; active: str
         ))}
         <form action={logout}>
           <SubmitButton
-            pendingText="Logging out…"
+            pendingText={t("account.nav.logging_out")}
             className="flex h-11 w-full items-center justify-between rounded-[10px] px-3.5 text-sm font-medium text-accent hover:bg-background"
           >
-            Log out
+            {t("account.nav.logout")}
             <span className="-mt-1.5 text-[44px] font-light leading-none" aria-hidden>›</span>
           </SubmitButton>
         </form>

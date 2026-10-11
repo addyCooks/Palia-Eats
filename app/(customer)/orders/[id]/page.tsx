@@ -18,6 +18,7 @@ import { RateOrder } from "@/components/order/RateOrder";
 import { Stars } from "@/components/order/Stars";
 import { ProblemPlate } from "@/components/ui/ProblemScreen";
 import { OrderHelpCard } from "@/components/support/OrderHelpCard";
+import { OrderPushCard } from "@/components/notifications/OrderPushCard";
 
 export const metadata: Metadata = { title: "Your order" };
 
@@ -276,6 +277,8 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
               <p className="mt-2 rounded-lg bg-muted p-2.5 text-stone-700">Note: {order.customer_notes}</p>
             )}
           </section>
+
+          {active && <OrderPushCard />}
 
           <OrderHelpCard
             orderNumber={order.order_number}

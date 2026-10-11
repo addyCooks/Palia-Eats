@@ -1,8 +1,11 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getCurrentUser, requireUser } from "@/lib/auth/session";
+import { sendAccountDeletedEmail } from "@/lib/email/account-emails";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/server";
 import { allow } from "@/lib/utils/rate-limit";
@@ -210,4 +213,44 @@ export async function deleteAddress(formData: FormData) {
   }
 
   revalidatePath(ADDRESSES_PATH);
+}
+
+// ------------------------------------------------------------- delete my account
+
+export type DeleteAccountState = { error?: string } | undefined;
+
+// "Delete my account". Wipes the personal details copied onto old orders (the orders themselves
+// stay, for the restaurants' sales records), then deletes the login, which also removes the
+// profile, addresses, favourites and notification settings. Refused while an order is still
+// on its way.
+export async function deleteAccount(
+  _prev: DeleteAccountState,
+  formData: FormData,
+): Promise<DeleteAccountState> {
+  const t = await getT();
+  const profile = await requireUser("/account");
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  if (profile.role === "admin") return { error: t("account.delete.admin") };
+  if (String(formData.get("confirm") ?? "").trim().toUpperCase() !== "DELETE") {
+    return { error: t("account.delete.type_delete") };
+  }
+  if (!(await allow(`delete-account:${user.id}`, 5, 3600))) return { error: t("auth.too_many") };
+
+  const admin = createAdminClient();
+  const { error: eraseError } = await admin.rpc("erase_customer", { p_uid: user.id });
+  if (eraseError) {
+    return { error: eraseError.message.includes("active_order") ? t("account.delete.active_order") : t("account.delete.failed") };
+  }
+  const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
+  if (deleteError) return { error: t("account.delete.failed") };
+
+  const email = user.email;
+  const name = profile.full_name;
+  if (email) after(() => sendAccountDeletedEmail(email, name));
+
+  // The login no longer exists: clear this browser's cookies too.
+  await (await createClient()).auth.signOut({ scope: "local" });
+  redirect("/goodbye");
 }

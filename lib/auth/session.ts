@@ -35,7 +35,17 @@ export async function requireUser(nextPath: string = "/") {
   return profile;
 }
 
+// How strongly this login is verified: "aal1" = password only, "aal2" = also the 6-digit code from
+// the authenticator app. Free to call: it reads the login cookie, no extra network trip.
+const getAssurance = cache(async () => {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  return data;
+});
+
 // Use at the top of every admin page / layout / server action.
+// An admin who has turned on 2-step login (Admin -> Security) must also have entered the code
+// from their authenticator app in this session, or they are sent to enter it.
 export async function requireAdmin() {
   const profile = await getProfile();
   if (!profile) {
@@ -43,6 +53,10 @@ export async function requireAdmin() {
   }
   if (profile.role !== "admin") {
     redirect("/");
+  }
+  const assurance = await getAssurance();
+  if (assurance?.nextLevel === "aal2" && assurance.currentLevel !== "aal2") {
+    redirect("/verify-2fa?next=/admin");
   }
   return profile;
 }

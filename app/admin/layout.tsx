@@ -1,6 +1,8 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { logout } from "@/lib/actions/auth";
 import { countPendingApplications } from "@/lib/queries/applications";
+import { countUnresolvedErrors } from "@/lib/queries/errors";
+import { countOpenSupportRequests } from "@/lib/queries/support";
 import { Sidebar, SidebarWordmark, TopNav } from "@/components/shell/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SubmitButton } from "@/components/ui/SubmitButton";
@@ -8,17 +10,27 @@ import { SubmitButton } from "@/components/ui/SubmitButton";
 // Every page under /admin goes through this check. Non-admins are redirected.
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const profile = await requireAdmin();
-  const waiting = await countPendingApplications();
+  const [waiting, openSupport, openErrors] = await Promise.all([
+    countPendingApplications(),
+    countOpenSupportRequests(),
+    countUnresolvedErrors(),
+  ]);
 
   const ITEMS = [
     { href: "/admin", label: "Dashboard", match: "exact" as const },
     { href: "/admin/orders", label: "Orders" },
     { href: "/admin/restaurants", label: "Restaurants" },
     { href: "/admin/requests", label: "Requests", badge: waiting > 0 ? String(waiting) : undefined },
+    { href: "/admin/support", label: "Support", badge: openSupport > 0 ? String(openSupport) : undefined },
     { href: "/admin/customers", label: "Customers" },
     { href: "/admin/ratings", label: "Ratings" },
     { href: "/admin/riders", label: "Riders" },
-    { href: "/admin/settings", label: "Settings", also: ["/admin/notifications"] },
+    { href: "/admin/errors", label: "Problems", badge: openErrors > 0 ? String(openErrors) : undefined },
+    {
+      href: "/admin/settings",
+      label: "Settings",
+      also: ["/admin/notifications", "/admin/activity", "/admin/security"],
+    },
   ];
 
   return (

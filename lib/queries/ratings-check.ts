@@ -44,6 +44,7 @@ export async function getRatingsCheck({
   const { data: ratingData, error } = await supabase
     .from("order_ratings")
     .select("order_id, customer_id, restaurant_id, stars, comment, created_at")
+    .not("customer_id", "is", null) // ratings of deleted accounts can't be checked
     .order("created_at", { ascending: false })
     .limit(RATINGS_LOOKED_AT);
   if (error) throw new Error(`Could not load ratings: ${error.message}`);

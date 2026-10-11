@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireUser } from "@/lib/auth/session";
 import { getMyAddresses } from "@/lib/queries/account";
 import { CheckoutView } from "@/components/checkout/CheckoutView";
+import { FunnelBeacon } from "@/components/analytics/FunnelBeacon";
 
 export const metadata: Metadata = { title: "Checkout" };
 
@@ -16,6 +17,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 lg:px-12">
+      <FunnelBeacon event="checkout_start" />
       <CheckoutView
         addresses={addresses}
         profilePhone={profile.phone}

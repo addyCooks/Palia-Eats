@@ -33,7 +33,7 @@ export async function sendWhatsAppOrderUpdate(orderId: string, kind: Kind): Prom
       .select("*, restaurants(name)")
       .eq("id", orderId)
       .maybeSingle();
-    if (!order) return;
+    if (!order?.customer_id) return; // gone: the customer deleted their account
 
     const { data: profile } = await admin
       .from("profiles")

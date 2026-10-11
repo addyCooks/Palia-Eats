@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ADMIN_PAGE_SIZE, FREQUENT_ORDERS, getAdminCustomers, type CustomerFilter } from "@/lib/queries/admin";
 import { wholeRupees } from "@/lib/orders/stats";
+import { Download } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import {
   Cell,
@@ -51,6 +52,13 @@ export default async function AdminCustomersPage({ searchParams }: PageProps<"/a
         sub={`${registered.toLocaleString("en-IN")} registered · ${newThisWeek} new this week`}
       >
         <SearchBox action="/admin/customers" value={search} placeholder="Name or phone number" keep={{ show: keep.show }} />
+        <a
+          href="/admin/export/customers"
+          className="inline-flex h-11 items-center gap-2 rounded-xl bg-surface px-4 text-sm font-semibold shadow-card hover:bg-muted"
+        >
+          <Download className="size-4" aria-hidden />
+          Download CSV
+        </a>
       </PageHeader>
 
       <FilterChips
