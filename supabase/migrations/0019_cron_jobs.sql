@@ -1,6 +1,8 @@
 -- PaliaEats timers: unanswered orders, the Monday summary, and tidying old records
--- Run once in Supabase Dashboard -> SQL Editor, AFTER 0018_platform_foundations.sql and after the
--- website version that has the /api/cron/pending-orders and /api/cron/weekly-summary routes is live.
+-- Run once in Supabase Dashboard -> SQL Editor, AFTER 0018_platform_foundations.sql. Run it BEFORE
+-- (or right as) the website version with the /api/cron/pending-orders and /api/cron/weekly-summary
+-- routes goes live: that version reads the new push_subscriptions.lang column. Until the routes are
+-- live the timers just get a harmless "not allowed" answer.
 --
 --   every minute   if an order has waited at "Order placed" for 4+ minutes, ask the website to
 --                  deal with it (remind the restaurant after 5, cancel after 15, tidy old ones)

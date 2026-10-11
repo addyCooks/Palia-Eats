@@ -723,5 +723,6 @@ export const hi: Record<MessageKey, string> = {
   "err.page_home": "होम पर जाएँ",
   "loading.default": "आपका पेज तैयार हो रहा है",
   "loading.menu": "मेन्यू गरम हो रहा है",
+  "footer.legal": "कानूनी जानकारी",
   // @@NEXT@@
 };

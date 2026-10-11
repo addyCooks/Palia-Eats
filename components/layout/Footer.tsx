@@ -93,7 +93,7 @@ export async function Footer() {
           <Link href="/about" className="hover:text-foreground hover:underline">
             {t("footer.made_before")} <Heart /> {t("footer.made_after")}
           </Link>
-          <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <nav aria-label={t("footer.legal")} className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
             <Link href="/privacy" className="hover:text-foreground hover:underline">
               {t("footer.privacy")}
             </Link>

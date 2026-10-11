@@ -723,6 +723,7 @@ export const en = {
   "err.page_home": "Go home",
   "loading.default": "Cooking up your page",
   "loading.menu": "Warming up the menu",
+  "footer.legal": "Legal",
   // @@NEXT@@
 };
 
