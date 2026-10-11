@@ -60,7 +60,8 @@ Set them in `.env.local` on your computer and in **Vercel → Project → Settin
 | `SUPPORT_PHONE` | optional | support WhatsApp number, kept server-side and never shown |
 | `NEXT_PUBLIC_SUPPORT_EMAIL`, `NEXT_PUBLIC_SUPPORT_HOURS` | optional | support email and hours |
 | `ADMIN_ALERT_EMAIL`, `EMAIL_REPLY_TO` | optional | where crash alerts go, and where email replies go |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | optional | phone notifications |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | optional | phone notifications (our own web push) |
+| `NEXT_PUBLIC_FIREBASE_*` (5 values), `FIREBASE_SERVICE_ACCOUNT` | optional | phone notifications through Firebase Cloud Messaging; used instead of the web push keys when all are set (see `.env.example`) |
 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | optional | shows "Continue with Google" once Google is set up in Supabase |
 | `WHATSAPP_*`, `NEXT_PUBLIC_WHATSAPP_NUMBER` | optional | WhatsApp ordering (see `docs/whatsapp-setup.md`) |
 | `CRON_SECRET` | optional | lets you run a timer job by hand |

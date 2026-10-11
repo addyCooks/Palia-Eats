@@ -10,6 +10,7 @@ import { ProfileForm } from "@/components/forms/ProfileForm";
 import { LanguageSwitch } from "@/components/layout/LanguageSwitch";
 import { InstallButton } from "@/components/notifications/InstallButton";
 import { PushToggle } from "@/components/notifications/PushToggle";
+import { pushEnabled } from "@/lib/push/client-config";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 
@@ -103,7 +104,7 @@ export default async function AccountPage({ searchParams }: PageProps<"/account"
           <ThemeToggle />
         </section>
 
-        {process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && (
+        {pushEnabled() && (
           <section className="flex flex-col gap-3 rounded-[22px] bg-surface p-5 shadow-card sm:p-6">
             <h2 className="text-lg font-semibold">{t("app.title")}</h2>
             <p className="text-sm text-stone-600">{t("app.intro")}</p>

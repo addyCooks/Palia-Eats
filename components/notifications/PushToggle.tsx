@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { removePushSubscription, savePushSubscription } from "@/lib/actions/push";
+import { removePushSubscription, saveFcmToken, savePushSubscription } from "@/lib/actions/push";
+import { fcmEnabled, firebaseVapidKey, firebaseWebConfig, pushEnabled } from "@/lib/push/client-config";
 import { useLang, useT } from "@/lib/i18n/client";
 import { Button } from "@/components/ui/Button";
 
@@ -16,12 +17,43 @@ function keyToBytes(base64: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+// This phone's Firebase token is remembered here, so turning notifications off knows how it was set up.
+const FCM_TOKEN_KEY = "pe-fcm-token";
+
+function savedFcmToken(): string | null {
+  try {
+    return window.localStorage.getItem(FCM_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function rememberFcmToken(token: string | null) {
+  try {
+    if (token) window.localStorage.setItem(FCM_TOKEN_KEY, token);
+    else window.localStorage.removeItem(FCM_TOKEN_KEY);
+  } catch {
+    // storage blocked: turning off still works, it just can't tell how this phone was set up
+  }
+}
+
+// The Firebase code (large) is only downloaded when someone actually turns notifications on or off.
+async function loadMessaging() {
+  const [{ getApps, initializeApp }, { getMessaging, isSupported }] = await Promise.all([
+    import("firebase/app"),
+    import("firebase/messaging"),
+  ]);
+  if (!(await isSupported())) throw new Error("unsupported");
+  const app = getApps()[0] ?? initializeApp(firebaseWebConfig);
+  return getMessaging(app);
+}
+
 function isStandalone(): boolean {
   return window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone === true;
 }
 
-// Turn order notifications on or off for THIS phone. Needs the VAPID public key (set on Vercel);
-// without it nothing is shown.
+// Turn order notifications on or off for THIS phone. Uses Firebase when its settings are in place,
+// otherwise our own web push (needs the VAPID public key, set on Vercel); with neither, nothing is shown.
 export function PushToggle() {
   const t = useT();
   const lang = useLang();
@@ -53,10 +85,9 @@ export function PushToggle() {
     };
   }, []);
 
-  if (!publicKey || state === "checking") return null;
+  if (!pushEnabled() || state === "checking") return null;
 
   async function turnOn() {
-    if (!publicKey) return;
     setBusy(true);
     setError(false);
     try {
@@ -69,6 +100,25 @@ export function PushToggle() {
         setState(permission === "denied" ? "denied" : "off");
         return;
       }
+      if (fcmEnabled()) {
+        const { getToken } = await import("firebase/messaging");
+        const messaging = await loadMessaging();
+        // A phone set up the old way holds a subscription for our own key: replace it with Firebase's.
+        const old = await registration.pushManager.getSubscription();
+        if (old && !savedFcmToken()) {
+          await removePushSubscription(old.endpoint);
+          await old.unsubscribe();
+        }
+        const token = await getToken(messaging, { vapidKey: firebaseVapidKey, serviceWorkerRegistration: registration });
+        if (!token) throw new Error("no token");
+        const saved = await saveFcmToken(token, lang);
+        if (saved.error) throw new Error(saved.error);
+        rememberFcmToken(token);
+        setState("on");
+        return;
+      }
+
+      if (!publicKey) throw new Error("not set up");
       const subscription =
         (await registration.pushManager.getSubscription()) ??
         (await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyToBytes(publicKey) }));
@@ -92,6 +142,13 @@ export function PushToggle() {
     setBusy(true);
     setError(false);
     try {
+      const token = savedFcmToken();
+      if (token) {
+        const { deleteToken } = await import("firebase/messaging");
+        await removePushSubscription(token);
+        await deleteToken(await loadMessaging());
+        rememberFcmToken(null);
+      }
       const registration = await navigator.serviceWorker.getRegistration();
       const subscription = await registration?.pushManager.getSubscription();
       if (subscription) {

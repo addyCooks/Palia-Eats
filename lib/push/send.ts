@@ -3,10 +3,13 @@ import webpush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { makeT } from "@/lib/i18n/messages";
 import { siteUrl } from "@/lib/email/shared";
+import { fcmAccount, sendFcm } from "@/lib/push/fcm";
 
-// Web push: a notification on the customer's phone when their order moves along. Needs the
-// VAPID keys (NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT); without them it
-// does nothing and nothing else is affected.
+// A notification on the customer's phone when their order moves along. Two ways, both free:
+//   web push   needs the VAPID keys (NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT)
+//   Firebase   needs FIREBASE_SERVICE_ACCOUNT (see lib/push/fcm.ts)
+// A phone uses whichever it was set up with. Without the settings for a way, that way does nothing
+// and nothing else is affected.
 function configure(): boolean {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
@@ -15,9 +18,17 @@ function configure(): boolean {
   return true;
 }
 
-type PushRow = { id: string; endpoint: string; p256dh: string; auth: string; lang: string };
+type PushRow = { id: string; kind: string; endpoint: string; p256dh: string | null; auth: string | null; lang: string };
 
 async function sendTo(row: PushRow, payload: { title: string; body: string; url: string; tag: string }) {
+  if (row.kind === "fcm") {
+    // The token is kept in "endpoint". "gone" = the phone no longer wants these: forget it.
+    if ((await sendFcm(row.endpoint, payload)) === "gone") {
+      await createAdminClient().from("push_subscriptions").delete().eq("id", row.id);
+    }
+    return;
+  }
+  if (!row.p256dh || !row.auth) return;
   try {
     await webpush.sendNotification(
       { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
@@ -40,7 +51,9 @@ async function sendTo(row: PushRow, payload: { title: string; body: string; url:
 export async function sendOrderPush(orderId: string, status: string): Promise<void> {
   try {
     if (!["preparing", "out_for_delivery", "delivered", "cancelled"].includes(status)) return;
-    if (!configure()) return;
+    const webReady = configure();
+    const fcmReady = fcmAccount() !== null;
+    if (!webReady && !fcmReady) return;
 
     const admin = createAdminClient();
     const { data: order } = await admin
@@ -52,16 +65,17 @@ export async function sendOrderPush(orderId: string, status: string): Promise<vo
 
     const { data: rows } = await admin
       .from("push_subscriptions")
-      .select("id, endpoint, p256dh, auth, lang")
+      .select("id, kind, endpoint, p256dh, auth, lang")
       .eq("user_id", order.customer_id);
-    if (!rows?.length) return;
+    const usable = ((rows ?? []) as PushRow[]).filter((row) => (row.kind === "fcm" ? fcmReady : webReady));
+    if (!usable.length) return;
 
     const restaurant = Array.isArray(order.restaurants) ? order.restaurants[0] : order.restaurants;
     const restaurantName = restaurant?.name ?? "PaliaEats";
     const url = `${siteUrl()}/orders/${order.id}`;
 
     await Promise.allSettled(
-      (rows as PushRow[]).map((row) => {
+      usable.map((row) => {
         const t = makeT(row.lang === "hi" ? "hi" : "en");
         const vars = { restaurant: restaurantName, n: order.order_number };
         const body =

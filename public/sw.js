@@ -9,6 +9,8 @@ self.addEventListener("push", (event) => {
   let data = {};
   try {
     data = event.data ? event.data.json() : {};
+    // Firebase wraps what we send: { data: { title, body, url, tag }, from, ... }. Web push does not.
+    if (data && typeof data.data === "object" && data.data !== null) data = data.data;
   } catch {
     data = { title: "PaliaEats", body: event.data ? event.data.text() : "" };
   }

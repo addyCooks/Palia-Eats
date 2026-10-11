@@ -19,7 +19,8 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  // Firebase: the phone signs up for notifications (installations + registrations)
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com https://fcm.googleapis.com",
   "frame-src https://www.openstreetmap.org",
   "worker-src 'self'",
   "manifest-src 'self'",

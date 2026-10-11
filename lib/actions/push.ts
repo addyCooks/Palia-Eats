@@ -43,6 +43,30 @@ export async function savePushSubscription(subscription: SubscriptionInput, lang
   return {};
 }
 
+// Same for a phone set up through Firebase: all we keep is its token (stored in "endpoint").
+export async function saveFcmToken(token: string, lang: string): Promise<PushResult> {
+  const profile = await requireUser("/account");
+  const value = String(token ?? "");
+  if (!/^[\w:.-]{40,500}$/.test(value)) return { error: "invalid" };
+  if (!(await allow(`push-save:${profile.id}`, 20, 3600))) return { error: "too_many" };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("push_subscriptions").upsert(
+    { user_id: profile.id, kind: "fcm", endpoint: value, p256dh: null, auth: null, lang: isLang(lang) ? lang : "en" },
+    { onConflict: "endpoint" },
+  );
+  if (error) return { error: "failed" };
+
+  const { data: all } = await admin
+    .from("push_subscriptions")
+    .select("id")
+    .eq("user_id", profile.id)
+    .order("created_at", { ascending: false });
+  const extra = (all ?? []).slice(MAX_PHONES_PER_PERSON).map((row) => row.id);
+  if (extra.length) await admin.from("push_subscriptions").delete().in("id", extra);
+  return {};
+}
+
 export async function removePushSubscription(endpoint: string): Promise<PushResult> {
   const profile = await requireUser("/account");
   const { error } = await createAdminClient()

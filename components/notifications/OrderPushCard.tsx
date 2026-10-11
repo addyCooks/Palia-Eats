@@ -1,10 +1,11 @@
 import { getT } from "@/lib/i18n/server";
 import { PushToggle } from "@/components/notifications/PushToggle";
+import { pushEnabled } from "@/lib/push/client-config";
 
 // On an order that is still in progress: offer notifications for this phone. Shows nothing when
 // notifications aren't set up (no keys) or the browser can't do them.
 export async function OrderPushCard() {
-  if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) return null;
+  if (!pushEnabled()) return null;
   const t = await getT();
   return (
     <section className="flex flex-col gap-3 rounded-[22px] bg-surface p-6 shadow-card">
