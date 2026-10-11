@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
+import { logAdminAction } from "@/lib/admin/audit";
 import { createClient } from "@/lib/supabase/server";
 import {
   isUuid,
@@ -83,7 +84,7 @@ export async function deleteCategory(
   _prev: MenuFormState,
   formData: FormData,
 ): Promise<MenuFormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const restaurantId = readRestaurantId(formData);
   const categoryId = String(formData.get("categoryId") ?? "");
   if (!restaurantId || !isUuid(categoryId)) return { error: "Missing category." };
@@ -103,6 +104,12 @@ export async function deleteCategory(
     return { error: "Could not delete the category." };
   }
 
+  await logAdminAction(admin, {
+    action: "menu.delete_category",
+    summary: "Deleted a menu category",
+    targetType: "restaurant",
+    targetId: restaurantId,
+  });
   revalidatePath(menuPath(restaurantId));
   await refreshStorefront(restaurantId);
   return { saved: true };
@@ -114,7 +121,7 @@ export async function createMenuItem(
   _prev: MenuFormState,
   formData: FormData,
 ): Promise<MenuFormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const restaurantId = readRestaurantId(formData);
   if (!restaurantId) return { error: "Missing restaurant." };
 
@@ -127,6 +134,12 @@ export async function createMenuItem(
     .insert({ restaurant_id: restaurantId, ...parsed.data });
   if (error) return { error: "Could not add the item. Please try again." };
 
+  await logAdminAction(admin, {
+    action: "menu.create_item",
+    summary: `Added dish ${parsed.data.name}`,
+    targetType: "restaurant",
+    targetId: restaurantId,
+  });
   revalidatePath(menuPath(restaurantId));
   await refreshStorefront(restaurantId);
   redirect(menuPath(restaurantId));
@@ -158,7 +171,7 @@ export async function updateMenuItem(
 }
 
 export async function deleteMenuItem(formData: FormData) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const restaurantId = readRestaurantId(formData);
   const itemId = String(formData.get("itemId") ?? "");
   if (!restaurantId || !isUuid(itemId)) throw new Error("Missing item.");
@@ -171,6 +184,13 @@ export async function deleteMenuItem(formData: FormData) {
     .eq("restaurant_id", restaurantId);
   if (error) throw new Error("Could not delete the item.");
 
+  await logAdminAction(admin, {
+    action: "menu.delete_item",
+    summary: "Deleted a dish",
+    targetType: "restaurant",
+    targetId: restaurantId,
+    details: { itemId },
+  });
   revalidatePath(menuPath(restaurantId));
   await refreshStorefront(restaurantId);
   redirect(menuPath(restaurantId));

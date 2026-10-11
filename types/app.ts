@@ -50,6 +50,8 @@ export type Restaurant = {
   is_accepting_orders: boolean;
   is_active: boolean;
   area: string | null;
+  // Optional 14-digit food licence number, shown on the restaurant page when present
+  fssai_number: string | null;
   rating_avg: number | null;
   rating_count: number;
   created_at?: string;
@@ -113,7 +115,8 @@ export type OrderItem = {
 export type Order = {
   id: string;
   order_number: number;
-  customer_id: string;
+  // null after the customer deleted their account
+  customer_id: string | null;
   restaurant_id: string;
   status: OrderStatus;
   subtotal: number;
@@ -134,7 +137,7 @@ export type Order = {
   customer_notes: string | null;
   rejection_reason: string | null;
   channel: "web" | "whatsapp";
-  cancelled_by: "restaurant" | "admin" | "customer" | null;
+  cancelled_by: "restaurant" | "admin" | "customer" | "system" | null;
   placed_at: string;
   status_updated_at: string;
   rider_id: string | null;

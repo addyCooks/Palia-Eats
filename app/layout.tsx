@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Serif_Display, Outfit } from "next/font/google";
+import { DM_Serif_Display, Noto_Sans_Devanagari, Noto_Serif_Devanagari, Outfit } from "next/font/google";
 import "./globals.css";
 import { Suspense } from "react";
 import { OfflineNotice } from "@/components/OfflineNotice";
 import { NavProgress } from "@/components/ui/NavProgress";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { PressFeedback } from "@/components/ui/PressFeedback";
+import { I18nProvider } from "@/lib/i18n/client";
+import { getLang } from "@/lib/i18n/server";
 
 // Design system v2: Outfit for all interface text, DM Serif Display for headings.
 const outfit = Outfit({
@@ -19,6 +21,24 @@ const dmSerif = DM_Serif_Display({
   subsets: ["latin"],
   weight: "400",
   style: ["normal", "italic"],
+});
+
+// Hindi letters. Only downloaded when a page actually shows Hindi text (the browser fetches a
+// font file only for characters it needs), so English visitors never pay for it.
+const devaSans = Noto_Sans_Devanagari({
+  variable: "--font-deva",
+  subsets: ["devanagari"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: false,
+});
+
+const devaSerif = Noto_Serif_Devanagari({
+  variable: "--font-deva-serif",
+  subsets: ["devanagari"],
+  weight: ["400", "600"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -40,24 +60,27 @@ export const viewport: Viewport = {
 // other theme. With no saved choice the phone's own setting is used (see globals.css).
 const THEME_SCRIPT = `try{var t=localStorage.getItem("pe-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const lang = await getLang();
   return (
     <html
-      lang="en"
+      lang={lang}
       suppressHydrationWarning
-      className={`${outfit.variable} ${dmSerif.variable} h-full antialiased`}
+      className={`${outfit.variable} ${dmSerif.variable} ${devaSans.variable} ${devaSerif.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <Suspense fallback={null}>
-          <NavProgress />
-          <ScrollToTop />
-        </Suspense>
-        <PressFeedback />
-        <OfflineNotice />
-        {children}
+        <I18nProvider lang={lang}>
+          <Suspense fallback={null}>
+            <NavProgress />
+            <ScrollToTop />
+          </Suspense>
+          <PressFeedback />
+          <OfflineNotice />
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );

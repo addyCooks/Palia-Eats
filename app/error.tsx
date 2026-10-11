@@ -1,10 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { ProblemScreen, problemActionClass } from "@/components/ui/ProblemScreen";
+import { reportClientError } from "@/lib/monitoring/report-client";
 
 // Shown when something unexpected breaks while loading a page (often a patchy connection).
-export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function PageError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    reportClientError(error);
+  }, [error]);
+
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
       <ProblemScreen

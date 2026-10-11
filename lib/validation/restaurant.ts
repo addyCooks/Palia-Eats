@@ -25,6 +25,7 @@ export type RestaurantInput = {
   is_active: boolean;
   is_accepting_orders: boolean;
   area: string | null;
+  fssai_number: string | null;
   owner_name: string | null;
   // COMMISSION OFF: commission_percent: number;
 };
@@ -113,6 +114,12 @@ export function parseRestaurantForm(formData: FormData): ParseResult {
     return { ok: false, error: "Area or owner name is too long." };
   }
 
+  // Optional food licence number: 14 digits.
+  const fssai = String(formData.get("fssai_number") ?? "").replace(/\s/g, "");
+  if (fssai && !/^\d{14}$/.test(fssai)) {
+    return { ok: false, error: "The FSSAI licence number has 14 digits." };
+  }
+
   const cuisineTags = String(formData.get("cuisine_tags") ?? "")
     .split(",")
     .map((tag) => tag.trim())
@@ -144,6 +151,7 @@ export function parseRestaurantForm(formData: FormData): ParseResult {
       is_active: formData.get("is_active") === "on",
       is_accepting_orders: formData.get("is_accepting_orders") === "on",
       area,
+      fssai_number: fssai || null,
       owner_name: ownerName,
       // COMMISSION OFF: commission_percent: Math.round(commission * 100) / 100,
     },

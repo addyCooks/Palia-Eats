@@ -40,6 +40,21 @@ export async function setAcceptingOrders(accepting: boolean): Promise<PanelActio
   return {};
 }
 
+// The Monday "your week" email: the restaurant can switch it off (and on again).
+export async function setWeeklySummary(enabled: boolean): Promise<PanelActionResult> {
+  const restaurant = await getPanelRestaurant();
+  if (!restaurant) return { error: SESSION_EXPIRED };
+
+  const { error } = await createAdminClient()
+    .from("restaurant_private")
+    .update({ weekly_summary: Boolean(enabled) })
+    .eq("restaurant_id", restaurant.id);
+  if (error) return { error: "Could not change this. Please try again." };
+
+  revalidatePath("/panel/settings");
+  return {};
+}
+
 export async function updateOrderStatus(input: {
   orderId: string;
   status: string;

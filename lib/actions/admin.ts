@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/session";
+import { logAdminAction } from "@/lib/admin/audit";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isUuid } from "@/lib/validation/menu";
@@ -26,13 +27,19 @@ export async function setCustomerBlocked(input: { customerId: string; blocked: b
   if (customerId === admin.id) return { error: "You can't block yourself." };
 
   const service = createAdminClient();
-  const { data: target } = await service.from("profiles").select("role").eq("id", customerId).maybeSingle();
+  const { data: target } = await service.from("profiles").select("role, full_name").eq("id", customerId).maybeSingle();
   if (!target) return { error: "Customer not found." };
   if (target.role === "admin") return { error: "Admins can't be blocked." };
 
   const { error } = await service.from("profiles").update({ is_blocked: Boolean(input.blocked) }).eq("id", customerId);
   if (error) return { error: "Could not change this. Please try again." };
 
+  await logAdminAction(admin, {
+    action: input.blocked ? "customer.block" : "customer.unblock",
+    summary: `${input.blocked ? "Blocked" : "Unblocked"} customer ${target.full_name ?? customerId}`,
+    targetType: "customer",
+    targetId: customerId,
+  });
   revalidatePath("/admin/customers", "layout");
   return {};
 }
@@ -41,13 +48,21 @@ export async function setCustomerBlocked(input: { customerId: string; blocked: b
 // themselves (a database trigger). Customers can't delete ratings, so this uses the server
 // key, after the admin check.
 export async function removeRating(input: { orderId: string }): Promise<AdminResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const orderId = String(input?.orderId);
   if (!isUuid(orderId)) return { error: "Missing rating." };
 
-  const { data, error } = await createAdminClient().from("order_ratings").delete().eq("order_id", orderId).select("order_id");
+  const { data, error } = await createAdminClient().from("order_ratings").delete().eq("order_id", orderId).select("order_id, restaurant_id, stars");
   if (error) return { error: "Could not remove it. Please try again." };
   if (!data?.length) return { error: "That rating is already gone." };
+
+  await logAdminAction(admin, {
+    action: "rating.remove",
+    summary: `Removed a ${data[0].stars}-star rating`,
+    targetType: "order",
+    targetId: orderId,
+    details: { restaurantId: data[0].restaurant_id, stars: data[0].stars },
+  });
 
   revalidatePath("/admin/ratings");
   revalidatePath("/admin/restaurants", "layout");
@@ -67,7 +82,7 @@ function parseRider(formData: FormData) {
 }
 
 export async function createRider(_prev: RiderFormState, formData: FormData): Promise<RiderFormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const parsed = parseRider(formData);
   if ("error" in parsed) return { error: parsed.error };
 
@@ -75,12 +90,13 @@ export async function createRider(_prev: RiderFormState, formData: FormData): Pr
   const { error } = await supabase.from("riders").insert(parsed.data);
   if (error) return { error: "Could not add the rider. Please try again." };
 
+  await logAdminAction(admin, { action: "rider.create", summary: `Added rider ${parsed.data.name}`, targetType: "rider" });
   revalidatePath("/admin/riders");
   return { saved: true };
 }
 
 export async function updateRider(_prev: RiderFormState, formData: FormData): Promise<RiderFormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const riderId = String(formData.get("riderId") ?? "");
   if (!isUuid(riderId)) return { error: "Missing rider." };
   const parsed = parseRider(formData);
@@ -90,12 +106,13 @@ export async function updateRider(_prev: RiderFormState, formData: FormData): Pr
   const { data, error } = await supabase.from("riders").update(parsed.data).eq("id", riderId).select("id");
   if (error || !data?.length) return { error: "Could not save the rider. Please try again." };
 
+  await logAdminAction(admin, { action: "rider.update", summary: `Edited rider ${parsed.data.name}`, targetType: "rider", targetId: riderId });
   revalidatePath("/admin/riders");
   return { saved: true };
 }
 
 export async function setRiderActive(input: { riderId: string; active: boolean }): Promise<AdminResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   if (!isUuid(String(input?.riderId))) return { error: "Missing rider." };
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -104,6 +121,12 @@ export async function setRiderActive(input: { riderId: string; active: boolean }
     .eq("id", input.riderId)
     .select("id");
   if (error || !data?.length) return { error: "Could not change this. Please try again." };
+  await logAdminAction(admin, {
+    action: input.active ? "rider.activate" : "rider.deactivate",
+    summary: `${input.active ? "Activated" : "Deactivated"} a rider`,
+    targetType: "rider",
+    targetId: input.riderId,
+  });
   revalidatePath("/admin/riders");
   return {};
 }
@@ -111,7 +134,7 @@ export async function setRiderActive(input: { riderId: string; active: boolean }
 // Put a rider on an order (or take them off). The database checks the rider is active and
 // works for this restaurant or for PaliaEats.
 export async function assignRider(input: { orderId: string; riderId: string | null }): Promise<AdminResult> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const orderId = String(input?.orderId);
   const riderId = input?.riderId ? String(input.riderId) : null;
   if (!isUuid(orderId) || (riderId && !isUuid(riderId))) return { error: "That change isn't allowed." };
@@ -124,6 +147,12 @@ export async function assignRider(input: { orderId: string; riderId: string | nu
   }
   if (!data?.length) return { error: "Order not found." };
 
+  await logAdminAction(admin, {
+    action: riderId ? "order.assign_rider" : "order.unassign_rider",
+    summary: riderId ? "Put a rider on an order" : "Took the rider off an order",
+    targetType: "order",
+    targetId: orderId,
+  });
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
   return {};

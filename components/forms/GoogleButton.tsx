@@ -2,6 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 import { signInWithGoogle } from "@/lib/actions/auth";
+import { useT } from "@/lib/i18n/client";
 
 // Google's own four-colour "G" (their sign-in buttons must use it unchanged).
 function GoogleMark() {
@@ -17,6 +18,7 @@ function GoogleMark() {
 
 function Submit() {
   const { pending } = useFormStatus();
+  const t = useT();
   return (
     <button
       type="submit"
@@ -28,7 +30,7 @@ function Submit() {
       ) : (
         <GoogleMark />
       )}
-      {pending ? "Opening Google…" : "Continue with Google"}
+      {pending ? t("auth.google.opening") : t("auth.google.continue")}
     </button>
   );
 }
@@ -36,6 +38,7 @@ function Submit() {
 // Only shown when NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true (after Google is set up
 // in Supabase), so visitors never see a button that doesn't work.
 export function GoogleButton({ next }: { next?: string }) {
+  const t = useT();
   if (process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED !== "true") return null;
 
   return (
@@ -46,7 +49,7 @@ export function GoogleButton({ next }: { next?: string }) {
       </form>
       <div className="flex items-center gap-3 text-xs text-stone-500">
         <span className="h-px flex-1 bg-border" />
-        or with email
+        {t("auth.google.or_email")}
         <span className="h-px flex-1 bg-border" />
       </div>
     </>

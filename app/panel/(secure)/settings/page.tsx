@@ -10,6 +10,7 @@ import { OpenClosedSwitch } from "@/components/panel/OpenClosedSwitch";
 import { ShareCard } from "@/components/restaurant/ShareCard";
 import { PageHeader, Panel } from "@/components/ui/page";
 import { PanelHelpCard } from "@/components/support/PanelHelp";
+import { SummaryEmailCard } from "@/components/panel/SummaryEmailCard";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -17,11 +18,11 @@ export default async function PanelSettingsPage() {
   const restaurant = await getPanelRestaurant();
   if (!restaurant) redirect("/panel/locked");
 
-  const { data: charges } = await createAdminClient()
-    .from("restaurants")
-    .select("delivery_fee, min_order_amount")
-    .eq("id", restaurant.id)
-    .single();
+  const admin = createAdminClient();
+  const [{ data: charges }, { data: priv }] = await Promise.all([
+    admin.from("restaurants").select("delivery_fee, min_order_amount").eq("id", restaurant.id).single(),
+    admin.from("restaurant_private").select("weekly_summary").eq("restaurant_id", restaurant.id).maybeSingle(),
+  ]);
 
   return (
     <>
@@ -63,6 +64,7 @@ export default async function PanelSettingsPage() {
         </div>
         <div className="flex flex-col gap-5">
           <ShareCard name={restaurant.name} slug={restaurant.slug} />
+          <SummaryEmailCard enabled={priv?.weekly_summary !== false} />
           <PanelHelpCard restaurantName={restaurant.name} />
         </div>
       </div>

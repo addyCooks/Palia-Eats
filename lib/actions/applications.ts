@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/session";
+import { logAdminAction } from "@/lib/admin/audit";
 import {
   emailApplicationApproved,
   emailApplicationReceived,
@@ -113,6 +114,7 @@ export async function approveApplication(_prev: DecideState, formData: FormData)
       phone: app.phone,
       address_text: app.address,
       area: app.area,
+      fssai_number: app.fssai ?? null,
       opening_time: app.opening_time,
       closing_time: app.closing_time,
       is_active: false,
@@ -146,6 +148,12 @@ export async function approveApplication(_prev: DecideState, formData: FormData)
   const panelLink = `${await getOrigin()}/panel/enter/${createPanelToken(restaurant.id, now, 180)}`;
   const emailed = await emailApplicationApproved(app as Application, panelLink);
 
+  await logAdminAction(profile, {
+    action: "application.approve",
+    summary: `Approved ${app.restaurant_name} (${slug})`,
+    targetType: "restaurant",
+    targetId: restaurant.id,
+  });
   revalidatePath("/admin", "layout");
   return { approved: { restaurantId: restaurant.id, emailed } };
 }
@@ -166,6 +174,13 @@ export async function rejectApplication(_prev: DecideState, formData: FormData):
     .maybeSingle();
   if (!app) return { error: "This request has already been handled." };
 
+  await logAdminAction(profile, {
+    action: "application.reject",
+    summary: `Rejected the request from ${app.restaurant_name}`,
+    targetType: "application",
+    targetId: id,
+    details: { reason },
+  });
   after(() => emailApplicationRejected(app as Application, reason));
   revalidatePath("/admin", "layout");
   return {};
@@ -173,7 +188,7 @@ export async function rejectApplication(_prev: DecideState, formData: FormData):
 
 // "Make visible": a restaurant that was setting up goes on the website.
 export async function adminMakeVisible(input: { restaurantId: string }): Promise<{ error?: string }> {
-  await requireAdmin();
+  const profile = await requireAdmin();
   const id = String(input?.restaurantId);
   if (!isUuid(id)) return { error: "Missing restaurant." };
 
@@ -181,6 +196,12 @@ export async function adminMakeVisible(input: { restaurantId: string }): Promise
   const { data, error } = await supabase.from("restaurants").update({ is_active: true }).eq("id", id).select("slug");
   if (error || !data?.length) return { error: "Could not change this. Please try again." };
   await supabase.from("restaurant_private").update({ setting_up: false }).eq("restaurant_id", id);
+  await logAdminAction(profile, {
+    action: "restaurant.make_visible",
+    summary: `Put ${data[0].slug} on the website`,
+    targetType: "restaurant",
+    targetId: id,
+  });
 
   revalidatePath("/admin", "layout");
   revalidatePath(`/restaurants/${data[0].slug}`);

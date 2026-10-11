@@ -3,21 +3,25 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getProfile } from "@/lib/auth/session";
 import { postLoginPath, safeNextPath } from "@/lib/auth/redirect";
+import { getT } from "@/lib/i18n/server";
 import { LoginForm } from "@/components/forms/LoginForm";
 import { GoogleButton } from "@/components/forms/GoogleButton";
 
-export const metadata: Metadata = { title: "Log in" };
-
-const ERROR_MESSAGES: Record<string, string> = {
-  google: "Google sign-in isn't available right now. Please use email instead.",
-  callback:
-    "We couldn't log you in from that link. If you were confirming your email, that part probably worked: just log in below with your email and password.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("auth.title.login") };
+}
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+  const t = await getT();
   const params = await searchParams;
   const next = safeNextPath(typeof params.next === "string" ? params.next : null);
   const error = typeof params.error === "string" ? params.error : null;
+
+  const errorMessages: Record<string, string> = {
+    google: t("auth.error_google"),
+    callback: t("auth.error_callback"),
+  };
 
   // Already logged in? Skip the form.
   const profile = await getProfile();
@@ -28,20 +32,20 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <>
       <div className="flex flex-col gap-1.5 sm:text-center">
-        <h1 className="font-display text-[34px] leading-[1.05]">Welcome back</h1>
-        <p className="text-[15px] text-stone-600">Your happy bite is just a tap away. Log in to order.</p>
+        <h1 className="font-display text-[34px] leading-[1.05]">{t("auth.login.title")}</h1>
+        <p className="text-[15px] text-stone-600">{t("auth.login.subtitle")}</p>
       </div>
-      {error && ERROR_MESSAGES[error] && (
+      {error && errorMessages[error] && (
         <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-          {ERROR_MESSAGES[error]}
+          {errorMessages[error]}
         </p>
       )}
       <GoogleButton next={next ?? undefined} />
       <LoginForm next={next ?? undefined} />
       <p className="text-center text-sm text-stone-600">
-        New here?{" "}
+        {t("auth.login.new_here")}{" "}
         <Link href={signupHref} className="font-semibold text-accent hover:underline">
-          Create an account
+          {t("auth.login.create")}
         </Link>
       </p>
     </>

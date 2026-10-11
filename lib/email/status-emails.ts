@@ -4,6 +4,7 @@ import { createPanelToken } from "@/lib/panel/token";
 import { button, deliver, escapeHtml, siteUrl } from "@/lib/email/shared";
 import { emailButton, emailLayout, emailNote, emailParagraph, emailSmall } from "@/lib/email/layout";
 import { formatPrice } from "@/lib/utils/format";
+import { AUTO_CANCEL_AFTER_MINUTES } from "@/lib/orders/auto-cancel";
 
 type RestaurantRow = {
   id: string;
@@ -75,7 +76,10 @@ export async function sendOrderStatusEmails(orderId: string, status: string) {
     const reason = status === "cancelled" ? order.rejection_reason : null;
 
     // ---- Customer ----
-    const { data: userData } = await createAdminClient().auth.admin.getUserById(order.customer_id);
+    // (customer_id is empty once the customer has deleted their account.)
+    const { data: userData } = order.customer_id
+      ? await createAdminClient().auth.admin.getUserById(order.customer_id)
+      : { data: null };
     const customerEmail = userData?.user?.email ?? null;
     // WhatsApp customers have no real email (they are told on WhatsApp instead).
     if (customerEmail && order.channel !== "whatsapp") {
@@ -105,9 +109,31 @@ export async function sendOrderStatusEmails(orderId: string, status: string) {
       });
     }
 
-    // ---- Restaurant: only when PaliaEats (admin) cancelled, since the restaurant
-    // already knows when it cancelled an order itself. ----
+    // ---- Restaurant: only when PaliaEats (admin) cancelled, or the timer did because nobody
+    // answered, since the restaurant already knows when it cancelled an order itself. ----
     const toRestaurant = notificationEmail(restaurant);
+    if (status === "cancelled" && order.cancelled_by === "system" && restaurant && toRestaurant) {
+      await deliver(order.id, "restaurant", "order_cancelled_unanswered", {
+        to: toRestaurant,
+        subject: `Order #${order.order_number} was cancelled: nobody answered it`,
+        text:
+          `Order #${order.order_number} waited ${AUTO_CANCEL_AFTER_MINUTES} minutes without being accepted, ` +
+          `so PaliaEats cancelled it and told the customer.
+
+` +
+          `Please keep your orders panel open while you are cooking, or tap "Paused" when you are too busy ` +
+          `to take orders.
+`,
+        html:
+          `<div style="font-family:Arial,sans-serif;max-width:480px">` +
+          `<h2 style="margin:0 0 8px">Order #${order.order_number} was cancelled</h2>` +
+          `<p>It waited ${AUTO_CANCEL_AFTER_MINUTES} minutes without being accepted, so PaliaEats cancelled it and ` +
+          `told the customer. Please don't prepare it.</p>` +
+          `<p style="background:#fff7ed;padding:8px;border-radius:8px">Too busy? Switch your restaurant to ` +
+          `<strong>Paused</strong> in the panel, so customers can't order until you are ready.</p>` +
+          `</div>`,
+      });
+    }
     if (status === "cancelled" && order.cancelled_by === "admin" && restaurant && toRestaurant) {
       await deliver(order.id, "restaurant", "order_cancelled_by_admin", {
         to: toRestaurant,

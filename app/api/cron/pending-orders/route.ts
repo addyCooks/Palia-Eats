@@ -1,50 +1,73 @@
-import { timingSafeEqual } from "node:crypto";
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isCronAuthorized } from "@/lib/cron/auth";
 import { sendPendingReminder } from "@/lib/email/status-emails";
+import { handleOrderEvent } from "@/lib/orders/events";
+import {
+  AUTO_CANCEL_REASON,
+  REMIND_AFTER_MINUTES,
+  pendingAction,
+} from "@/lib/orders/auto-cancel";
 
-// Called on a timer (every few minutes). Finds orders that have been sitting at
-// "Order placed" for a while and nudges the restaurant once.
-// Protected by CRON_SECRET: callers must send "Authorization: Bearer <CRON_SECRET>".
-const REMIND_AFTER_MINUTES = 5;
-const GIVE_UP_AFTER_HOURS = 6; // don't nag about very old orders
-
+// Called by the database timer every minute (see 0019_cron_jobs.sql). Looks at orders that are
+// still at "Order placed":
+//   after 5 minutes  -> reminds the restaurant once (email)
+//   after 15 minutes -> cancels the order and tells the customer (nobody answered)
+//   over a day old   -> cancels quietly (old leftovers; nobody is emailed about those)
+// Protected by the cron key (or CRON_SECRET).
 export const dynamic = "force-dynamic";
 
-function isAuthorized(request: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  const given = request.headers.get("authorization") ?? "";
-  const expected = `Bearer ${secret}`;
-  const a = Buffer.from(given);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
-export async function GET(request: NextRequest) {
-  if (!process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "Not configured" }, { status: 503 });
-  }
-  if (!isAuthorized(request)) {
+async function run(request: NextRequest) {
+  if (!(await isCronAuthorized(request, "pending_orders"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const admin = createAdminClient();
   const now = Date.now();
-  const { data: orders, error } = await createAdminClient()
+  const { data: orders, error } = await admin
     .from("orders")
-    .select("id")
+    .select("id, placed_at")
     .eq("status", "pending")
     .lt("placed_at", new Date(now - REMIND_AFTER_MINUTES * 60_000).toISOString())
-    .gt("placed_at", new Date(now - GIVE_UP_AFTER_HOURS * 3_600_000).toISOString())
     .order("placed_at", { ascending: true })
-    .limit(50);
-
+    .limit(200);
   if (error) return NextResponse.json({ error: "Query failed" }, { status: 500 });
 
-  let checked = 0;
+  let cancelled = 0;
+  let tidied = 0;
+  const toRemind: string[] = [];
+
   for (const order of orders ?? []) {
-    checked++;
-    await sendPendingReminder(order.id); // skips if already reminded
+    const action = pendingAction(new Date(order.placed_at).getTime(), now);
+    if (action === "remind") {
+      toRemind.push(order.id);
+      continue;
+    }
+    if (action === "cancel" || action === "cancel_quietly") {
+      // Only if it is STILL pending: the restaurant may have accepted it a moment ago.
+      const { data: done } = await admin
+        .from("orders")
+        .update({ status: "cancelled", rejection_reason: AUTO_CANCEL_REASON, cancelled_by: "system" })
+        .eq("id", order.id)
+        .eq("status", "pending")
+        .select("id");
+      if (!done?.length) continue;
+      if (action === "cancel") {
+        cancelled++;
+        after(() => handleOrderEvent({ type: "status_changed", orderId: order.id, status: "cancelled" }));
+      } else {
+        tidied++;
+      }
+    }
   }
-  return NextResponse.json({ checked });
+
+  // Emails to restaurants can be slow, so they go out after the answer is sent.
+  after(async () => {
+    for (const id of toRemind) await sendPendingReminder(id); // skips if already reminded
+  });
+
+  return NextResponse.json({ reminded: toRemind.length, cancelled, tidied });
 }
+
+export const GET = run;
+export const POST = run;

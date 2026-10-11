@@ -62,6 +62,14 @@ export function RestaurantForm({ restaurant }: { restaurant?: AdminRestaurant })
         />
         <Input label="Phone" name="phone" type="tel" defaultValue={restaurant?.phone ?? ""} />
         <Input label="Address" name="address_text" defaultValue={restaurant?.address_text ?? ""} />
+        <Input
+          label="FSSAI licence number (optional, shown to customers)"
+          name="fssai_number"
+          inputMode="numeric"
+          maxLength={17}
+          placeholder="14 digits"
+          defaultValue={restaurant?.fssai_number ?? ""}
+        />
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
             label="Area (shown to customers)"

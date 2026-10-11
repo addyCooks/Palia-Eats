@@ -3,6 +3,7 @@
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/session";
+import { logAdminAction } from "@/lib/admin/audit";
 import { createClient } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/validation/menu";
 import { handleOrderEvent } from "@/lib/orders/events";
@@ -17,7 +18,7 @@ export async function adminUpdateOrderStatus(input: {
   reason?: string;
   undo?: boolean;
 }): Promise<{ error?: string }> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   // "pending" = one step back from Cooking (undo); the database allows one step back only.
   const allowed = ["pending", "preparing", "out_for_delivery", "delivered", "cancelled"];
@@ -37,7 +38,7 @@ export async function adminUpdateOrderStatus(input: {
       cancelled_by: input.status === "cancelled" ? "admin" : null,
     })
     .eq("id", input.orderId)
-    .select("id");
+    .select("id, order_number");
 
   if (error) {
     if (error.message.includes("Invalid order status change")) {
@@ -46,6 +47,13 @@ export async function adminUpdateOrderStatus(input: {
     return { error: "Could not update the order. Please try again." };
   }
   if (!data?.length) return { error: "Order not found." };
+
+  await logAdminAction(admin, {
+    action: input.undo ? "order.undo_status" : input.status === "cancelled" ? "order.cancel" : "order.status",
+    summary: `${input.undo ? "Stepped back" : "Moved"} order #${data[0].order_number} to ${input.status}${reason ? ` (${reason})` : ""}`,
+    targetType: "order",
+    targetId: input.orderId,
+  });
 
   if (!input.undo) {
     after(() => handleOrderEvent({ type: "status_changed", orderId: input.orderId, status: input.status }));

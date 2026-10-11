@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/session";
+import { logAdminAction } from "@/lib/admin/audit";
 import { createClient } from "@/lib/supabase/server";
 import { parseRestaurantForm, type RestaurantInput } from "@/lib/validation/restaurant";
 import { createPanelToken } from "@/lib/panel/token";
@@ -34,6 +35,7 @@ function publicColumns(input: RestaurantInput, existingTheme: object = {}) {
     is_active: input.is_active,
     is_accepting_orders: input.is_accepting_orders,
     area: input.area,
+    fssai_number: input.fssai_number,
   };
 }
 
@@ -53,7 +55,7 @@ export async function createRestaurant(
   _prev: RestaurantFormState,
   formData: FormData,
 ): Promise<RestaurantFormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const parsed = parseRestaurantForm(formData);
   if (!parsed.ok) return { error: parsed.error };
@@ -76,6 +78,12 @@ export async function createRestaurant(
   // A private row is created automatically by a database trigger; fill it in.
   await supabase.from("restaurant_private").update(privateColumns(input)).eq("restaurant_id", created.id);
 
+  await logAdminAction(admin, {
+    action: "restaurant.create",
+    summary: `Created restaurant ${input.name}`,
+    targetType: "restaurant",
+    targetId: created.id,
+  });
   revalidatePath("/admin/restaurants");
   redirect(`/admin/restaurants/${created.id}`);
 }
@@ -84,7 +92,7 @@ export async function updateRestaurant(
   _prev: RestaurantFormState,
   formData: FormData,
 ): Promise<RestaurantFormState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const id = String(formData.get("restaurantId") ?? "");
   if (!id) return { error: "Missing restaurant." };
@@ -115,6 +123,12 @@ export async function updateRestaurant(
     .eq("restaurant_id", id);
   if (privateError) return { error: "Could not save notification details." };
 
+  await logAdminAction(admin, {
+    action: "restaurant.update",
+    summary: `Edited restaurant ${input.name}`,
+    targetType: "restaurant",
+    targetId: id,
+  });
   revalidatePath("/admin/restaurants", "layout");
   revalidatePath(`/restaurants/${current.slug}`);
   revalidatePath("/");
@@ -123,7 +137,7 @@ export async function updateRestaurant(
 
 // "Pause orders" / "Resume orders" on the restaurant detail page.
 export async function adminSetAccepting(input: { restaurantId: string; accepting: boolean }): Promise<{ error?: string }> {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("restaurants")
@@ -132,6 +146,12 @@ export async function adminSetAccepting(input: { restaurantId: string; accepting
     .select("slug");
   if (error || !data?.length) return { error: "Could not change this. Please try again." };
 
+  await logAdminAction(admin, {
+    action: input.accepting ? "restaurant.resume" : "restaurant.pause",
+    summary: `${input.accepting ? "Resumed" : "Paused"} orders for ${data[0].slug}`,
+    targetType: "restaurant",
+    targetId: String(input.restaurantId),
+  });
   revalidatePath("/admin/restaurants", "layout");
   revalidatePath(`/restaurants/${data[0].slug}`);
   revalidatePath("/");
@@ -144,7 +164,7 @@ export async function generateRestaurantPanelKey(
   _prev: PanelKeyState,
   formData: FormData,
 ): Promise<PanelKeyState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const id = String(formData.get("restaurantId") ?? "");
   if (!id) return { error: "Missing restaurant." };
@@ -165,6 +185,13 @@ export async function generateRestaurantPanelKey(
     return { error: "Could not create the panel link. Please try again." };
   }
 
+  // The link itself is never written down, only the fact that a new one was made.
+  await logAdminAction(admin, {
+    action: "restaurant.new_panel_link",
+    summary: "Made a new restaurant panel link (all older links stopped working)",
+    targetType: "restaurant",
+    targetId: id,
+  });
   revalidatePath(`/admin/restaurants/${id}`);
   const origin = await getOrigin();
   const token = createPanelToken(id, now, 180); // this link is good for about 6 months

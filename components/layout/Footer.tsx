@@ -1,21 +1,29 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/layout/Wordmark";
+import { LanguageSwitch } from "@/components/layout/LanguageSwitch";
 import { Banknote, MessageCircle, Radio, Store } from "lucide-react";
+import { getT } from "@/lib/i18n/server";
 import { whatsAppChatUrl } from "@/lib/utils/site";
 import { supportLinks } from "@/lib/utils/support";
+import { localHours } from "@/lib/utils/support-text";
 import { Heart } from "@/components/ui/Heart";
 
 // Four promises, then the footer. The WhatsApp points only show once WhatsApp is switched on.
-export function Footer() {
+export async function Footer() {
+  const t = await getT();
   const whatsapp = whatsAppChatUrl();
   const support = supportLinks();
 
   const promises = [
-    { icon: Banknote, title: "Cash on Delivery", sub: "Pay at your door" },
-    { icon: Store, title: "Local restaurants", sub: "All from Palia" },
-    { icon: Radio, title: "Live tracking", sub: "Every step, in real time" },
-    ...(whatsapp ? [{ icon: MessageCircle, title: "Order on WhatsApp", sub: "No app needed" }] : []),
+    { icon: Banknote, title: t("footer.promise.cod.title"), sub: t("footer.promise.cod.sub") },
+    { icon: Store, title: t("footer.promise.local.title"), sub: t("footer.promise.local.sub") },
+    { icon: Radio, title: t("footer.promise.live.title"), sub: t("footer.promise.live.sub") },
+    ...(whatsapp
+      ? [{ icon: MessageCircle, title: t("footer.promise.whatsapp.title"), sub: t("footer.promise.whatsapp.sub") }]
+      : []),
   ];
+
+  const link = "text-stone-600 hover:text-foreground";
 
   return (
     <footer className="border-t border-border bg-surface pb-28 lg:pb-0">
@@ -39,50 +47,65 @@ export function Footer() {
             <div className="self-start">
               <Wordmark size="sm" />
             </div>
-            <p className="font-display text-lg italic leading-snug text-accent">Made fresh for moments worth savoring.</p>
-            <p className="max-w-xs text-stone-600">
-              Palia&apos;s own food app. Made in Palia, Uttar Pradesh. Delivered by the restaurants that cook it.
-            </p>
+            <p className="font-display text-lg italic leading-snug text-accent">{t("footer.tagline")}</p>
+            <p className="max-w-xs text-stone-600">{t("footer.blurb")}</p>
           </div>
           <div className="flex flex-col gap-2.5">
-            <b>Explore</b>
-            <Link href="/#restaurants" className="text-stone-600 hover:text-foreground">
-              Restaurants
+            <b>{t("footer.explore")}</b>
+            <Link href="/#restaurants" className={link}>
+              {t("footer.restaurants")}
             </Link>
-            <Link href="/about" className="text-stone-600 hover:text-foreground">
-              About PaliaEats
+            <Link href="/about" className={link}>
+              {t("footer.about")}
             </Link>
-            <Link href="/orders" className="text-stone-600 hover:text-foreground">
-              My orders
+            <Link href="/orders" className={link}>
+              {t("footer.my_orders")}
             </Link>
-            <Link href="/account" className="text-stone-600 hover:text-foreground">
-              My account
+            <Link href="/account" className={link}>
+              {t("footer.my_account")}
             </Link>
           </div>
           <div className="flex flex-col gap-2.5">
-            <b>Help</b>
+            <b>{t("footer.help")}</b>
+            <Link href="/help" className={link}>
+              {t("footer.help_center")}
+            </Link>
             {support.whatsappHref && (
-              <a href={support.whatsappHref} target="_blank" rel="noopener noreferrer" className="text-stone-600 hover:text-foreground">
-                Chat with us on WhatsApp
+              <a href={support.whatsappHref} target="_blank" rel="noopener noreferrer" className={link}>
+                {t("footer.whatsapp")}
               </a>
             )}
-            <a href={support.emailHref} className="text-stone-600 hover:text-foreground">
-              Email {support.email}
+            <a href={support.emailHref} className={link}>
+              {t("footer.email", { email: support.email })}
             </a>
-            <span className="text-[13px] text-stone-500">We reply {support.hours}</span>
-            <span className="text-stone-600">Pay cash or UPI on delivery</span>
-            <span className="text-stone-600">Delivered by the restaurant</span>
+            <span className="text-[13px] text-stone-500">
+              {t("footer.reply_hours", { hours: localHours(t, support.hours) })}
+            </span>
+            <span className="text-stone-600">{t("footer.cod_line")}</span>
+            <span className="text-stone-600">{t("footer.delivered_by")}</span>
             <Link href="/join" className="font-semibold text-accent hover:underline">
-              Own a restaurant? Join PaliaEats
+              {t("footer.join")}
             </Link>
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-1.5 border-t border-border py-5 text-[13px] text-stone-500 sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-border py-5 text-[13px] text-stone-500 sm:flex-row">
           <Link href="/about" className="hover:text-foreground hover:underline">
-            Made with <Heart /> in Palia · About us
+            {t("footer.made_before")} <Heart /> {t("footer.made_after")}
           </Link>
-          <span>© {new Date().getFullYear()} PaliaEats</span>
+          <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <Link href="/privacy" className="hover:text-foreground hover:underline">
+              {t("footer.privacy")}
+            </Link>
+            <Link href="/terms" className="hover:text-foreground hover:underline">
+              {t("footer.terms")}
+            </Link>
+            <Link href="/refunds" className="hover:text-foreground hover:underline">
+              {t("footer.refunds")}
+            </Link>
+            <LanguageSwitch variant="text" className="text-[13px]" />
+          </nav>
+          <span>{t("footer.copyright", { year: new Date().getFullYear() })}</span>
         </div>
       </div>
     </footer>

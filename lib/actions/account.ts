@@ -2,12 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireUser } from "@/lib/auth/session";
+import { getCurrentUser, requireUser } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
+import { getT } from "@/lib/i18n/server";
+import { allow } from "@/lib/utils/rate-limit";
 import { isUuid } from "@/lib/validation/menu";
 import { parseAddressForm, parseProfileForm } from "@/lib/validation/account";
 
 export type AccountFormState = { error?: string; saved?: boolean } | undefined;
+
+const MIN_PASSWORD_LENGTH = 8;
 
 const MAX_ADDRESSES = 10;
 const ADDRESSES_PATH = "/account/addresses";
@@ -35,6 +39,40 @@ export async function updateProfile(
   if (error) return { error: "Could not save your details. Please try again." };
 
   revalidatePath("/account");
+  return { saved: true };
+}
+
+// Change password from the account page. The current password is checked first, so someone
+// who borrows an unlocked phone can't lock the owner out.
+export async function changePassword(
+  _prev: AccountFormState,
+  formData: FormData,
+): Promise<AccountFormState> {
+  const t = await getT();
+  const profile = await requireUser("/account");
+  const user = await getCurrentUser();
+
+  const current = String(formData.get("current") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+
+  if (!user?.email || !current) return { error: t("auth.fill_all") };
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return { error: t("auth.password_min", { n: MIN_PASSWORD_LENGTH }) };
+  }
+  if (password !== confirm) return { error: t("auth.reset.mismatch") };
+  if (password === current) return { error: t("account.password.same") };
+  if (!(await allow(`change-password:${profile.id}`, 8, 3600))) return { error: t("auth.too_many") };
+
+  const supabase = await createClient();
+  const { error: wrongPassword } = await supabase.auth.signInWithPassword({ email: user.email, password: current });
+  if (wrongPassword) return { error: t("account.password.wrong_current") };
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    if (error.code === "same_password") return { error: t("account.password.same") };
+    return { error: t("auth.reset.failed") };
+  }
   return { saved: true };
 }
 

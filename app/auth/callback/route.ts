@@ -4,11 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { postLoginPath } from "@/lib/auth/redirect";
 
 // Only these kinds of email links are accepted here.
-const EMAIL_LINK_TYPES: EmailOtpType[] = ["email", "signup"];
+const EMAIL_LINK_TYPES: EmailOtpType[] = ["email", "signup", "recovery"];
 
 // People arrive here from two kinds of links:
-//  1. The "confirm your email" link in our signup email. It carries token_hash + type,
-//     and works in ANY browser or device (it doesn't depend on the window that signed up).
+//  1. The "confirm your email" link in our signup email, and the "reset your password" link
+//     (type=recovery, which sends them on to /reset-password). They carry token_hash + type,
+//     and work in ANY browser or device (they don't depend on the window that asked for them).
 //  2. Google sign-in, which returns a one-time `code` that only works in the same browser.
 // Either way we turn it into a login session, then send the person on their way.
 export async function GET(request: NextRequest) {
@@ -44,5 +45,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // A reset link that didn't work (used twice, or too old): offer a fresh one.
+  if (type === "recovery" || next === "/reset-password") {
+    return NextResponse.redirect(`${origin}/forgot-password?error=link`);
+  }
   return NextResponse.redirect(`${origin}/login?error=callback`);
 }

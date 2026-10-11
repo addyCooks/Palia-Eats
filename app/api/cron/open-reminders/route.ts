@@ -1,6 +1,6 @@
-import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isCronAuthorized } from "@/lib/cron/auth";
 import { sendOpenReminder } from "@/lib/email/reminder-emails";
 import { getRestaurantStatus } from "@/lib/utils/hours";
 
@@ -10,22 +10,6 @@ import { getRestaurantStatus } from "@/lib/utils/hours";
 // one stored in cron_keys (or CRON_SECRET, for running it by hand).
 
 export const dynamic = "force-dynamic";
-
-function same(a: string, b: string): boolean {
-  const x = Buffer.from(a);
-  const y = Buffer.from(b);
-  return x.length === y.length && timingSafeEqual(x, y);
-}
-
-async function isAuthorized(request: NextRequest): Promise<boolean> {
-  const given = request.headers.get("authorization") ?? "";
-  if (!given.startsWith("Bearer ") || given.length < 40) return false;
-
-  if (process.env.CRON_SECRET && same(given, `Bearer ${process.env.CRON_SECRET}`)) return true;
-
-  const { data } = await createAdminClient().from("cron_keys").select("key").eq("name", "open_reminders").maybeSingle();
-  return Boolean(data?.key) && same(given, `Bearer ${data!.key}`);
-}
 
 type ReminderRow = {
   user_id: string;
@@ -43,7 +27,7 @@ type ReminderRow = {
 };
 
 async function run(request: NextRequest) {
-  if (!(await isAuthorized(request))) {
+  if (!(await isCronAuthorized(request, "open_reminders"))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
