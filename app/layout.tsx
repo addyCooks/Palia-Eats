@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { OfflineNotice } from "@/components/OfflineNotice";
 import { NavProgress } from "@/components/ui/NavProgress";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
+import { SkipLink } from "@/components/ui/SkipLink";
 import { PressFeedback } from "@/components/ui/PressFeedback";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -90,6 +91,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <I18nProvider lang={lang}>
+          <SkipLink />
           <Suspense fallback={null}>
             <NavProgress />
             <ScrollToTop />

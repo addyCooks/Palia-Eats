@@ -25,9 +25,10 @@ export async function updateProfile(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
+  const t = await getT();
   const profile = await requireUser("/account");
 
-  const parsed = parseProfileForm(formData);
+  const parsed = parseProfileForm(formData, t);
   if (!parsed.ok) return { error: parsed.error };
 
   const supabase = await createClient();
@@ -39,7 +40,7 @@ export async function updateProfile(
       whatsapp_opt_in: parsed.data.whatsapp_opt_in,
     })
     .eq("id", profile.id);
-  if (error) return { error: "Could not save your details. Please try again." };
+  if (error) return { error: t("acct.err.save") };
 
   revalidatePath("/account");
   return { saved: true };
@@ -97,9 +98,10 @@ export async function createAddress(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
+  const t = await getT();
   const profile = await requireUser(ADDRESSES_PATH);
 
-  const parsed = parseAddressForm(formData);
+  const parsed = parseAddressForm(formData, t);
   if (!parsed.ok) return { error: parsed.error };
 
   const supabase = await createClient();
@@ -107,7 +109,7 @@ export async function createAddress(
     .from("customer_addresses")
     .select("id", { count: "exact", head: true });
   if ((count ?? 0) >= MAX_ADDRESSES) {
-    return { error: `You can save up to ${MAX_ADDRESSES} addresses. Delete one first.` };
+    return { error: t("acct.err.max_addr", { n: MAX_ADDRESSES }) };
   }
 
   // Your first address is the default automatically.
@@ -119,7 +121,7 @@ export async function createAddress(
     .insert({ user_id: profile.id, ...parsed.data, is_default: makeDefault })
     .select("id")
     .single();
-  if (error || !created) return { error: "Could not save the address. Please try again." };
+  if (error || !created) return { error: t("acct.err.addr_save") };
 
   revalidatePath(ADDRESSES_PATH);
 
@@ -134,12 +136,13 @@ export async function updateAddress(
   _prev: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
+  const t = await getT();
   const profile = await requireUser(ADDRESSES_PATH);
 
   const addressId = String(formData.get("addressId") ?? "");
-  if (!isUuid(addressId)) return { error: "Missing address." };
+  if (!isUuid(addressId)) return { error: t("acct.err.addr_missing") };
 
-  const parsed = parseAddressForm(formData);
+  const parsed = parseAddressForm(formData, t);
   if (!parsed.ok) return { error: parsed.error };
 
   const supabase = await createClient();
@@ -149,7 +152,7 @@ export async function updateAddress(
     .eq("id", addressId)
     .eq("user_id", profile.id)
     .maybeSingle();
-  if (!existing) return { error: "Address not found." };
+  if (!existing) return { error: t("acct.err.addr_not_found") };
 
   // The current default stays the default (you change it by choosing another one).
   const makeDefault = parsed.data.is_default || existing.is_default;
@@ -160,7 +163,7 @@ export async function updateAddress(
     .update({ ...parsed.data, is_default: makeDefault })
     .eq("id", addressId)
     .eq("user_id", profile.id);
-  if (error) return { error: "Could not save the address. Please try again." };
+  if (error) return { error: t("acct.err.addr_save") };
 
   revalidatePath(ADDRESSES_PATH);
   redirect(ADDRESSES_PATH);

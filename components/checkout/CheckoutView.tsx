@@ -7,6 +7,7 @@ import { Home, MapPin } from "lucide-react";
 import { placeOrder } from "@/lib/actions/orders";
 import { lineKey, lineName } from "@/lib/cart/cart";
 import { formatPrice } from "@/lib/utils/format";
+import { addressLabel } from "@/lib/utils/address-label";
 import { useCart } from "@/components/cart/useCart";
 import { useCartSync } from "@/components/cart/useCartSync";
 import { Textarea } from "@/components/ui/Textarea";
@@ -177,7 +178,7 @@ export function CheckoutView({ addresses, profilePhone, initialAddressId }: Chec
                       <Icon className="size-5" aria-hidden />
                     </span>
                     <span className="flex min-w-0 flex-col gap-0.5">
-                      <span className="font-semibold">{address.label}</span>
+                      <span className="font-semibold">{addressLabel(address.label, t)}</span>
                       <span className="text-stone-600">
                         {address.address_line}
                         {address.landmark ? `, ${t("co.near", { landmark: address.landmark })}` : ""}

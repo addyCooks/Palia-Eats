@@ -15,12 +15,13 @@ import { Photo } from "@/components/ui/Photo";
 // works out "open or closed" once, on the server.
 export function RestaurantCard({
   restaurant,
-  status = getRestaurantStatus(restaurant),
+  status: givenStatus,
 }: {
   restaurant: Restaurant;
   status?: RestaurantStatus;
 }) {
   const t = useT();
+  const status = givenStatus ?? getRestaurantStatus(restaurant, new Date(), t);
   const unavailable = !status.canOrder;
   const rating = publicRating(restaurant);
   const cuisines = restaurant.tagline ?? restaurant.cuisine_tags.join(" · ");

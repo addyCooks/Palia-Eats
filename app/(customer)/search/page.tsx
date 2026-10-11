@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { MessageKey } from "@/lib/i18n/messages";
+import { getT } from "@/lib/i18n/server";
 import { Search } from "lucide-react";
 import { getActiveRestaurants, getPublicDishes } from "@/lib/queries/public";
 import { activeFilterCount, matchesFilters, NO_FILTERS, parseFilters, priceBounds, searchHref, SORTS, type Sort } from "@/lib/search/filters";
@@ -12,11 +14,14 @@ import { Photo } from "@/components/ui/Photo";
 import { ProblemScreen, problemActionClass } from "@/components/ui/ProblemScreen";
 import { publicRating } from "@/lib/utils/rating";
 
-export const metadata: Metadata = { title: "Search" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("nav.search") };
+}
 
 const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
 
 export default async function SearchPage({ searchParams }: PageProps<"/search">) {
+  const t = await getT();
   const params = await searchParams;
   const raw = typeof params.q === "string" ? params.q.slice(0, 60) : "";
   const filters = parseFilters(params);
@@ -65,6 +70,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 
   return (
     <main className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col gap-5 px-4 pb-28 pt-6 sm:px-6 lg:px-12 lg:pb-12">
+      <h1 className="sr-only">{t("nav.search")}</h1>
       <form action="/search" role="search">
         {/* A new search keeps the chosen filters */}
         {filters.sort !== "relevance" && <input type="hidden" name="sort" value={filters.sort} />}
@@ -74,26 +80,26 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
         {filters.max !== null && <input type="hidden" name="max" value={filters.max} />}
         <label className="flex h-[52px] items-center gap-3 rounded-[14px] border-2 border-brand bg-surface pl-4 pr-2 text-base lg:h-[60px] lg:border-0 lg:pl-5 lg:text-lg lg:shadow-[0_4px_14px_rgba(120,70,0,.06)]">
           <Search className="size-5 shrink-0" aria-hidden />
-          <span className="sr-only">Search dishes or restaurants</span>
+          <span className="sr-only">{t("home.search_sr")}</span>
           <input
             name="q"
             type="search"
             defaultValue={query}
             autoFocus={!query}
-            placeholder="Search biryani, momos, thali…"
+            placeholder={t("srch.placeholder")}
             autoComplete="off"
             className="min-w-0 flex-1 bg-transparent font-medium outline-none placeholder:font-normal placeholder:text-stone-500"
           />
           {query && (
             <Link href="/search" className="hidden text-[13px] text-stone-500 hover:text-foreground sm:block">
-              Clear
+              {t("home.clear")}
             </Link>
           )}
           <button
             type="submit"
             className="hidden h-11 rounded-[10px] bg-brand px-5 text-[15px] font-bold text-on-brand hover:bg-brand-dark sm:block"
           >
-            Search
+            {t("nav.search")}
           </button>
         </label>
       </form>
@@ -102,24 +108,26 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {browsing ? (
-          <h2 className="text-[13px] font-semibold tracking-[.5px] text-stone-500">POPULAR RIGHT NOW</h2>
+          <h2 className="text-[13px] font-semibold tracking-[.5px] text-stone-500">{t("srch.popular")}</h2>
         ) : (
           <p className="text-base">
             <b className="font-semibold">
-              {matching.length} {matching.length === 1 ? "dish" : "dishes"}
+              {matching.length === 1 ? t("menu.dish_one") : t("menu.dish_many", { n: matching.length })}
             </b>{" "}
             <span className="text-stone-600">
               {query
-                ? `and ${matchingRestaurants.length} ${matchingRestaurants.length === 1 ? "restaurant" : "restaurants"} for “${query}”`
+                ? matchingRestaurants.length === 1
+                  ? t("srch.and_rest_one", { q: query })
+                  : t("srch.and_rest_many", { n: matchingRestaurants.length, q: query })
                 : matching.length === 1
-                  ? "matches your filters"
-                  : "match your filters"}
+                  ? t("srch.match_one")
+                  : t("srch.match_many")}
             </span>
           </p>
         )}
         <div className="scrollbar-none -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:px-0">
           <FiltersSheet query={query} filters={filters} dishes={filterable} cuisines={cuisines} bounds={priceBounds(filterable)} />
-          <nav aria-label="Sort" className="flex gap-2">
+          <nav aria-label={t("sort.nav")} className="flex gap-2">
             {SORTS.map((s) => (
               <Link
                 key={s.key}
@@ -129,7 +137,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
                   s.key === sort ? "bg-deep text-brand" : "bg-surface text-stone-700"
                 }`}
               >
-                {s.label}
+                {t(`sort.${s.key}` as MessageKey)}
               </Link>
             ))}
           </nav>
@@ -139,23 +147,21 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
       {!browsing && matching.length === 0 && matchingRestaurants.length === 0 ? (
         <ProblemScreen
           glyph="?"
-          title={query ? `No dishes for “${query}”` : "No dishes match"}
+          title={query ? t("srch.none_title_q", { q: query }) : t("srch.none_title")}
           action={
             <Link href="/#restaurants" className={problemActionClass}>
-              Browse menus
+              {t("srch.browse")}
             </Link>
           }
           secondary={
             filtering ? (
-              <Link href={searchHref(query, NO_FILTERS)}>Clear filters</Link>
+              <Link href={searchHref(query, NO_FILTERS)}>{t("srch.clear_filters")}</Link>
             ) : (
-              <Link href="/search">Clear search</Link>
+              <Link href="/search">{t("srch.clear_search")}</Link>
             )
           }
         >
-          {filtering
-            ? "Nothing matches these filters. Try fewer filters, or a wider price range."
-            : "Try another dish, or browse what Palia’s kitchens are cooking tonight."}
+          {filtering ? t("srch.none_filters_body") : t("srch.none_body")}
         </ProblemScreen>
       ) : (
         <>
@@ -173,7 +179,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[15px] font-semibold">{restaurant.name}</span>
-                    <span className="truncate text-xs text-stone-500">Restaurant{restaurant.area ? ` · ${restaurant.area}` : ""}</span>
+                    <span className="truncate text-xs text-stone-500">
+                      {restaurant.area ? t("srch.restaurant_area", { area: restaurant.area }) : t("orders.restaurant")}
+                    </span>
                   </span>
                   {publicRating(restaurant) && (
                     <span className="text-sm font-bold">★ {publicRating(restaurant)!.avg}</span>

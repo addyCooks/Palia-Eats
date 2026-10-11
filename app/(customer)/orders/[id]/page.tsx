@@ -6,6 +6,7 @@ import { getRealtimeToken, requireUser } from "@/lib/auth/session";
 import { getMyOrder } from "@/lib/queries/orders";
 import { isUuid } from "@/lib/validation/menu";
 import { formatPrice } from "@/lib/utils/format";
+import { addressLabel } from "@/lib/utils/address-label";
 import { formatClock, formatDayLabel } from "@/lib/utils/time";
 import { isOrderOverdue } from "@/lib/orders/overdue";
 import { ACTIVE_STATUSES, isCancelled, statusLabel } from "@/lib/orders/status";
@@ -264,7 +265,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/or
 
           <section className="flex flex-col gap-1 rounded-[22px] bg-surface p-6 text-sm shadow-card">
             <h2 className="mb-1 text-lg font-semibold">{t("ord.delivering_to")}</h2>
-            <p className="font-medium">{address.label}</p>
+            <p className="font-medium">{addressLabel(address.label, t)}</p>
             <p className="whitespace-pre-line text-stone-700">{address.address_line}</p>
             {typeof address.lat === "number" && <p className="font-medium text-accent">{t("ord.pin_shared")}</p>}
             {address.landmark && <p className="text-stone-500">{t("ord.landmark", { landmark: address.landmark })}</p>}

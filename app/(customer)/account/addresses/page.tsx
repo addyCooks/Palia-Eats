@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getT } from "@/lib/i18n/server";
 import { requireUser } from "@/lib/auth/session";
 import { getMyAddresses } from "@/lib/queries/account";
 import { AccountCard } from "@/components/account/AccountCard";
 import { AddressCard } from "@/components/account/AddressCard";
 import { AddressForm } from "@/components/forms/AddressForm";
 
-export const metadata: Metadata = { title: "Saved addresses" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("account.nav.addresses") };
+}
 
 export default async function AddressesPage({ searchParams }: PageProps<"/account/addresses">) {
+  const t = await getT();
   const profile = await requireUser("/account/addresses");
   const addresses = await getMyAddresses();
 
@@ -26,21 +30,21 @@ export default async function AddressesPage({ searchParams }: PageProps<"/accoun
         <div className="flex flex-col gap-1">
           {backToCheckout ? (
             <Link href="/checkout" className="text-sm font-semibold text-accent hover:underline">
-              ← Back to checkout
+              {t("addr.back_checkout")}
             </Link>
           ) : (
             <Link href="/account" className="text-sm text-stone-500 hover:underline lg:hidden">
-              ← My account
+              {t("addr.back_account")}
             </Link>
           )}
-          <h1 className="font-display text-[34px] leading-none sm:text-[44px]">Saved addresses</h1>
+          <h1 className="font-display text-[34px] leading-none sm:text-[44px]">{t("account.nav.addresses")}</h1>
         </div>
 
         <div className="grid items-start gap-5 xl:grid-cols-2">
           <section className="flex flex-col gap-3">
             {addresses.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-border p-6 text-center text-stone-500">
-                You haven&apos;t saved an address yet.
+                {t("co.no_address")}
               </p>
             ) : (
               <ul className="flex flex-col gap-3">
@@ -54,7 +58,7 @@ export default async function AddressesPage({ searchParams }: PageProps<"/accoun
           </section>
 
           <section className="flex flex-col gap-4 rounded-[22px] bg-surface p-5 shadow-card sm:p-6">
-            <h2 className="font-display text-[28px] leading-none">Where should we deliver?</h2>
+            <h2 className="font-display text-[28px] leading-none">{t("addr.where")}</h2>
             <AddressForm defaultPhone={profile.phone} next={backToCheckout ? "/checkout" : undefined} />
           </section>
         </div>

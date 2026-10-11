@@ -1,6 +1,6 @@
 import type { Restaurant } from "@/types/app";
 import type { MessageKey, T } from "@/lib/i18n/messages";
-import { say } from "@/lib/i18n/say";
+import { say } from "../i18n/say.ts"; // relative so the plain-Node tests can load this file
 
 // Restaurants run on local (Indian) time. Servers (Vercel) run on UTC, so we
 // always work out "now" in this time zone.

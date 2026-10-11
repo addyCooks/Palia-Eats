@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useT } from "@/lib/i18n/client";
 
 const KEY = "paliaeats-recent-searches";
 
@@ -16,6 +17,7 @@ function read(): string[] {
 
 // Remembers the last few searches on this phone (v2 8b "RECENT"). Only in this browser.
 export function RecentSearches() {
+  const t = useT();
   const [recent, setRecent] = useState<string[]>([]);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- browser storage is only readable after mount
@@ -25,7 +27,7 @@ export function RecentSearches() {
 
   return (
     <section className="flex flex-col gap-2.5">
-      <h2 className="text-[13px] font-semibold tracking-[.5px] text-stone-500">RECENT</h2>
+      <h2 className="text-[13px] font-semibold tracking-[.5px] text-stone-500">{t("srch.recent")}</h2>
       <div className="flex flex-wrap gap-2">
         {recent.map((term) => (
           <Link

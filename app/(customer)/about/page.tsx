@@ -2,47 +2,35 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Banknote, Bike, ChefHat, MessageCircle, Radio, ReceiptText, Store, UtensilsCrossed } from "lucide-react";
+import { getT } from "@/lib/i18n/server";
 import { whatsAppChatUrl } from "@/lib/utils/site";
 import { supportLinks } from "@/lib/utils/support";
+import { localHours } from "@/lib/utils/support-text";
 import { Heart } from "@/components/ui/Heart";
 
-export const metadata: Metadata = {
-  title: "About",
-  description:
-    "PaliaEats is Palia's own food app: order from the restaurants of Palia, follow your order live and pay cash or UPI at your door. Made with love in Palia.",
-};
-
-const STEPS = [
-  {
-    icon: UtensilsCrossed,
-    title: "Pick your craving",
-    text: "Browse Palia's restaurants and their menus, with photos, prices and veg marks. Add what you love to your cart.",
-  },
-  {
-    icon: ChefHat,
-    title: "Made fresh for you",
-    text: "Your order goes straight to the restaurant's kitchen. They start cooking, and you watch every step live.",
-  },
-  {
-    icon: Bike,
-    title: "At your door",
-    text: "The restaurant brings it to you, hot and fresh. You pay in cash or by UPI when it arrives.",
-  },
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("about.meta_title"), description: t("about.meta_desc") };
+}
 
 // Public "About PaliaEats" page. Linked only from the footer.
-export default function AboutPage() {
+export default async function AboutPage() {
+  const t = await getT();
   const whatsapp = whatsAppChatUrl();
   const support = supportLinks();
 
+  const steps = [
+    { icon: UtensilsCrossed, title: t("about.step1.title"), text: t("about.step1.text") },
+    { icon: ChefHat, title: t("about.step2.title"), text: t("about.step2.text") },
+    { icon: Bike, title: t("about.step3.title"), text: t("about.step3.text") },
+  ];
+
   const promises = [
-    { icon: Store, title: "Local first", text: "Every restaurant on PaliaEats is right here in Palia." },
-    { icon: Banknote, title: "Pay at your door", text: "Cash or UPI when your food arrives. Nothing to pay online." },
-    { icon: Radio, title: "Live tracking", text: "Placed, cooking, on the way, delivered: it updates by itself." },
-    { icon: ReceiptText, title: "Clear prices", text: "You see the full price, delivery fee included, before you order." },
-    ...(whatsapp
-      ? [{ icon: MessageCircle, title: "Order on WhatsApp", text: "No app needed: just send us a message." }]
-      : []),
+    { icon: Store, title: t("about.p1.title"), text: t("about.p1.text") },
+    { icon: Banknote, title: t("about.p2.title"), text: t("about.p2.text") },
+    { icon: Radio, title: t("about.p3.title"), text: t("about.p3.text") },
+    { icon: ReceiptText, title: t("about.p4.title"), text: t("about.p4.text") },
+    ...(whatsapp ? [{ icon: MessageCircle, title: t("about.p5.title"), text: t("about.p5.text") }] : []),
   ];
 
   return (
@@ -50,30 +38,26 @@ export default function AboutPage() {
       {/* Hero */}
       <section className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-14">
         <div className="flex flex-col gap-5">
-          <span className="kicker">About PaliaEats</span>
+          <span className="kicker">{t("about.kicker")}</span>
           <h1 className="font-display text-[42px] leading-[1.03] tracking-[-0.5px] sm:text-[56px] lg:text-[68px]">
-            Palia&apos;s own food app
+            {t("about.h1")}
           </h1>
           <p className="font-display text-2xl italic text-accent sm:text-[28px]">
-            Made with <Heart /> in Palia
+            {t("about.made_a")} <Heart /> {t("about.made_b")}
           </p>
-          <p className="max-w-xl text-pretty text-[16px] leading-[1.7] text-stone-600 sm:text-[17px]">
-            PaliaEats brings the kitchens of Palia to your phone. Pick a dish from a restaurant down the road, the
-            restaurant cooks it fresh and brings it to your door, and you pay when it arrives. Good local food, made
-            fresh for moments worth savoring, and just a tap away.
-          </p>
+          <p className="max-w-xl text-pretty text-[16px] leading-[1.7] text-stone-600 sm:text-[17px]">{t("about.intro")}</p>
           <div className="flex flex-wrap gap-3">
             <Link
               href="/#restaurants"
               className="flex h-[52px] items-center rounded-[14px] bg-brand px-6 font-bold text-on-brand shadow-saffron hover:bg-brand-dark"
             >
-              Browse restaurants
+              {t("cart.browse")}
             </Link>
             <Link
               href="/join"
               className="flex h-[52px] items-center rounded-[14px] border-[1.5px] border-border bg-surface px-6 font-semibold hover:bg-muted"
             >
-              Add your restaurant
+              {t("join.title")}
             </Link>
           </div>
         </div>
@@ -82,7 +66,7 @@ export default function AboutPage() {
           <div className="pe-ring absolute inset-[14%] rounded-full bg-brand/20" aria-hidden />
           <Image
             src="/brand/paliaeats-logo.png"
-            alt="The PaliaEats logo: a steaming bowl of curry and rice with a spoon"
+            alt={t("about.logo_alt")}
             width={440}
             height={440}
             priority
@@ -94,14 +78,14 @@ export default function AboutPage() {
       {/* How it works */}
       <section aria-labelledby="how-title" className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <span className="kicker">How it works</span>
+          <span className="kicker">{t("about.how_kicker")}</span>
           <h2 id="how-title" className="font-display text-[32px] leading-none sm:text-[40px]">
-            Your kind of delicious, coming right up
+            {t("ord.tagline.pending")}
           </h2>
         </div>
         <ol className="stagger grid gap-4 md:grid-cols-3 lg:gap-6">
-          {STEPS.map(({ icon: Icon, title, text }, i) => (
-            <li key={title} className="lift relative flex flex-col gap-3 rounded-[22px] bg-surface p-6 shadow-card">
+          {steps.map(({ icon: Icon, title, text }, i) => (
+            <li key={i} className="lift relative flex flex-col gap-3 rounded-[22px] bg-surface p-6 shadow-card">
               <span className="absolute right-5 top-4 font-display text-[56px] leading-none text-stone-300" aria-hidden>
                 {i + 1}
               </span>
@@ -118,14 +102,14 @@ export default function AboutPage() {
       {/* Promises */}
       <section aria-labelledby="promise-title" className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <span className="kicker">Why PaliaEats</span>
+          <span className="kicker">{t("about.why_kicker")}</span>
           <h2 id="promise-title" className="font-display text-[32px] leading-none sm:text-[40px]">
-            Small town, big flavour
+            {t("about.why_title")}
           </h2>
         </div>
         <ul className="stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {promises.map(({ icon: Icon, title, text }) => (
-            <li key={title} className="flex items-start gap-3.5 rounded-[18px] bg-surface p-5 shadow-card">
+          {promises.map(({ icon: Icon, title, text }, i) => (
+            <li key={i} className="flex items-start gap-3.5 rounded-[18px] bg-surface p-5 shadow-card">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-amber-50 text-accent">
                 <Icon className="size-5" aria-hidden />
               </span>
@@ -140,45 +124,37 @@ export default function AboutPage() {
 
       {/* Tagline band */}
       <section className="relative overflow-hidden rounded-[28px] bg-[#16120D] px-6 py-12 text-center text-white sm:px-12 lg:py-16 dark:bg-[#1F1A14]">
-        <p className="mx-auto max-w-3xl font-display text-[34px] leading-[1.1] sm:text-[48px]">
-          Your happy bite is just a tap away.
-        </p>
-        <p className="mt-4 text-[15px] text-[#D8D2C8]">
-          Bringing your little slice of joy to you, one order at a time.
-        </p>
+        <p className="mx-auto max-w-3xl font-display text-[34px] leading-[1.1] sm:text-[48px]">{t("about.band1")}</p>
+        <p className="mt-4 text-[15px] text-[#D8D2C8]">{t("about.band2")}</p>
       </section>
 
       {/* For restaurants + help */}
       <section className="grid gap-5 lg:grid-cols-2">
         <div className="flex flex-col gap-3 rounded-[22px] bg-surface p-6 shadow-card sm:p-8">
-          <span className="kicker">For restaurants</span>
-          <h2 className="font-display text-[28px] leading-tight">Run a kitchen in Palia?</h2>
-          <p className="text-[15px] leading-relaxed text-stone-600">
-            Get your own restaurant page, orders straight to your email and your orders panel, and a simple way to
-            update your menu, mark dishes sold out and see your sales. No app to install.
-          </p>
+          <span className="kicker">{t("join.kicker")}</span>
+          <h2 className="font-display text-[28px] leading-tight">{t("about.rest_title")}</h2>
+          <p className="text-[15px] leading-relaxed text-stone-600">{t("about.rest_text")}</p>
           <Link href="/join" className="mt-1 self-start font-semibold text-accent hover:underline">
-            Add your restaurant →
+            {t("about.rest_link")}
           </Link>
         </div>
         <div className="flex flex-col gap-3 rounded-[22px] bg-surface p-6 shadow-card sm:p-8">
-          <span className="kicker">Need help?</span>
-          <h2 className="font-display text-[28px] leading-tight">We&apos;re right here</h2>
+          <span className="kicker">{t("about.help_kicker")}</span>
+          <h2 className="font-display text-[28px] leading-tight">{t("about.help_title")}</h2>
           <p className="text-[15px] leading-relaxed text-stone-600">
-            Something wrong with an order? Open it under My orders and tap &ldquo;Need help with this order?&rdquo;, or
-            write to us any time. We&apos;ll sort it out with the restaurant. We reply {support.hours}.
+            {t("about.help_text", { hours: localHours(t, support.hours) })}
           </p>
           <div className="mt-1 flex flex-wrap gap-x-5 gap-y-2">
             <Link href="/orders" className="font-semibold text-accent hover:underline">
-              My orders →
+              {t("about.help_orders")}
             </Link>
             {support.whatsappHref && (
               <a href={support.whatsappHref} target="_blank" rel="noopener noreferrer" className="font-semibold text-accent hover:underline">
-                Chat with us on WhatsApp →
+                {t("about.help_whatsapp")}
               </a>
             )}
             <a href={support.emailHref} className="font-semibold text-accent hover:underline">
-              Email {support.email} →
+              {t("about.help_email", { email: support.email })}
             </a>
           </div>
         </div>
@@ -186,15 +162,15 @@ export default function AboutPage() {
 
       {/* Closing */}
       <section className="flex flex-col items-center gap-4 text-center">
-        <h2 className="font-display text-[36px] leading-none sm:text-[48px]">Hungry? Let&apos;s fix that.</h2>
+        <h2 className="font-display text-[36px] leading-none sm:text-[48px]">{t("cart.empty_title")}</h2>
         <p className="text-stone-600">
-          Made with <Heart /> in Palia, Uttar Pradesh.
+          {t("about.close_made_a")} <Heart /> {t("about.close_made_b")}
         </p>
         <Link
           href="/#restaurants"
           className="flex h-[52px] items-center rounded-[14px] bg-brand px-7 font-bold text-on-brand shadow-saffron hover:bg-brand-dark"
         >
-          Order now
+          {t("about.order_now")}
         </Link>
       </section>
     </main>

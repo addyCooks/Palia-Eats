@@ -1,3 +1,5 @@
+import type { T } from "@/lib/i18n/messages";
+import { say } from "@/lib/i18n/say";
 import { normalizePhone } from "@/lib/validation/account";
 
 // The public "Add your restaurant" form (see 0015_restaurant_applications.sql).
@@ -25,6 +27,7 @@ function text(formData: FormData, key: string, max: number): string {
 
 export function parseApplicationForm(
   formData: FormData,
+  t?: T,
 ): { ok: true; data: ApplicationInput } | { ok: false; error: string } {
   const restaurant_name = text(formData, "restaurant_name", 80);
   const owner_name = text(formData, "owner_name", 80);
@@ -45,16 +48,16 @@ export function parseApplicationForm(
   const fssai = String(formData.get("fssai") ?? "").replace(/\s/g, "");
   const message = String(formData.get("message") ?? "").trim().slice(0, 600);
 
-  if (restaurant_name.length < 2) return { ok: false, error: "Please enter the restaurant's name." };
-  if (owner_name.length < 2) return { ok: false, error: "Please enter the owner's name." };
-  if (!phone) return { ok: false, error: "Enter a valid 10-digit mobile number." };
-  if (!EMAIL_PATTERN.test(email)) return { ok: false, error: "Enter a valid email address. Your panel link is sent there." };
-  if (area.length < 2) return { ok: false, error: "Please enter the area (for example Main Chowk)." };
-  if (address.length < 5) return { ok: false, error: "Please enter the full address." };
+  if (restaurant_name.length < 2) return { ok: false, error: say(t, "val.rest_name", "Please enter the restaurant's name.") };
+  if (owner_name.length < 2) return { ok: false, error: say(t, "val.owner_name", "Please enter the owner's name.") };
+  if (!phone) return { ok: false, error: say(t, "val.phone", "Enter a valid 10-digit mobile number.") };
+  if (!EMAIL_PATTERN.test(email)) return { ok: false, error: say(t, "val.email_panel", "Enter a valid email address. Your panel link is sent there.") };
+  if (area.length < 2) return { ok: false, error: say(t, "val.area", "Please enter the area (for example Main Chowk).") };
+  if (address.length < 5) return { ok: false, error: say(t, "val.address", "Please enter the full address.") };
   if ((opening && !TIME_PATTERN.test(opening)) || (closing && !TIME_PATTERN.test(closing))) {
-    return { ok: false, error: "Please check the opening hours." };
+    return { ok: false, error: say(t, "val.hours", "Please check the opening hours.") };
   }
-  if (fssai && !/^\d{14}$/.test(fssai)) return { ok: false, error: "The FSSAI licence number has 14 digits." };
+  if (fssai && !/^\d{14}$/.test(fssai)) return { ok: false, error: say(t, "val.fssai", "The FSSAI licence number has 14 digits.") };
 
   return {
     ok: true,

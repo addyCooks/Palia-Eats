@@ -2,11 +2,13 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { useT } from "@/lib/i18n/client";
 import { ProblemScreen, problemActionClass } from "@/components/ui/ProblemScreen";
 import { reportClientError } from "@/lib/monitoring/report-client";
 
 // Shown when something unexpected breaks while loading a page (often a patchy connection).
 export default function PageError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  const t = useT();
   useEffect(() => {
     reportClientError(error);
   }, [error]);
@@ -16,15 +18,15 @@ export default function PageError({ error, reset }: { error: Error & { digest?: 
       <ProblemScreen
         glyph="!"
         tone="dark"
-        title="We couldn't load this page"
+        title={t("err.page_title")}
         action={
           <button type="button" onClick={reset} className={problemActionClass}>
-            Try again
+            {t("err.page_retry")}
           </button>
         }
-        secondary={<Link href="/">Go home</Link>}
+        secondary={<Link href="/">{t("err.page_home")}</Link>}
       >
-        Check your mobile data or Wi-Fi and try again. Your cart is saved.
+        {t("err.page_body")}
       </ProblemScreen>
     </main>
   );

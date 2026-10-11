@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/messages";
 import {
   activeFilterCount,
   DIETS,
@@ -33,6 +35,7 @@ export function FiltersSheet({
   bounds: { low: number; high: number } | null;
 }) {
   const router = useRouter();
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<SearchFilters>(filters);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -99,7 +102,7 @@ export function FiltersSheet({
         }`}
       >
         <SlidersHorizontal className="size-4" aria-hidden />
-        Filters
+        {t("flt.button")}
         {count > 0 && (
           <span className="grid h-5 min-w-5 place-items-center rounded-md bg-brand px-1 text-[11px] font-bold text-on-brand">
             {count}
@@ -112,20 +115,20 @@ export function FiltersSheet({
           ref={dialogRef}
           onClose={() => setOpen(false)}
           onClick={(event) => event.target === dialogRef.current && close()}
-          aria-label="Filters"
+          aria-label={t("flt.button")}
           className="sheet m-0 mt-auto max-h-[92dvh] w-full max-w-none overflow-y-auto rounded-t-[30px] bg-background p-0 text-foreground backdrop:bg-black/50 sm:m-auto sm:max-w-[460px] sm:rounded-[30px]"
         >
           <div className="flex flex-col gap-[22px] px-[22px] pb-4 pt-3 sm:pt-6">
             <span className="h-[5px] w-11 self-center rounded-full bg-stone-300 sm:hidden" aria-hidden />
             <div className="flex items-baseline justify-between">
-              <h2 className="font-display text-[30px] leading-none">Filters</h2>
+              <h2 className="font-display text-[30px] leading-none">{t("flt.button")}</h2>
               <button type="button" onClick={() => setDraft(NO_FILTERS)} className="text-sm font-semibold text-accent">
-                Reset
+                {t("flt.reset")}
               </button>
             </div>
 
-            <div role="group" aria-label="Sort by" className="flex flex-col gap-2.5">
-              <span className="text-[15px] font-semibold">Sort by</span>
+            <div role="group" aria-label={t("sort.by")} className="flex flex-col gap-2.5">
+              <span className="text-[15px] font-semibold">{t("sort.by")}</span>
               <div className="flex flex-wrap gap-2">
                 {SORTS.map((sort) => (
                   <button
@@ -135,20 +138,20 @@ export function FiltersSheet({
                     onClick={() => setDraft((current) => ({ ...current, sort: sort.key }))}
                     className={chip(draft.sort === sort.key)}
                   >
-                    {sort.label}
+                    {t(`sort.${sort.key}` as MessageKey)}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div role="group" aria-label="Diet" className="flex flex-col gap-2.5">
-              <span className="text-[15px] font-semibold">Diet</span>
+            <div role="group" aria-label={t("diet.title")} className="flex flex-col gap-2.5">
+              <span className="text-[15px] font-semibold">{t("diet.title")}</span>
               <div className="flex flex-wrap gap-2">
                 {DIETS.map((diet) => {
                   const on = draft.diet.includes(diet.key);
                   return (
                     <button key={diet.key} type="button" aria-pressed={on} onClick={() => toggle("diet", diet.key)} className={chip(on)}>
-                      {diet.label}
+                      {t(`diet.${diet.key}` as MessageKey)}
                     </button>
                   );
                 })}
@@ -156,8 +159,8 @@ export function FiltersSheet({
             </div>
 
             {cuisines.length > 0 && (
-              <div role="group" aria-label="Cuisine" className="flex flex-col gap-2.5">
-                <span className="text-[15px] font-semibold">Cuisine</span>
+              <div role="group" aria-label={t("flt.cuisine")} className="flex flex-col gap-2.5">
+                <span className="text-[15px] font-semibold">{t("flt.cuisine")}</span>
                 <div className="flex flex-wrap gap-2">
                   {cuisines.map((cuisine) => {
                     const on = draft.cuisine.includes(cuisine);
@@ -174,7 +177,7 @@ export function FiltersSheet({
             {bounds && (
               <div className="flex flex-col gap-3">
                 <div className="flex justify-between">
-                  <span className="text-[15px] font-semibold">Price of a dish</span>
+                  <span className="text-[15px] font-semibold">{t("flt.price")}</span>
                   <span className="text-sm text-stone-600 tabular-nums">
                     {rupees(minValue)} – {rupees(maxValue)}
                   </span>
@@ -192,7 +195,7 @@ export function FiltersSheet({
                     max={high}
                     step={STEP}
                     value={minValue}
-                    aria-label="Lowest price"
+                    aria-label={t("flt.lowest")}
                     aria-valuetext={rupees(minValue)}
                     onChange={(event) =>
                       setDraft((current) => ({ ...current, min: Math.min(Number(event.target.value), maxValue - STEP) }))
@@ -204,7 +207,7 @@ export function FiltersSheet({
                     max={high}
                     step={STEP}
                     value={maxValue}
-                    aria-label="Highest price"
+                    aria-label={t("flt.highest")}
                     aria-valuetext={rupees(maxValue)}
                     onChange={(event) =>
                       setDraft((current) => ({ ...current, max: Math.max(Number(event.target.value), minValue + STEP) }))
@@ -223,10 +226,10 @@ export function FiltersSheet({
               className="flex h-14 w-full items-center justify-center rounded-[14px] bg-[#16120D] text-base font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#2A241C]"
             >
               {matching === 0 ? (
-                "No dishes match"
+                t("srch.none_title")
               ) : (
                 <>
-                  Show {matching} {matching === 1 ? "dish" : "dishes"}
+                  {matching === 1 ? t("flt.show_one") : t("flt.show_many", { n: matching })}
                   <span className="ml-2 text-brand" aria-hidden>
                     →
                   </span>

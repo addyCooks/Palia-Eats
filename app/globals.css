@@ -273,6 +273,30 @@ html[lang="hi"] * {
   letter-spacing: normal !important;
 }
 
+/* Keyboard focus: a clear ring on whatever you tab to. Mouse and touch taps don't show it.
+   Text fields already change their border colour when focused. */
+:where(a, button, summary, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+/* "Skip to main content": invisible until a keyboard user tabs to it. */
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: 200;
+  transform: translateY(-200%);
+  border-radius: 12px;
+  background: var(--deep);
+  padding: 10px 16px;
+  font-weight: 600;
+  color: var(--brand);
+}
+.skip-link:focus {
+  transform: none;
+}
+
 /* Rows that scroll sideways (cuisine chips, category tabs) without a visible scrollbar. */
 .scrollbar-none {
   scrollbar-width: none;

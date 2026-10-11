@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LocateFixed, MapPin, X } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 import { mapsLink } from "@/lib/utils/maps";
 
 type Pin = { lat: number; lng: number; accuracy?: number };
@@ -9,13 +10,14 @@ type Pin = { lat: number; lng: number; accuracy?: number };
 // Optional "use my current location" for an address. The pin travels with the form as
 // two hidden fields; the rider gets a "Open in Maps" link with the order.
 export function LocationField({ initial }: { initial?: { lat: number; lng: number } | null }) {
+  const t = useT();
   const [pin, setPin] = useState<Pin | null>(initial ?? null);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function locate() {
     if (!("geolocation" in navigator)) {
-      setError("This browser can't share a location. No problem, it's optional.");
+      setError(t("loc.no_geo"));
       return;
     }
     setLocating(true);
@@ -33,8 +35,8 @@ export function LocationField({ initial }: { initial?: { lat: number; lng: numbe
         setLocating(false);
         setError(
           failure.code === failure.PERMISSION_DENIED
-            ? "Location is blocked for this site. You can allow it in your browser settings, or skip it: it's optional."
-            : "We couldn't find your location just now. Try again near a window, or skip it.",
+            ? t("loc.blocked")
+            : t("loc.failed"),
         );
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
@@ -47,13 +49,13 @@ export function LocationField({ initial }: { initial?: { lat: number; lng: numbe
       <input type="hidden" name="longitude" value={pin?.lng ?? ""} />
 
       <span className="text-[13px] font-semibold text-stone-600">
-        Location pin <span className="font-normal text-stone-500">(optional)</span>
+        {t("loc.title")} <span className="font-normal text-stone-500">{t("loc.optional")}</span>
       </span>
 
       {pin ? (
         <div className="anim-pop-in flex flex-col overflow-hidden rounded-xl bg-surface shadow-card">
           <iframe
-            title="Your location on the map"
+            title={t("loc.map_title")}
             src={`https://www.openstreetmap.org/export/embed.html?bbox=${pin.lng - 0.002},${pin.lat - 0.0012},${pin.lng + 0.002},${pin.lat + 0.0012}&layer=mapnik&marker=${pin.lat},${pin.lng}`}
             className="pointer-events-none h-44 w-full border-0"
             loading="lazy"
@@ -63,15 +65,15 @@ export function LocationField({ initial }: { initial?: { lat: number; lng: numbe
               <MapPin className="size-[18px]" aria-hidden />
             </span>
             <span className="min-w-0 flex-1 text-sm">
-              <b className="block">Location added</b>
+              <b className="block">{t("loc.added")}</b>
               <a href={mapsLink(pin.lat, pin.lng)} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-                {pin.accuracy ? `Accurate to about ${pin.accuracy} m · ` : ""}View on map
+                {pin.accuracy ? `${t("loc.accuracy", { m: pin.accuracy })} · ` : ""}{t("loc.view")}
               </a>
             </span>
             <button
               type="button"
               onClick={() => setPin(null)}
-              aria-label="Remove location pin"
+              aria-label={t("loc.remove")}
               className="grid size-9 shrink-0 place-items-center rounded-lg text-stone-500 hover:bg-muted hover:text-foreground"
             >
               <X className="size-4" aria-hidden />
@@ -86,7 +88,7 @@ export function LocationField({ initial }: { initial?: { lat: number; lng: numbe
           className="flex h-[50px] items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-dashed border-brand/70 bg-amber-50 text-[15px] font-semibold text-amber-900 hover:bg-amber-100 disabled:cursor-wait"
         >
           {locating ? <span className="pe-spinner text-brand" aria-hidden /> : <LocateFixed className="size-[18px] text-accent" aria-hidden />}
-          {locating ? "Finding you…" : "Use my current location"}
+          {locating ? t("loc.finding") : t("loc.use")}
         </button>
       )}
 
@@ -96,7 +98,7 @@ export function LocationField({ initial }: { initial?: { lat: number; lng: numbe
         </p>
       ) : (
         <p className="text-xs leading-relaxed text-stone-500">
-          Optional, but it helps the rider reach your door without a single phone call: turning your want into a wow.
+          {t("loc.hint")}
         </p>
       )}
     </div>

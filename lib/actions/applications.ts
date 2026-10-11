@@ -15,6 +15,9 @@ import {
 import { createPanelToken } from "@/lib/panel/token";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { getT } from "@/lib/i18n/server";
+import { looksLikeBot } from "@/lib/utils/bot-check";
+import { allowFromHere } from "@/lib/utils/rate-limit";
 import { slugify } from "@/lib/utils/format";
 import { getOrigin } from "@/lib/utils/origin";
 import { parseApplicationForm } from "@/lib/validation/application";
@@ -28,11 +31,13 @@ const MAX_REQUESTS_PER_HOUR = 20; // all visitors together: stops a flood of jun
 
 // "Add your restaurant": saved by the server (visitors can't touch the table).
 export async function submitApplication(_prev: ApplyState, formData: FormData): Promise<ApplyState> {
-  // Bots fill every field, including this hidden one. Pretend it worked.
-  if (String(formData.get("website") ?? "").trim()) return { done: { name: "your restaurant", email: "" } };
+  const t = await getT();
+  // Bots fill every field, including a hidden one, or send the form too fast. Pretend it worked.
+  if (looksLikeBot(formData)) return { done: { name: t("join.your_restaurant"), email: "" } };
 
-  const parsed = parseApplicationForm(formData);
+  const parsed = parseApplicationForm(formData, t);
   if (!parsed.ok) return { error: parsed.error };
+  if (!(await allowFromHere("join", 5, 3600))) return { error: t("auth.too_many") };
   const input = parsed.data;
 
   const admin = createAdminClient();
@@ -53,14 +58,14 @@ export async function submitApplication(_prev: ApplyState, formData: FormData): 
       .gte("created_at", new Date(Date.now() - 3_600_000).toISOString()),
   ]);
   if ((samePhone ?? 0) + (sameEmail ?? 0) > 0) {
-    return { error: "We already have a request from this phone number or email. We'll be in touch soon." };
+    return { error: t("join.err.dup") };
   }
   if ((lastHour ?? 0) >= MAX_REQUESTS_PER_HOUR) {
-    return { error: "We're getting a lot of requests right now. Please try again in an hour." };
+    return { error: t("join.err.busy") };
   }
 
   const { data, error } = await admin.from("restaurant_applications").insert(input).select("*").single();
-  if (error || !data) return { error: "We couldn't send your request. Please try again." };
+  if (error || !data) return { error: t("join.err.failed") };
 
   after(async () => {
     await emailNewApplication(data as Application);

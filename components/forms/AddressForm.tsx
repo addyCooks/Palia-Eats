@@ -7,6 +7,8 @@ import {
   type AccountFormState,
 } from "@/lib/actions/account";
 import type { Address } from "@/types/app";
+import { useT } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/messages";
 import { keepValues } from "@/lib/forms";
 import { Input } from "@/components/ui/Input";
 import { FormToggle } from "@/components/ui/Toggle";
@@ -21,8 +23,10 @@ type AddressFormProps = {
 };
 
 const TYPES = ["Home", "Work", "Other"] as const;
+const TYPE_KEY = { Home: "addr.home", Work: "addr.work", Other: "addr.other" } as const satisfies Record<(typeof TYPES)[number], MessageKey>;
 
 export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
+  const t = useT();
   const isEdit = Boolean(address);
   const [state, formAction, pending] = useActionState<AccountFormState, FormData>(
     isEdit ? updateAddress : createAddress,
@@ -55,17 +59,17 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
       <input type="hidden" name="label" value={label} />
 
       <Input
-        label="House / shop number, street"
+        label={t("addr.line")}
         name="address_line"
-        placeholder="House 14, Ward 6"
+        placeholder={t("addr.line_ph")}
         defaultValue={address?.address_line}
         maxLength={300}
         required
       />
       <Input
-        label="Landmark"
+        label={t("addr.landmark")}
         name="landmark"
-        placeholder="Near Hanuman Mandir"
+        placeholder={t("addr.landmark_ph")}
         defaultValue={address?.landmark ?? ""}
         maxLength={100}
       />
@@ -76,7 +80,7 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
         }
       />
       <Input
-        label="Phone for the rider"
+        label={t("addr.phone")}
         name="phone"
         type="tel"
         inputMode="numeric"
@@ -85,7 +89,7 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
       />
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1.5 text-[13px] font-semibold text-stone-600">Save as</legend>
+        <legend className="mb-1.5 text-[13px] font-semibold text-stone-600">{t("addr.save_as")}</legend>
         <div className="flex gap-2">
           {TYPES.map((option) => (
             <button
@@ -97,7 +101,7 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
                 type === option ? "bg-deep text-brand" : "bg-surface text-stone-700 shadow-card"
               }`}
             >
-              {option}
+              {t(TYPE_KEY[option])}
             </button>
           ))}
         </div>
@@ -106,16 +110,16 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
             value={customLabel}
             onChange={(event) => setCustomLabel(event.target.value)}
             maxLength={30}
-            placeholder="Name it, e.g. Mom's place"
-            aria-label="Name for this address"
+            placeholder={t("addr.name_ph")}
+            aria-label={t("addr.name_aria")}
             className="mt-1 h-[50px] rounded-xl border-[1.5px] border-border bg-surface px-3.5 text-[15px] outline-none focus:border-brand"
           />
         )}
       </fieldset>
 
       <label className="flex items-center justify-between gap-3 text-sm font-medium">
-        {address?.is_default ? "This is your default address" : "Use as my default address"}
-        <FormToggle name="is_default" defaultChecked={address?.is_default ?? false} label="Default address" />
+        {address?.is_default ? t("addr.is_default") : t("addr.use_default")}
+        <FormToggle name="is_default" defaultChecked={address?.is_default ?? false} label={t("addr.default_label")} />
       </label>
 
       {state?.error && (
@@ -125,7 +129,7 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
       )}
       {state?.saved && (
         <p role="status" className="rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
-          Address saved.
+          {t("addr.saved")}
         </p>
       )}
 
@@ -134,7 +138,7 @@ export function AddressForm({ address, defaultPhone, next }: AddressFormProps) {
         disabled={pending}
         className="mt-1 h-14 rounded-[14px] bg-brand text-base font-bold text-on-brand hover:bg-brand-dark disabled:opacity-60"
       >
-        {pending ? "Saving…" : "Save address"}
+        {pending ? t("addr.saving") : t("addr.save")}
       </button>
     </form>
   );

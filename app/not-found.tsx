@@ -1,19 +1,21 @@
 import Link from "next/link";
+import { getT } from "@/lib/i18n/server";
 import { ProblemScreen, problemActionClass } from "@/components/ui/ProblemScreen";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const t = await getT();
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
       <ProblemScreen
         glyph="?"
-        title="Nothing here"
+        title={t("nf.title")}
         action={
           <Link href="/" className={problemActionClass}>
-            Back to PaliaEats
+            {t("goodbye.home")}
           </Link>
         }
       >
-        That page doesn&apos;t exist, or it has moved.
+        {t("nf.body")}
       </ProblemScreen>
     </main>
   );

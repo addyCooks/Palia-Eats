@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getT } from "@/lib/i18n/server";
 import { requireUser } from "@/lib/auth/session";
 import { getMyFavourites } from "@/lib/queries/favourites";
 import { formatPrice } from "@/lib/utils/format";
@@ -11,7 +12,9 @@ import { RestaurantCard } from "@/components/restaurant/RestaurantCard";
 import { Photo } from "@/components/ui/Photo";
 import { ProblemScreen, problemActionClass } from "@/components/ui/ProblemScreen";
 
-export const metadata: Metadata = { title: "Favourites" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())("account.nav.favourites") };
+}
 
 const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
 
@@ -19,6 +22,7 @@ const rupees = (amount: number) => formatPrice(amount).replace(/\.00$/, "");
 // here leaves the item in place (with an empty heart) until the page is opened again,
 // so a mistaken tap is easy to undo.
 export default async function FavouritesPage() {
+  const t = await getT();
   const profile = await requireUser("/account/favourites");
   const { restaurants, dishes } = await getMyFavourites();
   const empty = restaurants.length === 0 && dishes.length === 0;
@@ -32,31 +36,31 @@ export default async function FavouritesPage() {
       <div className="flex min-w-0 flex-col gap-6">
         <div className="flex flex-col gap-1">
           <Link href="/account" className="text-sm text-stone-500 hover:underline lg:hidden">
-            ← My account
+            {t("addr.back_account")}
           </Link>
-          <h1 className="font-display text-[34px] leading-none sm:text-[44px]">Favourites</h1>
+          <h1 className="font-display text-[34px] leading-none sm:text-[44px]">{t("account.nav.favourites")}</h1>
         </div>
 
         {empty ? (
           <ProblemScreen
             glyph="♡"
             tone="warm"
-            title="Nothing saved yet"
+            title={t("fav.empty_title")}
             action={
               <Link href="/#restaurants" className={problemActionClass}>
-                Browse restaurants
+                {t("cart.browse")}
               </Link>
             }
           >
-            Tap the ♡ on a restaurant&apos;s cover photo, or on a dish, and it will wait for you here.
+            {t("fav.empty_body")}
           </ProblemScreen>
         ) : (
           <>
             <section className="flex flex-col gap-3">
-              <h2 className="text-[13px] font-semibold tracking-[.5px] text-stone-500">DISHES</h2>
+              <h2 className="text-[13px] font-semibold tracking-[.5px] text-stone-500">{t("fav.dishes")}</h2>
               {dishes.length === 0 ? (
                 <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-stone-500">
-                  No dishes yet. Open a dish and tap the ♡ to keep it here.
+                  {t("fav.no_dishes")}
                 </p>
               ) : (
                 <ul className="grid gap-3 xl:grid-cols-2">
@@ -76,7 +80,7 @@ export default async function FavouritesPage() {
                           </span>
                           <span className="truncate text-xs text-stone-500">
                             {dish.restaurants.name}
-                            {dish.is_available ? "" : " · Sold out today"}
+                            {dish.is_available ? "" : ` · ${t("menu.sold_out")}`}
                           </span>
                         </span>
                         <span className="shrink-0 text-sm font-bold tabular-nums">{rupees(dish.price)}</span>
@@ -89,10 +93,10 @@ export default async function FavouritesPage() {
             </section>
 
             <section className="flex flex-col gap-3">
-              <h2 className="text-[13px] font-semibold tracking-[.5px] text-stone-500">RESTAURANTS</h2>
+              <h2 className="text-[13px] font-semibold tracking-[.5px] text-stone-500">{t("fav.restaurants")}</h2>
               {restaurants.length === 0 ? (
                 <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-stone-500">
-                  No restaurants yet. Tap the ♡ on a restaurant&apos;s cover photo to keep it here.
+                  {t("fav.no_restaurants")}
                 </p>
               ) : (
                 <ul className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
