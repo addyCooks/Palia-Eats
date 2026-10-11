@@ -6,11 +6,13 @@ import { OfflineNotice } from "@/components/OfflineNotice";
 import { NavProgress } from "@/components/ui/NavProgress";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import { SkipLink } from "@/components/ui/SkipLink";
+import { SplashScreen } from "@/components/ui/SplashScreen";
 import { PressFeedback } from "@/components/ui/PressFeedback";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { FunnelBeacon } from "@/components/analytics/FunnelBeacon";
 import { I18nProvider } from "@/lib/i18n/client";
+import { makeT } from "@/lib/i18n/messages";
 import { getLang } from "@/lib/i18n/server";
 
 // Design system v2: Outfit for all interface text, DM Serif Display for headings.
@@ -78,6 +80,9 @@ export const viewport: Viewport = {
 // other theme. With no saved choice the phone's own setting is used (see globals.css).
 const THEME_SCRIPT = `try{var t=localStorage.getItem("pe-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}`;
 
+// The opening screen is shown once per visit, and never in the admin or the restaurant panel.
+const SPLASH_SCRIPT = `try{if(sessionStorage.getItem("pe-splash")||/^[/](admin|panel)/.test(location.pathname)){document.documentElement.setAttribute("data-splash","off")}else{sessionStorage.setItem("pe-splash","1")}}catch(e){}`;
+
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const lang = await getLang();
   return (
@@ -88,8 +93,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: SPLASH_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
+        <SplashScreen tagline={makeT(lang)("about.band1")} />
         <I18nProvider lang={lang}>
           <SkipLink />
           <Suspense fallback={null}>

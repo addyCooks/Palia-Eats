@@ -273,6 +273,80 @@ html[lang="hi"] * {
   letter-spacing: normal !important;
 }
 
+/* The short opening screen (components/ui/SplashScreen.tsx): shows for about 2.5 s, then fades
+   out and gets out of the way. Hidden when this visit has already seen it (the page head sets
+   data-splash="off") and for people who ask for less motion. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  background: var(--background);
+  animation: splash-out 0.5s ease-in 2s both;
+}
+.splash-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  text-align: center;
+}
+.splash-pot {
+  animation: splash-pop 0.7s var(--ease-soft) both;
+}
+.splash-name {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  animation: pe-fade-in 0.5s ease-out 0.25s both, pe-rise 0.8s var(--ease-soft) 0.25s both;
+}
+.splash-tagline {
+  max-width: 280px;
+  font-size: 15px;
+  color: var(--color-stone-600);
+  animation: pe-fade-in 0.5s ease-out 0.6s both, pe-rise 0.8s var(--ease-soft) 0.6s both;
+}
+.splash-bar {
+  position: relative;
+  width: 120px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--muted);
+}
+.splash-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--brand);
+  transform-origin: left;
+  animation: splash-fill 1.9s var(--ease-soft) 0.1s both;
+}
+@keyframes splash-pop {
+  from { opacity: 0; transform: translateY(14px) scale(0.8); }
+  60% { opacity: 1; transform: translateY(-3px) scale(1.04); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes splash-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes splash-out {
+  to { opacity: 0; visibility: hidden; }
+}
+html[data-splash="off"] .splash {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash {
+    display: none;
+  }
+}
+
 /* Keyboard focus: a clear ring on whatever you tab to. Mouse and touch taps don't show it.
    Text fields already change their border colour when focused. */
 :where(a, button, summary, [role="button"], [tabindex]):focus-visible {
